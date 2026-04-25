@@ -29,7 +29,7 @@ export function HeroShowcase() {
       <div className="col-span-2 flex items-center gap-3 rounded-2xl border border-accent/40 bg-gradient-accent px-4 py-3 shadow-glow md:col-span-3">
         <Sparkles className="h-5 w-5 text-accent-foreground" strokeWidth={2.4} />
         <div className="text-xs font-bold text-accent-foreground md:text-sm">
-          New users get <span className="underline">$50 off</span> your first booking + a free travel consultation. Limited time.
+          New users get <span className="underline">$50 off</span> your first booking. Expert consultations available from $49. Limited time.
         </div>
       </div>
     </div>

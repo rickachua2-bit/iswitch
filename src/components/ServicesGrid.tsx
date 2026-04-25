@@ -19,7 +19,7 @@ export function ServicesGrid() {
           <h2 className="font-display text-2xl font-extrabold text-foreground md:text-3xl">
             Everything you need, in one app
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">From flights to free consultations — iSwitch handles it all</p>
+          <p className="mt-1 text-sm text-muted-foreground">From flights to expert consultations — iSwitch handles it all</p>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-7">
           {SERVICES.map((s) => {

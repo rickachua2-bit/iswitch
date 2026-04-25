@@ -62,7 +62,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
             to="/consultations"
             className="hidden rounded-md bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90 md:inline-block"
           >
-            Free Consult
+            Book a Consult
           </Link>
           <button
             onClick={() => setOpen((v) => !v)}

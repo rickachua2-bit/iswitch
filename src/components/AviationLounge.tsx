@@ -14,13 +14,13 @@ export function AviationLounge() {
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div className="mb-8 max-w-2xl">
           <span className="inline-block rounded-full bg-accent/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
-            Free consultation
+            Expert consultations
           </span>
           <h2 className="mt-3 font-display text-2xl font-extrabold text-primary-foreground md:text-3xl">
-            Talk to a global mobility expert — on us
+            Talk to a certified global mobility expert
           </h2>
           <p className="mt-2 text-sm text-primary-foreground/80">
-            Whether you're studying, relocating, working or registering a business abroad — book a free 30-minute call with a certified consultant.
+            Whether you're studying, relocating, working or registering a business abroad — book a paid 30, 60 or 90-minute session with a certified consultant. Transparent pricing, real expertise.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export function AviationLounge() {
                 <div className="font-display text-lg font-bold text-primary-foreground">{c.title}</div>
                 <div className="mt-1 text-sm text-primary-foreground/75">{c.desc}</div>
                 <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-accent">
-                  Book free call <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
+                  Book a session <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                 </div>
               </Link>
             );

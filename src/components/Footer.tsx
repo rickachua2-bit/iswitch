@@ -14,7 +14,7 @@ export function Footer() {
               <span className="font-display text-xl font-extrabold">iSwitch</span>
             </Link>
             <p className="mt-3 max-w-sm text-sm text-primary-foreground/75">
-              The global mobility super app. Flights, stays, visas, insurance, tours, pickups and free expert consultations — all in one place.
+              The global mobility super app. Flights, stays, visas, insurance, tours, pickups and expert paid consultations — all in one place.
             </p>
             <div className="mt-4 flex gap-2">
               {[Globe, Send, Camera, Briefcase].map((Icon, i) => (
