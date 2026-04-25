@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookingDialog } from "@/components/BookingDialog";
@@ -199,6 +199,11 @@ function FlightsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
+  // Detect pending navigation/loader runs to show a real loading state on Search click
+  const isSearching = useRouterState({
+    select: (s) => s.isLoading || s.isTransitioning,
+  });
+
   const hasSearched = !!query.departure && !!query.origin && !!query.destination;
   const sort = search.sort ?? "best";
   const stopsFilter = search.stops ?? "any";
@@ -251,10 +256,12 @@ function FlightsPage() {
       <Header />
 
       {/* compact gradient search bar (Trip.com-style) */}
-      <FlightSearchBar />
+      <FlightSearchBar pending={isSearching} />
 
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        {!hasSearched ? (
+        {isSearching ? (
+          <SearchingState query={query} />
+        ) : !hasSearched ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
             Enter your origin, destination and departure date above to search live flights.
           </div>
@@ -262,7 +269,7 @@ function FlightsPage() {
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">{error}</div>
         ) : offers.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
-            <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> No offers found. Try different dates or airports.
+            <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
@@ -404,7 +411,7 @@ function FlightsPage() {
 
 /* ----------------------------- search bar ----------------------------- */
 
-function FlightSearchBar() {
+function FlightSearchBar({ pending = false }: { pending?: boolean }) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
@@ -422,6 +429,7 @@ function FlightSearchBar() {
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="rounded-2xl bg-card p-4 shadow-elevated md:p-5">
           <FlightForm
+            pending={pending}
             onSearch={(q) => navigate({
               search: { ...q, sort: search.sort ?? "best" } as never,
             })}
@@ -437,6 +445,69 @@ function FilterGroup({ title, children }: { title: string; children: React.React
     <div className="border-t border-border py-3 first:border-t-0 first:pt-0">
       <div className="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</div>
       {children}
+    </div>
+  );
+}
+
+/* ----------------------------- searching state ----------------------------- */
+
+function SearchingState({ query }: { query: any }) {
+  const from = query.origin?.split(" ")[0] || toIata(query.origin) || "Origin";
+  const to = query.destination?.split(" ")[0] || toIata(query.destination) || "Destination";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5 shadow-card">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-primary shadow-glow">
+              <Plane className="h-5 w-5 animate-pulse text-primary-foreground" />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              Searching live flights
+              <span className="inline-flex gap-0.5">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+              </span>
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {from} <ArrowRight className="inline h-3 w-3" /> {to} · Comparing 500+ airlines in real time
+            </div>
+          </div>
+        </div>
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 items-center gap-4">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-secondary" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-32 animate-pulse rounded bg-secondary" />
+                <div className="h-2.5 w-48 animate-pulse rounded bg-secondary/70" />
+              </div>
+              <div className="hidden flex-1 items-center justify-between gap-3 md:flex">
+                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+                <div className="h-px flex-1 bg-border" />
+                <div className="h-4 w-16 animate-pulse rounded bg-secondary/70" />
+                <div className="h-px flex-1 bg-border" />
+                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="h-7 w-24 animate-pulse rounded bg-secondary" />
+              <div className="h-8 w-24 animate-pulse rounded-lg bg-primary/20" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

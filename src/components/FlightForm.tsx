@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeftRight, Calendar, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Calendar, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 import { TravelersPopover, travelersDisplay, type TravelersValue } from "@/components/TravelersPopover";
 
@@ -28,11 +28,12 @@ export interface FlightSearchPayload {
 
 interface Props {
   onSearch: (q: Record<string, string>) => void;
+  pending?: boolean;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function FlightForm({ onSearch }: Props) {
+export function FlightForm({ onSearch, pending = false }: Props) {
   const [trip, setTrip] = useState<TripType>("round-trip");
   const [origin, setOrigin] = useState("Lagos (LOS)");
   const [destination, setDestination] = useState("London (LHR)");
@@ -107,6 +108,7 @@ export function FlightForm({ onSearch }: Props) {
           departure={departure} setDeparture={setDeparture}
           returnDate={returnDate} setReturnDate={setReturnDate}
           travelers={travelers} setTravelers={setTravelers}
+          pending={pending}
         />
       ) : (
         <MultiCity
@@ -116,6 +118,7 @@ export function FlightForm({ onSearch }: Props) {
           removeSegment={removeSegment}
           travelers={travelers}
           setTravelers={setTravelers}
+          pending={pending}
         />
       )}
     </form>
@@ -130,9 +133,10 @@ function SimpleGrid(props: {
   departure: string; setDeparture: (s: string) => void;
   returnDate: string; setReturnDate: (s: string) => void;
   travelers: TravelersValue; setTravelers: (v: TravelersValue) => void;
+  pending?: boolean;
 }) {
   const { trip, origin, setOrigin, destination, setDestination,
-    departure, setDeparture, returnDate, setReturnDate, travelers, setTravelers } = props;
+    departure, setDeparture, returnDate, setReturnDate, travelers, setTravelers, pending } = props;
   const isRound = trip === "round-trip";
   const cols = isRound
     ? "md:grid-cols-[1fr_1fr_1fr_1fr_1.1fr_auto]"
@@ -167,7 +171,7 @@ function SimpleGrid(props: {
       )}
 
       <TravelersPopover value={travelers} onChange={setTravelers} />
-      <SubmitBtn />
+      <SubmitBtn pending={pending} />
     </div>
   );
 }
@@ -180,8 +184,9 @@ function MultiCity(props: {
   removeSegment: (i: number) => void;
   travelers: TravelersValue;
   setTravelers: (v: TravelersValue) => void;
+  pending?: boolean;
 }) {
-  const { segments, updateSegment, addSegment, removeSegment, travelers, setTravelers } = props;
+  const { segments, updateSegment, addSegment, removeSegment, travelers, setTravelers, pending } = props;
   return (
     <div className="space-y-3">
       {segments.map((seg, i) => (
@@ -228,7 +233,7 @@ function MultiCity(props: {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.1fr_auto]">
         <TravelersPopover value={travelers} onChange={setTravelers} />
-        <SubmitBtn />
+        <SubmitBtn pending={pending} />
       </div>
     </div>
   );
@@ -254,13 +259,22 @@ function DateField({
   );
 }
 
-function SubmitBtn() {
+function SubmitBtn({ pending = false }: { pending?: boolean }) {
   return (
     <button
       type="submit"
-      className="flex h-full min-h-[58px] items-center justify-center gap-2 rounded-xl bg-gradient-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95"
+      disabled={pending}
+      className="flex h-full min-h-[58px] items-center justify-center gap-2 rounded-xl bg-gradient-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95 disabled:cursor-wait disabled:opacity-90"
     >
-      <Search className="h-4 w-4" strokeWidth={2.6} /> Search
+      {pending ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.6} /> Searching…
+        </>
+      ) : (
+        <>
+          <Search className="h-4 w-4" strokeWidth={2.6} /> Search
+        </>
+      )}
     </button>
   );
 }
