@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeftRight, Calendar, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Calendar, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 import { TravelersPopover, travelersDisplay, type TravelersValue } from "@/components/TravelersPopover";
 
