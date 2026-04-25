@@ -37,11 +37,15 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
 export const searchFlights = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
-      origin: string;
-      destination: string;
-      departure_date: string;
+      origin?: string;
+      destination?: string;
+      departure_date?: string;
       return_date?: string;
+      segments?: Array<{ origin: string; destination: string; departure_date: string }>;
       adults: number;
+      children?: number;
+      infants?: number;
+      cabin?: string;
     }) => input,
   )
   .handler(async ({ data }) => call("/flights/search", data));
