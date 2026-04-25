@@ -103,9 +103,10 @@ async function searchCall(path: string, body: unknown): Promise<any> {
     }
   }
   const status: number | null = lastErr?.status ?? null;
+  const requestId: string | null = lastErr?.requestId ?? null;
   const message = friendlyError(status, lastErr?.message ?? "");
-  console.error("Travel search failed", { path, status, raw: lastErr?.message });
-  return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message };
+  console.error("Travel search failed", { path, status, requestId, raw: lastErr?.message });
+  return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message, requestId };
 }
 
 /* ----------------------------- FLIGHTS ----------------------------- */
