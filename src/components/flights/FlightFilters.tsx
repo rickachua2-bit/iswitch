@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Filter, Search, Briefcase } from "lucide-react";
+import { usePriceFormat } from "@/lib/use-price-format";
 
 type Airline = { code: string; name: string; minPrice: number };
 
@@ -23,6 +24,8 @@ interface Props {
 export function FlightFilters({
   offers, currency, stops, airlines, baggage, recommended, onChange,
 }: Props) {
+  const formatPrice = usePriceFormat();
+
   const allAirlines = useMemo<Airline[]>(() => {
     const map = new Map<string, Airline>();
     for (const o of offers) {
@@ -41,7 +44,9 @@ export function FlightFilters({
     return { min: Math.min(...xs), max: Math.max(...xs) };
   }, [offers]);
 
+  // sym retained for backwards compat, but prefer formatPrice for display
   const sym = currencySymbol(currency);
+  void sym;
 
   const [airlineQ, setAirlineQ] = useState("");
   const filteredAirlines = airlineQ
@@ -130,8 +135,7 @@ export function FlightFilters({
                     </span>
                     <span className="flex-1 truncate text-xs">{a.name}</span>
                     <span className="text-[11px] font-semibold text-muted-foreground">
-                      {sym}
-                      {Math.round(a.minPrice).toLocaleString()}
+                      {formatPrice(a.minPrice, currency)}
                     </span>
                   </label>
                 );
@@ -150,11 +154,11 @@ export function FlightFilters({
           <div className="text-xs text-muted-foreground">
             From{" "}
             <span className="font-bold text-foreground">
-              {sym}{Math.round(priceRange.min).toLocaleString()}
+              {formatPrice(priceRange.min, currency)}
             </span>{" "}
             to{" "}
             <span className="font-bold text-foreground">
-              {sym}{Math.round(priceRange.max).toLocaleString()}
+              {formatPrice(priceRange.max, currency)}
             </span>
           </div>
         </Group>

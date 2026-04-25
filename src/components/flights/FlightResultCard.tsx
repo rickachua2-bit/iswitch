@@ -4,6 +4,7 @@ import {
   ChevronDown, ChevronRight, Plane, Wifi, Utensils, Tv, Zap,
   Briefcase, Luggage, RefreshCw, Pencil, Check, X, Clock,
 } from "lucide-react";
+import { usePriceFormat } from "@/lib/use-price-format";
 
 /* ---------------- shared utils (kept local to keep card self-contained) ---------------- */
 
@@ -48,6 +49,7 @@ function fmtDuration(min: number) {
 export function FlightResultCard({ offer }: { offer: any }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const formatPrice = usePriceFormat();
 
   const slices: any[] = offer?.slices ?? offer?.itineraries ?? [];
   const carrier = offerCarrier(offer);
@@ -112,8 +114,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
         <div className="flex items-center justify-between gap-4 border-t border-border pt-3 md:flex-col md:items-end md:justify-center md:border-l md:border-t-0 md:pl-5 md:pt-0">
           <div className="text-right">
             <div className="text-2xl font-extrabold text-primary md:text-[28px]">
-              {currencySymbol(cur)}
-              {Math.round(price).toLocaleString()}
+              {formatPrice(price, cur)}
             </div>
             <div className="text-[11px] text-muted-foreground">per adult, taxes incl.</div>
           </div>
@@ -140,8 +141,8 @@ export function FlightResultCard({ offer }: { offer: any }) {
             </button>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {fares.map((f: any) => (
-              <FareCard key={f.id} fare={f} onPick={() => selectFare(f.id)} />
+          {fares.map((f: any) => (
+              <FareCard key={f.id} fare={f} formatPrice={formatPrice} onPick={() => selectFare(f.id)} />
             ))}
           </div>
         </div>
@@ -290,9 +291,11 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
 function FareCard({
   fare,
   onPick,
+  formatPrice,
 }: {
   fare: ReturnType<typeof buildFares>[number];
   onPick: () => void;
+  formatPrice: (amount: number, currency: string) => string;
 }) {
   return (
     <div
@@ -311,8 +314,7 @@ function FareCard({
         </div>
         <div className="text-right">
           <div className="text-xl font-extrabold text-primary">
-            {currencySymbol(fare.currency)}
-            {Math.round(fare.price).toLocaleString()}
+            {formatPrice(fare.price, fare.currency)}
           </div>
         </div>
       </div>

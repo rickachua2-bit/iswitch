@@ -8,6 +8,7 @@ import {
   Briefcase, Luggage, Loader2, Clock,
 } from "lucide-react";
 import { bookFlight } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 
 const bookSchema = z.object({
   offer_id: z.string(),
@@ -514,6 +515,8 @@ function SliceLine({ slice }: { slice: any }) {
 /* ------------ right column: sticky price summary ------------ */
 
 function PriceSummary({ offer, fare }: { offer: any; fare: any }) {
+  const formatPrice = usePriceFormat();
+
   const baseAmount = Number(
     fare?.price ?? offer?.total_amount ?? offer?.price?.total ?? 0,
   );
@@ -529,8 +532,6 @@ function PriceSummary({ offer, fare }: { offer: any; fare: any }) {
     return { fareTotal: provBase, taxes, total: baseAmount };
   }, [offer, baseAmount]);
 
-  const sym = currencySymbol(cur);
-
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
       <div className="rounded-2xl border border-border bg-card shadow-card">
@@ -539,15 +540,15 @@ function PriceSummary({ offer, fare }: { offer: any; fare: any }) {
           <div className="text-[11px] text-muted-foreground">For 1 adult</div>
         </div>
         <div className="space-y-2 px-4 py-3 text-sm">
-          <Row label="Base fare" value={`${sym}${Math.round(breakdown.fareTotal).toLocaleString()}`} />
-          <Row label="Taxes & fees" value={`${sym}${Math.round(breakdown.taxes).toLocaleString()}`} />
+          <Row label="Base fare" value={formatPrice(breakdown.fareTotal, cur)} />
+          <Row label="Taxes & fees" value={formatPrice(breakdown.taxes, cur)} />
           <Row label="Service fee" value="Included" muted />
         </div>
         <div className="border-t border-border px-4 py-3">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-bold text-foreground">Total</span>
             <span className="text-2xl font-extrabold text-primary">
-              {sym}{Math.round(breakdown.total).toLocaleString()}
+              {formatPrice(breakdown.total, cur)}
             </span>
           </div>
           <div className="mt-1 text-[11px] text-muted-foreground">
