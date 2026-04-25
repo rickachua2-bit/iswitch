@@ -201,11 +201,7 @@ function FlightsPage() {
 
   // Detect pending navigation/loader runs to show a real loading state on Search click
   const isSearching = useRouterState({
-    select: (s) =>
-      s.isLoading ||
-      s.isTransitioning ||
-      s.pendingMatches?.some((m) => m.routeId === "/flights") ||
-      false,
+    select: (s) => s.isLoading || s.isTransitioning,
   });
 
   const hasSearched = !!query.departure && !!query.origin && !!query.destination;
