@@ -17,8 +17,8 @@ const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = 
   { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
 ];
 
-export function SearchTabs() {
-  const [active, setActive] = useState<TabId>("flights");
+export function SearchTabs({ defaultTab = "flights" }: { defaultTab?: TabId } = {}) {
+  const [active, setActive] = useState<TabId>(defaultTab);
   const navigate = useNavigate();
 
   return (
