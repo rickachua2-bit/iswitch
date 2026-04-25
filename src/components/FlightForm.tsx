@@ -108,6 +108,7 @@ export function FlightForm({ onSearch, pending = false }: Props) {
           departure={departure} setDeparture={setDeparture}
           returnDate={returnDate} setReturnDate={setReturnDate}
           travelers={travelers} setTravelers={setTravelers}
+          pending={pending}
         />
       ) : (
         <MultiCity
@@ -117,6 +118,7 @@ export function FlightForm({ onSearch, pending = false }: Props) {
           removeSegment={removeSegment}
           travelers={travelers}
           setTravelers={setTravelers}
+          pending={pending}
         />
       )}
     </form>
