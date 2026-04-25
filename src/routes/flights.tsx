@@ -448,6 +448,69 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   );
 }
 
+/* ----------------------------- searching state ----------------------------- */
+
+function SearchingState({ query }: { query: any }) {
+  const from = query.origin?.split(" ")[0] || toIata(query.origin) || "Origin";
+  const to = query.destination?.split(" ")[0] || toIata(query.destination) || "Destination";
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5 shadow-card">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-primary shadow-glow">
+              <Plane className="h-5 w-5 animate-pulse text-primary-foreground" />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              Searching live flights
+              <span className="inline-flex gap-0.5">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+              </span>
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {from} <ArrowRight className="inline h-3 w-3" /> {to} · Comparing 500+ airlines in real time
+            </div>
+          </div>
+        </div>
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 items-center gap-4">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-secondary" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-32 animate-pulse rounded bg-secondary" />
+                <div className="h-2.5 w-48 animate-pulse rounded bg-secondary/70" />
+              </div>
+              <div className="hidden flex-1 items-center justify-between gap-3 md:flex">
+                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+                <div className="h-px flex-1 bg-border" />
+                <div className="h-4 w-16 animate-pulse rounded bg-secondary/70" />
+                <div className="h-px flex-1 bg-border" />
+                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="h-7 w-24 animate-pulse rounded bg-secondary" />
+              <div className="h-8 w-24 animate-pulse rounded-lg bg-primary/20" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ----------------------------- card ----------------------------- */
 
 function FlightCard({ offer, onBook }: { offer: any; onBook: () => void }) {
