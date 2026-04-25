@@ -4,19 +4,13 @@ import heroImg from "@/assets/hero-iconic.jpg";
 import { Header } from "@/components/Header";
 import { SearchTabs } from "@/components/SearchTabs";
 import { HeroShowcase } from "@/components/HeroShowcase";
-import { TrustBadges } from "@/components/TrustBadges";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { TrendingDeals } from "@/components/TrendingDeals";
 import { HandpickedRoutes } from "@/components/HandpickedRoutes";
-import { InspirationGrid } from "@/components/InspirationGrid";
-import { HowItWorks } from "@/components/HowItWorks";
-import { PriceGuarantee } from "@/components/PriceGuarantee";
-import { StatsStrip } from "@/components/StatsStrip";
 import { AviationLounge } from "@/components/AviationLounge";
-import { Testimonials } from "@/components/Testimonials";
 import { WhyBook } from "@/components/WhyBook";
+import { Testimonials } from "@/components/Testimonials";
 import { Newsletter } from "@/components/Newsletter";
-import { AppBanner } from "@/components/AppBanner";
 import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/")({
@@ -73,19 +67,13 @@ function Home() {
         </div>
       </section>
 
-      <TrustBadges />
       <ServicesGrid />
       <TrendingDeals />
       <HandpickedRoutes />
-      <InspirationGrid />
-      <HowItWorks />
-      <PriceGuarantee />
-      <StatsStrip />
       <AviationLounge />
-      <Testimonials />
       <WhyBook />
+      <Testimonials />
       <Newsletter />
-      <AppBanner />
       <Footer />
     </div>
   );
