@@ -233,7 +233,7 @@ function MultiCity(props: {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.1fr_auto]">
         <TravelersPopover value={travelers} onChange={setTravelers} />
-        <SubmitBtn />
+        <SubmitBtn pending={pending} />
       </div>
     </div>
   );
