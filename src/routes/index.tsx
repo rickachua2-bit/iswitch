@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import heroImg from "@/assets/hero-travel.jpg";
+import heroImg from "@/assets/hero-iconic.jpg";
 import { Header } from "@/components/Header";
 import { SearchTabs } from "@/components/SearchTabs";
 import { ServicesGrid } from "@/components/ServicesGrid";
@@ -30,19 +30,22 @@ function Home() {
       {/* HERO */}
       <section className="relative">
         <div className="absolute inset-0 -z-10">
-          <img src={heroImg} alt="Crystal blue tropical beach" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.30_0.16_260/0.85)] via-[oklch(0.30_0.16_260/0.65)] to-[oklch(0.30_0.16_260/0.95)]" />
+          <img src={heroImg} alt="Airplane wing soaring above world landmarks at golden hour" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.18_0.08_260/0.55)] via-[oklch(0.20_0.10_260/0.45)] to-[oklch(0.22_0.10_260/0.92)]" />
         </div>
 
-        <div className="px-4 pt-12 pb-8 md:pt-16 md:pb-12">
-          <div className="mx-auto mb-8 max-w-4xl text-center">
-            <h1 className="font-display text-3xl font-extrabold leading-[1.1] tracking-tight text-primary-foreground md:text-5xl">
-              Where will you go next?
+        <div className="px-4 pt-16 pb-10 md:pt-24 md:pb-14">
+          <div className="mx-auto mb-10 max-w-4xl text-center">
+            <span className="inline-block rounded-full bg-accent/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground shadow-glow">
+              The Global Mobility Super App
+            </span>
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-primary-foreground md:text-6xl">
+              The world is yours.
               <br />
               <span className="text-accent">Book it all in one place.</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
-              Flights · Stays · Visas · Insurance · Tours · Pickups · Free expert consultations.
+            <p className="mx-auto mt-4 max-w-xl text-sm text-primary-foreground/85 md:text-base">
+              Flights, stays, visas, insurance, tours, pickups & free expert consultations.
             </p>
           </div>
           <SearchTabs />
