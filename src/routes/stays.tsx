@@ -579,10 +579,10 @@ function ResultsBoard({
           {/* States */}
           {error ? (
             <div className="rounded-2xl border border-destructive/30 bg-card p-6 text-sm shadow-card">
-              <div className="font-bold text-destructive">Hotel provider is temporarily unavailable</div>
+              <div className="font-bold text-destructive">Hotels are temporarily unavailable</div>
               <div className="mt-1 text-muted-foreground">
-                Our hotel inventory partner returned an error
-                {error.includes("522") ? " (Cloudflare 522 — origin timeout)" : ` (${error})`}.
+                We couldn't load hotel inventory right now
+                {error.includes("522") ? " (upstream timeout)" : ` (${error})`}.
                 Flights and other services are unaffected. Please try again in a minute.
               </div>
             </div>
