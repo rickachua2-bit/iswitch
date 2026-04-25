@@ -2,8 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 
 const BASE = process.env.TRAVSIFY_BASE_URL || "https://travsify.com/api/v1";
 
+let _keyLogged = false;
 function getKey() {
   const key = process.env.TRAVSIFY_API_KEY;
+  if (!_keyLogged) {
+    _keyLogged = true;
+    // Safe diagnostic: presence + length + first 4 chars only. Never logs the secret.
+    console.log("[travsify] key check", {
+      present: !!key,
+      length: key?.length ?? 0,
+      prefix: key ? key.slice(0, 4) : null,
+      base: BASE,
+    });
+  }
   if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
   return key;
 }
