@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const BASE = "https://api.travsify.com/api/v1";
+const BASE = process.env.TRAVSIFY_BASE_URL || "https://travsifyndc.lovable.app/api/v1";
 
 function getKey() {
   const key = process.env.TRAVSIFY_API_KEY;
