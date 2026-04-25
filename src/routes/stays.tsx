@@ -208,7 +208,13 @@ function StaysPage() {
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
         <div className="mb-5 flex items-end justify-between">
           <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">Top destinations worldwide</h2>
-          <Link to="/stays" className="text-sm font-semibold text-[#1d96a6] hover:underline">View all →</Link>
+          <Link
+            to="/stays"
+            search={{ destination: "Dubai", checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
+            className="text-sm font-semibold text-[#1d96a6] hover:underline"
+          >
+            View all →
+          </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           {TOP_DESTINATIONS.map((d) => (
