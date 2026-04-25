@@ -34,7 +34,14 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
 
 async function searchCall(path: string, body: unknown): Promise<any> {
   try {
-    return await call(path, body);
+    const res: any = await call(path, body);
+    // Normalize Travsify's per-vertical keys (flights/hotels/tours/visas/plans)
+    // into the unified shape the UI consumes (offers/hotels/tours/visas/plans).
+    const d = res?.data ?? {};
+    if (d && !d.offers && Array.isArray(d.flights)) {
+      d.offers = d.flights;
+    }
+    return { ...res, data: d };
   } catch (error: any) {
     const message = error?.message ?? "Travel provider is currently unavailable.";
     console.error("Travsify search failed", { path, message });
