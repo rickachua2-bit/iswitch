@@ -12,7 +12,7 @@ const REVIEWS = [
   {
     name: "Marcus T.",
     role: "Software Engineer · Toronto",
-    text: "The free immigration consultation actually got me my Canadian PR. They didn't sell me anything I didn't need.",
+    text: "The immigration consultation was worth every cent — actually got me my Canadian PR. They didn't sell me anything I didn't need.",
     rating: 5,
     initials: "MT",
     color: "bg-blue-100 text-blue-700",
