@@ -246,7 +246,16 @@ function FlightsPage() {
             Enter your origin, destination and departure date above to search live flights.
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
+            <div className="font-bold text-foreground">Flights are taking a moment</div>
+            <div className="mt-1 text-muted-foreground">{error}</div>
+            <button
+              onClick={() => navigate({ search: (prev: any) => ({ ...prev }) })}
+              className="mt-3 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+            >
+              Try again
+            </button>
+          </div>
         ) : offers.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
