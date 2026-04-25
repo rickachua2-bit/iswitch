@@ -74,16 +74,23 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
             <span className="font-display text-xl font-extrabold tracking-tight text-primary-foreground">iSwitch</span>
           </Link>
           <nav className="hidden items-center gap-0.5 lg:flex">
-            {NAV.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="rounded-md px-2.5 py-2 text-sm font-semibold text-primary-foreground/85 transition hover:bg-white/10 hover:text-primary-foreground"
-                activeProps={{ className: "rounded-md px-2.5 py-2 text-sm font-semibold bg-white/15 text-accent" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {NAV.map((item) => {
+              const extra =
+                item.to === "/stays"
+                  ? { search: { destination: "Dubai", checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" } }
+                  : {};
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  {...(extra as any)}
+                  className="rounded-md px-2.5 py-2 text-sm font-semibold text-primary-foreground/85 transition hover:bg-white/10 hover:text-primary-foreground"
+                  activeProps={{ className: "rounded-md px-2.5 py-2 text-sm font-semibold bg-white/15 text-accent" }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
