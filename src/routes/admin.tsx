@@ -194,7 +194,7 @@ function SystemSettings() {
 
   async function save(key: string, value: number) {
     setSavingKey(key);
-    await supabase.from("system_settings").update({ value: value as unknown as object, updated_at: new Date().toISOString() }).eq("key", key);
+    await supabase.from("system_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", key);
     setSavingKey(null);
   }
 
