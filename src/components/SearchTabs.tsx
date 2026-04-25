@@ -2,9 +2,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap,
-  MapPin, Calendar, Users, Search, ArrowLeftRight, Globe,
+  MapPin, Calendar, Users, Search, Globe,
 } from "lucide-react";
-import { AirportAutocomplete } from "@/components/AirportAutocomplete";
+import { FlightForm } from "@/components/FlightForm";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
@@ -89,69 +89,6 @@ function SubmitBtn() {
     >
       <Search className="h-4 w-4" strokeWidth={2.6} /> Search
     </button>
-  );
-}
-
-/* ----- Flight ----- */
-function FlightForm({ onSearch }: { onSearch: (q: Record<string, string>) => void }) {
-  const [trip, setTrip] = useState<"one-way" | "round-trip" | "multi-city">("round-trip");
-  const [origin, setOrigin] = useState("Lagos (LOS)");
-  const [destination, setDestination] = useState("London (LHR)");
-  const [departure, setDeparture] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [travelers, setTravelers] = useState("1 Adult, Economy");
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSearch({ trip, origin, destination, departure, returnDate, travelers });
-      }}
-    >
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 rounded-full bg-secondary p-1">
-          {(["round-trip", "one-way", "multi-city"] as const).map((t) => (
-            <button
-              type="button"
-              key={t}
-              onClick={() => setTrip(t)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold capitalize transition ${
-                trip === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t.replace("-", " ")}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_1fr_1.1fr_auto]">
-        <div className="relative md:col-span-2">
-          <div className="grid grid-cols-2 gap-3">
-            <AirportAutocomplete label="From" value={origin} onChange={(d) => setOrigin(d)} />
-            <AirportAutocomplete label="To" value={destination} onChange={(d) => setDestination(d)} />
-          </div>
-          <button
-            type="button"
-            onClick={() => { const o = origin; setOrigin(destination); setDestination(o); }}
-            className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card p-1.5 shadow-card hover:bg-secondary"
-            aria-label="Swap"
-          >
-            <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
-          </button>
-        </div>
-        <Field icon={Calendar} label="Departure">
-          <TextInput type="date" value={departure} onChange={(e) => setDeparture(e.target.value)} />
-        </Field>
-        <Field icon={Calendar} label="Return">
-          <TextInput type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} disabled={trip === "one-way"} />
-        </Field>
-        <Field icon={Users} label="Travelers / Class">
-          <TextInput value={travelers} onChange={(e) => setTravelers(e.target.value)} />
-        </Field>
-        <SubmitBtn />
-      </div>
-    </form>
   );
 }
 
