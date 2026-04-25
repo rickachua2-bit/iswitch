@@ -549,7 +549,7 @@ function ResultsBoard({
             <div>
               <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
                 <span className="text-primary">{query.destination}</span>:{" "}
-                {error ? "0" : filtered.length} properties found
+                {error ? "0" : filtered.length} hotel stays found
               </h2>
               <p className="text-xs text-muted-foreground">
                 {query.checkIn} → {query.checkOut} · {query.guests}
