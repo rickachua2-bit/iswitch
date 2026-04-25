@@ -1,46 +1,86 @@
-import { Link } from "@tanstack/react-router";
-import { ChevronDown, Globe, Menu, User } from "lucide-react";
-import { useState } from "react";
-
-const NAV = [
-  { label: "Flights", to: "/flights" },
-  { label: "Hotels", to: "/stays" },
-  { label: "Visas", to: "/visas" },
-  { label: "Insurance", to: "/insurance" },
-  { label: "Tours", to: "/tours" },
-  { label: "Car Transfers", to: "/pickups" },
-  { label: "Consultations", to: "/consultations" },
-] as const;
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronDown, Globe, Menu, User, Briefcase, X, Search, LogOut, LayoutDashboard, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
+import { useCurrency } from "@/hooks/use-currency";
+import { SUPPORTED_LANGUAGES } from "@/i18n";
 
 export function Header({ transparent = false }: { transparent?: boolean }) {
-  const [open, setOpen] = useState(false);
+  const { t, i18n } = useTranslation();
+  const { user, hasRole, signOut } = useAuth();
+  const { currency, currencies, setCurrency } = useCurrency();
+  const navigate = useNavigate();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [curOpen, setCurOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [langQuery, setLangQuery] = useState("");
+  const [curQuery, setCurQuery] = useState("");
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (!headerRef.current?.contains(e.target as Node)) {
+        setLangOpen(false);
+        setCurOpen(false);
+        setUserOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const NAV = [
+    { label: t("nav.flights"), to: "/flights" as const },
+    { label: t("nav.hotels"), to: "/stays" as const },
+    { label: t("nav.visas"), to: "/visas" as const },
+    { label: t("nav.insurance"), to: "/insurance" as const },
+    { label: t("nav.tours"), to: "/tours" as const },
+    { label: t("nav.transfers"), to: "/pickups" as const },
+    { label: t("nav.consultations"), to: "/consultations" as const },
+  ];
+
+  const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES[0];
+  const filteredLangs = SUPPORTED_LANGUAGES.filter((l) => {
+    const q = langQuery.toLowerCase();
+    return !q || l.label.toLowerCase().includes(q) || l.native.toLowerCase().includes(q) || l.code.includes(q);
+  });
+  const filteredCurs = currencies.filter((c) => {
+    const q = curQuery.toLowerCase();
+    return !q || c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+  });
+
+  function handleSignOut() {
+    void signOut().then(() => navigate({ to: "/" }));
+    setUserOpen(false);
+  }
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 w-full ${
-        transparent
-          ? "bg-[var(--header-bg)]/95 backdrop-blur"
-          : "bg-[var(--header-bg)] shadow-card"
+        transparent ? "bg-[var(--header-bg)]/95 backdrop-blur" : "bg-[var(--header-bg)] shadow-card"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+        {/* Logo + nav */}
+        <div className="flex min-w-0 items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-accent shadow-glow">
               <span className="font-display text-lg font-black text-accent-foreground">i</span>
             </div>
-            <span className="font-display text-xl font-extrabold tracking-tight text-primary-foreground">
-              iSwitch
-            </span>
+            <span className="font-display text-xl font-extrabold tracking-tight text-primary-foreground">iSwitch</span>
           </Link>
-
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-0.5 lg:flex">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="rounded-md px-3 py-2 text-sm font-semibold text-primary-foreground/85 transition hover:bg-white/10 hover:text-primary-foreground"
-                activeProps={{ className: "rounded-md px-3 py-2 text-sm font-semibold bg-white/15 text-accent" }}
+                className="rounded-md px-2.5 py-2 text-sm font-semibold text-primary-foreground/85 transition hover:bg-white/10 hover:text-primary-foreground"
+                activeProps={{ className: "rounded-md px-2.5 py-2 text-sm font-semibold bg-white/15 text-accent" }}
               >
                 {item.label}
               </Link>
@@ -48,48 +88,237 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
-          <button className="hidden items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10 md:flex">
-            USD <ChevronDown className="h-3 w-3" />
-          </button>
-          <button className="hidden items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10 md:flex">
-            <Globe className="h-3.5 w-3.5" /> EN
-          </button>
-          <button className="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10 md:flex">
-            <User className="h-4 w-4" /> Sign in
-          </button>
+        {/* Right side */}
+        <div className="flex items-center gap-1.5 md:gap-2">
+          {/* Currency */}
+          <div className="relative hidden md:block">
+            <button
+              onClick={() => { setCurOpen((v) => !v); setLangOpen(false); setUserOpen(false); }}
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10"
+              aria-label="Select currency"
+            >
+              {currency.code} <ChevronDown className="h-3 w-3" />
+            </button>
+            {curOpen && (
+              <DropdownPanel onClose={() => setCurOpen(false)}>
+                <SearchBox value={curQuery} onChange={setCurQuery} placeholder={t("common.currency")} />
+                <ul className="max-h-72 overflow-auto py-1">
+                  {filteredCurs.map((c) => (
+                    <li key={c.code}>
+                      <button
+                        onClick={() => { setCurrency(c.code); setCurOpen(false); setCurQuery(""); }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-7 font-bold">{c.symbol}</span>
+                          <span className="font-semibold">{c.code}</span>
+                          <span className="text-xs text-muted-foreground">{c.name}</span>
+                        </span>
+                        {c.code === currency.code && <Check className="h-4 w-4 text-primary" />}
+                      </button>
+                    </li>
+                  ))}
+                  {filteredCurs.length === 0 && <li className="px-3 py-4 text-center text-xs text-muted-foreground">No matches</li>}
+                </ul>
+              </DropdownPanel>
+            )}
+          </div>
+
+          {/* Language */}
+          <div className="relative hidden md:block">
+            <button
+              onClick={() => { setLangOpen((v) => !v); setCurOpen(false); setUserOpen(false); }}
+              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10"
+              aria-label="Select language"
+            >
+              <Globe className="h-3.5 w-3.5" /> {activeLang.code.toUpperCase()}
+            </button>
+            {langOpen && (
+              <DropdownPanel onClose={() => setLangOpen(false)}>
+                <SearchBox value={langQuery} onChange={setLangQuery} placeholder={t("common.language")} />
+                <ul className="max-h-72 overflow-auto py-1">
+                  {filteredLangs.map((l) => (
+                    <li key={l.code}>
+                      <button
+                        onClick={() => { void i18n.changeLanguage(l.code); setLangOpen(false); setLangQuery(""); }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-8 font-mono text-xs uppercase text-muted-foreground">{l.code}</span>
+                          <span className="font-semibold">{l.native}</span>
+                          <span className="text-xs text-muted-foreground">{l.label}</span>
+                        </span>
+                        {l.code === i18n.language && <Check className="h-4 w-4 text-primary" />}
+                      </button>
+                    </li>
+                  ))}
+                  {filteredLangs.length === 0 && <li className="px-3 py-4 text-center text-xs text-muted-foreground">No matches</li>}
+                </ul>
+              </DropdownPanel>
+            )}
+          </div>
+
+          {/* Partner with us (B2B) */}
+          <Link
+            to="/agents/apply"
+            className="hidden items-center gap-1.5 rounded-md border border-white/20 px-3 py-1.5 text-xs font-semibold text-primary-foreground/90 transition hover:bg-white/10 md:flex"
+          >
+            <Briefcase className="h-3.5 w-3.5" /> {t("cta.partner")}
+          </Link>
+
+          {/* Sign in / user menu */}
+          {user ? (
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => { setUserOpen((v) => !v); setLangOpen(false); setCurOpen(false); }}
+                className="flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-white/15"
+              >
+                <User className="h-4 w-4" /> {user.email?.split("@")[0]} <ChevronDown className="h-3 w-3" />
+              </button>
+              {userOpen && (
+                <DropdownPanel onClose={() => setUserOpen(false)}>
+                  <ul className="py-1">
+                    <li>
+                      <Link to="/dashboard" onClick={() => setUserOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary">
+                        <LayoutDashboard className="h-4 w-4" /> Dashboard
+                      </Link>
+                    </li>
+                    {hasRole("admin") && (
+                      <li>
+                        <Link to="/admin" onClick={() => setUserOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary">
+                          <Briefcase className="h-4 w-4" /> Admin
+                        </Link>
+                      </li>
+                    )}
+                    <li>
+                      <button onClick={handleSignOut} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-secondary">
+                        <LogOut className="h-4 w-4" /> Sign out
+                      </button>
+                    </li>
+                  </ul>
+                </DropdownPanel>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-primary-foreground/90 transition hover:bg-white/10 md:flex"
+            >
+              <User className="h-4 w-4" /> {t("cta.signIn")}
+            </Link>
+          )}
+
           <Link
             to="/consultations"
             className="hidden rounded-md bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90 md:inline-block"
           >
-            Book a Consult
+            {t("cta.bookConsult")}
           </Link>
+
           <button
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => setMobileOpen((v) => !v)}
             className="rounded-md p-2 text-primary-foreground hover:bg-white/10 lg:hidden"
             aria-label="Open menu"
           >
-            <Menu className="h-5 w-5" />
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {open && (
+      {/* Mobile drawer */}
+      {mobileOpen && (
         <div className="border-t border-white/10 bg-[var(--header-bg)] lg:hidden">
           <nav className="flex flex-col p-3">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                onClick={() => setOpen(false)}
+                onClick={() => setMobileOpen(false)}
                 className="rounded-md px-3 py-2.5 text-sm font-semibold text-primary-foreground/85 hover:bg-white/10"
               >
                 {item.label}
               </Link>
             ))}
+            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
+              <select
+                value={i18n.language}
+                onChange={(e) => void i18n.changeLanguage(e.target.value)}
+                className="rounded-md bg-white/10 px-2 py-2 text-xs font-semibold text-primary-foreground"
+                aria-label="Language"
+              >
+                {SUPPORTED_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code} className="bg-background text-foreground">
+                    {l.native} ({l.code.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+              <select
+                value={currency.code}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="rounded-md bg-white/10 px-2 py-2 text-xs font-semibold text-primary-foreground"
+                aria-label="Currency"
+              >
+                {currencies.map((c) => (
+                  <option key={c.code} value={c.code} className="bg-background text-foreground">
+                    {c.code} — {c.symbol}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
+              <Link to="/agents/apply" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md border border-white/20 px-3 py-2 text-sm font-semibold text-primary-foreground">
+                <Briefcase className="h-4 w-4" /> {t("cta.partner")}
+              </Link>
+              {user ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-primary-foreground">
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                  </Link>
+                  {hasRole("admin") && (
+                    <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-primary-foreground">
+                      <Briefcase className="h-4 w-4" /> Admin
+                    </Link>
+                  )}
+                  <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-destructive">
+                    <LogOut className="h-4 w-4" /> Sign out
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-primary-foreground">
+                  <User className="h-4 w-4" /> {t("cta.signIn")}
+                </Link>
+              )}
+              <Link to="/consultations" onClick={() => setMobileOpen(false)} className="rounded-md bg-gradient-accent px-3 py-2 text-center text-sm font-bold uppercase text-accent-foreground shadow-glow">
+                {t("cta.bookConsult")}
+              </Link>
+            </div>
           </nav>
         </div>
       )}
     </header>
+  );
+}
+
+function DropdownPanel({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  void onClose;
+  return (
+    <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-border bg-card shadow-elevated">
+      {children}
+    </div>
+  );
+}
+
+function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+      <input
+        autoFocus
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+      />
+    </div>
   );
 }
