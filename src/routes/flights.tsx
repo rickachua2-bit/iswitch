@@ -47,7 +47,7 @@ export const Route = createFileRoute("/flights")({
   head: () => ({
     meta: [
       { title: "Cheap Flights — Compare 500+ airlines | iSwitch" },
-      { name: "description", content: "Compare and book real-time flights worldwide via our NDC partner. Best price guarantee on 500+ airlines." },
+      { name: "description", content: "Compare and book real-time flights worldwide on iSwitch. Best price guarantee on 500+ airlines." },
       { property: "og:title", content: "Cheap Flights | iSwitch" },
       { property: "og:description", content: "Search and book the cheapest flights worldwide." },
     ],
