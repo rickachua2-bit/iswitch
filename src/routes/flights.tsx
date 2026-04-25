@@ -9,12 +9,16 @@ import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  origin: z.string().optional().default("LOS"),
-  destination: z.string().optional().default("DXB"),
-  departure: z.string().optional().default(""),
-  returnDate: z.string().optional().default(""),
-  travelers: z.string().optional().default("1 Adult, Economy"),
-  trip: z.string().optional().default("round-trip"),
+  origin: z.string().optional(),
+  destination: z.string().optional(),
+  departure: z.string().optional(),
+  returnDate: z.string().optional(),
+  travelers: z.string().optional(),
+  trip: z.string().optional(),
+  cabin: z.string().optional(),
+  stops: z.string().optional(),
+  airlines: z.string().optional(),
+  sort: z.enum(["best", "cheapest", "fastest"]).optional(),
 });
 
 function airportCode(s: string) {
