@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/hooks/use-currency";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
+import iswitchLogo from "@/assets/iswitch-logo.jpeg";
 
 export function Header({ transparent = false }: { transparent?: boolean }) {
   const { t, i18n } = useTranslation();
