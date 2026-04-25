@@ -32,6 +32,16 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
   return json as T;
 }
 
+async function searchCall<T = any>(path: string, body: unknown): Promise<T & { error?: string }> {
+  try {
+    return await call<T>(path, body);
+  } catch (error: any) {
+    const message = error?.message ?? "Travel provider is currently unavailable.";
+    console.error("Travsify search failed", { path, message });
+    return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message } as T & { error?: string };
+  }
+}
+
 /* ----------------------------- FLIGHTS ----------------------------- */
 
 export const searchFlights = createServerFn({ method: "POST" })
