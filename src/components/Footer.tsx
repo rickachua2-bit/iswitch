@@ -8,11 +8,12 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-6">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-accent">
-                <span className="font-display text-lg font-black text-accent-foreground">i</span>
-              </div>
-              <span className="font-display text-xl font-extrabold">iSwitch</span>
+            <Link to="/" className="flex items-center" aria-label="iSwitch home">
+              <img
+                src={iswitchLogo}
+                alt="iSwitch"
+                className="h-12 w-auto rounded-xl bg-white object-contain p-1.5 shadow-card"
+              />
             </Link>
             <p className="mt-3 max-w-sm text-sm text-primary-foreground/75">
               The global mobility super app. Flights, stays, visas, insurance, tours, pickups and expert paid consultations — all in one place.
