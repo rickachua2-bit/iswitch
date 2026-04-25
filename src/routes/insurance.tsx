@@ -34,7 +34,7 @@ export const Route = createFileRoute("/insurance")({
   head: () => ({
     meta: [
       { title: "Travel Insurance — Cover from $4/day | iSwitch" },
-      { name: "description", content: "Affordable travel and medical insurance powered by SafetyWing. Schengen-approved, COVID-19 cover, instant policy." },
+      { name: "description", content: "Affordable travel and medical insurance from iSwitch. Schengen-approved, COVID-19 cover, instant policy." },
       { property: "og:title", content: "Travel Insurance | iSwitch" },
       { property: "og:description", content: "Protect every trip with comprehensive travel insurance." },
     ],
