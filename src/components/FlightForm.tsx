@@ -259,13 +259,22 @@ function DateField({
   );
 }
 
-function SubmitBtn() {
+function SubmitBtn({ pending = false }: { pending?: boolean }) {
   return (
     <button
       type="submit"
-      className="flex h-full min-h-[58px] items-center justify-center gap-2 rounded-xl bg-gradient-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95"
+      disabled={pending}
+      className="flex h-full min-h-[58px] items-center justify-center gap-2 rounded-xl bg-gradient-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95 disabled:cursor-wait disabled:opacity-90"
     >
-      <Search className="h-4 w-4" strokeWidth={2.6} /> Search
+      {pending ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.6} /> Searching…
+        </>
+      ) : (
+        <>
+          <Search className="h-4 w-4" strokeWidth={2.6} /> Search
+        </>
+      )}
     </button>
   );
 }
