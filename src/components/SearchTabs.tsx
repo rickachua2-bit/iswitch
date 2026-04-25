@@ -4,6 +4,7 @@ import {
   Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap,
   MapPin, Calendar, Users, Search, ArrowLeftRight, Globe,
 } from "lucide-react";
+import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
 
