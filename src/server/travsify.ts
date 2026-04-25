@@ -32,13 +32,13 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
   return json as T;
 }
 
-async function searchCall<T = any>(path: string, body: unknown): Promise<T & { error?: string }> {
+async function searchCall(path: string, body: unknown): Promise<any> {
   try {
-    return await call<T>(path, body);
+    return await call(path, body);
   } catch (error: any) {
     const message = error?.message ?? "Travel provider is currently unavailable.";
     console.error("Travsify search failed", { path, message });
-    return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message } as T & { error?: string };
+    return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message };
   }
 }
 
