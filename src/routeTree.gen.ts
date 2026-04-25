@@ -12,11 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisasRouteImport } from './routes/visas'
 import { Route as ToursRouteImport } from './routes/tours'
 import { Route as StaysRouteImport } from './routes/stays'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PickupsRouteImport } from './routes/pickups'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InsuranceRouteImport } from './routes/insurance'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlightsRouteImport } from './routes/flights'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 
 const VisasRoute = VisasRouteImport.update({
   id: '/visas',
@@ -33,9 +39,24 @@ const StaysRoute = StaysRouteImport.update({
   path: '/stays',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PickupsRoute = PickupsRouteImport.update({
   id: '/pickups',
   path: '/pickups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsuranceRoute = InsuranceRouteImport.update({
@@ -43,9 +64,19 @@ const InsuranceRoute = InsuranceRouteImport.update({
   path: '/insurance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlightsRoute = FlightsRouteImport.update({
   id: '/flights',
   path: '/flights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultationsRoute = ConsultationsRouteImport.update({
@@ -58,80 +89,127 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentsApplyRoute = AgentsApplyRouteImport.update({
+  id: '/agents/apply',
+  path: '/agents/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultations': typeof ConsultationsRoute
+  '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
+  '/login': typeof LoginRoute
   '/pickups': typeof PickupsRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/stays': typeof StaysRoute
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
+  '/agents/apply': typeof AgentsApplyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultations': typeof ConsultationsRoute
+  '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
+  '/login': typeof LoginRoute
   '/pickups': typeof PickupsRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/stays': typeof StaysRoute
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
+  '/agents/apply': typeof AgentsApplyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/consultations': typeof ConsultationsRoute
+  '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
+  '/login': typeof LoginRoute
   '/pickups': typeof PickupsRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/stays': typeof StaysRoute
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
+  '/agents/apply': typeof AgentsApplyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/consultations'
+    | '/dashboard'
     | '/flights'
+    | '/forgot-password'
     | '/insurance'
+    | '/login'
     | '/pickups'
+    | '/reset-password'
+    | '/signup'
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/agents/apply'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/consultations'
+    | '/dashboard'
     | '/flights'
+    | '/forgot-password'
     | '/insurance'
+    | '/login'
     | '/pickups'
+    | '/reset-password'
+    | '/signup'
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/agents/apply'
   id:
     | '__root__'
     | '/'
     | '/consultations'
+    | '/dashboard'
     | '/flights'
+    | '/forgot-password'
     | '/insurance'
+    | '/login'
     | '/pickups'
+    | '/reset-password'
+    | '/signup'
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/agents/apply'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConsultationsRoute: typeof ConsultationsRoute
+  DashboardRoute: typeof DashboardRoute
   FlightsRoute: typeof FlightsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   InsuranceRoute: typeof InsuranceRoute
+  LoginRoute: typeof LoginRoute
   PickupsRoute: typeof PickupsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
   StaysRoute: typeof StaysRoute
   ToursRoute: typeof ToursRoute
   VisasRoute: typeof VisasRoute
+  AgentsApplyRoute: typeof AgentsApplyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -157,11 +235,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaysRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pickups': {
       id: '/pickups'
       path: '/pickups'
       fullPath: '/pickups'
       preLoaderRoute: typeof PickupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insurance': {
@@ -171,11 +270,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsuranceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flights': {
       id: '/flights'
       path: '/flights'
       fullPath: '/flights'
       preLoaderRoute: typeof FlightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consultations': {
@@ -192,18 +305,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agents/apply': {
+      id: '/agents/apply'
+      path: '/agents/apply'
+      fullPath: '/agents/apply'
+      preLoaderRoute: typeof AgentsApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConsultationsRoute: ConsultationsRoute,
+  DashboardRoute: DashboardRoute,
   FlightsRoute: FlightsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   InsuranceRoute: InsuranceRoute,
+  LoginRoute: LoginRoute,
   PickupsRoute: PickupsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
   StaysRoute: StaysRoute,
   ToursRoute: ToursRoute,
   VisasRoute: VisasRoute,
+  AgentsApplyRoute: AgentsApplyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
