@@ -7,6 +7,9 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : "",
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — iSwitch" },
@@ -18,14 +21,17 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const dest = redirect && redirect.startsWith("/") ? redirect : "/dashboard";
+
   if (!authLoading && user) {
-    void navigate({ to: "/dashboard" });
+    void navigate({ to: dest });
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -38,7 +44,7 @@ function LoginPage() {
       setError(signInError.message);
       return;
     }
-    void navigate({ to: "/dashboard" });
+    void navigate({ to: dest });
   }
 
   return (
@@ -47,7 +53,11 @@ function LoginPage() {
       <section className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16">
         <div className="text-center">
           <h1 className="font-display text-3xl font-extrabold text-foreground">Welcome back</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to your iSwitch account.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {redirect === "/consultations"
+              ? "Sign in to book your consultation."
+              : "Sign in to your iSwitch account."}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-card">
