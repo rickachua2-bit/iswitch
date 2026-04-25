@@ -23,8 +23,8 @@ export function SearchTabs() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
-      {/* Tab strip */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+      {/* Tab strip — all 7 services, evenly distributed on desktop, scrollable on mobile */}
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide md:grid md:grid-cols-7 md:gap-1.5">
         {TABS.map((t) => {
           const Icon = t.icon;
           const isActive = active === t.id;
@@ -32,14 +32,14 @@ export function SearchTabs() {
             <button
               key={t.id}
               onClick={() => setActive(t.id)}
-              className={`flex min-w-fit items-center gap-2 rounded-t-xl px-5 py-3 text-sm font-bold transition ${
+              className={`flex min-w-fit items-center justify-center gap-2 rounded-t-xl px-3 py-3 text-xs font-bold transition md:text-sm ${
                 isActive
                   ? "bg-card text-primary shadow-card"
                   : "bg-white/15 text-primary-foreground hover:bg-white/25"
               }`}
             >
-              <Icon className="h-4 w-4" strokeWidth={2.4} />
-              {t.label}
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+              <span className="whitespace-nowrap">{t.label}</span>
             </button>
           );
         })}
