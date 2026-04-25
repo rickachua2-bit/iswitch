@@ -38,7 +38,7 @@ export function Testimonials() {
           <h2 className="mt-3 font-display text-2xl font-extrabold text-foreground md:text-3xl">
             What our travelers say
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">Real reviews from real customers — verified by Trustpilot</p>
+          <p className="mt-1 text-sm text-muted-foreground">Real reviews from verified iSwitch customers</p>
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
