@@ -33,7 +33,7 @@ interface Props {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function FlightForm({ onSearch }: Props) {
+export function FlightForm({ onSearch, pending = false }: Props) {
   const [trip, setTrip] = useState<TripType>("round-trip");
   const [origin, setOrigin] = useState("Lagos (LOS)");
   const [destination, setDestination] = useState("London (LHR)");
