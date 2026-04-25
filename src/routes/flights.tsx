@@ -100,7 +100,7 @@ export const Route = createFileRoute("/flights")({
             infants: deps.infants ? Number(deps.infants) : undefined,
           };
       const res = await searchFlights({ data: payload });
-      return { offers: res?.data?.offers ?? [], query: deps, error: null as string | null };
+      return { offers: res?.data?.offers ?? [], query: deps, error: res?.error ?? null as string | null };
     } catch (e: any) {
       return { offers: [], query: deps, error: e?.message ?? "Search failed" };
     }
