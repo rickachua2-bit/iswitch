@@ -35,21 +35,24 @@ function friendlyError(status: number | null, raw: string): string {
 
 const REQUEST_TIMEOUT_MS = 25_000;
 
-async function call<T = any>(path: string, body: unknown): Promise<T> {
+async function call<T = any>(path: string, body: unknown, method: "POST" | "GET" = "POST"): Promise<T> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
   const requestId = crypto.randomUUID();
   let res: Response;
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${getKey()}`,
+      "X-Request-Id": requestId,
+    };
+    if (method === "POST") {
+      headers["Content-Type"] = "application/json";
+      headers["Idempotency-Key"] = requestId;
+    }
     res = await fetch(`${BASE}${path}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getKey()}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": requestId,
-        "X-Request-Id": requestId,
-      },
-      body: JSON.stringify(body),
+      method,
+      headers,
+      body: method === "POST" ? JSON.stringify(body) : undefined,
       signal: ctrl.signal,
     });
   } catch (err: any) {
