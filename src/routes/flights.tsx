@@ -1,13 +1,13 @@
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FlightForm } from "@/components/FlightForm";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
-import { searchFlights } from "@/server/travsify";
+import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
 import { toIata } from "@/lib/airports";
 import { Plane, Loader2, ArrowRight } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -22,9 +22,11 @@ const searchSchema = z.object({
   children: z.string().optional(),
   infants: z.string().optional(),
   segments: z.string().optional(),
-  stops: z.string().optional(),         // "any" | "0" | "1" | "2"
-  airlines: z.string().optional(),       // comma-separated IATA codes
+  stops: z.string().optional(),
+  airlines: z.string().optional(),
   sort: z.enum(["best", "cheapest", "fastest"]).optional(),
+  baggage: z.string().optional(),
+  recommended: z.string().optional(),
 });
 
 function adultsFromTravelers(s: string | undefined) {
@@ -53,56 +55,6 @@ export const Route = createFileRoute("/flights")({
     ],
   }),
   validateSearch: (s) => searchSchema.parse(s),
-  loaderDeps: ({ search }) => ({
-    origin: search.origin ?? "",
-    destination: search.destination ?? "",
-    departure: search.departure ?? "",
-    returnDate: search.returnDate ?? "",
-    travelers: search.travelers ?? "",
-    trip: search.trip ?? "round-trip",
-    cabin: search.cabin ?? "economy",
-    adults: search.adults ?? "",
-    children: search.children ?? "",
-    infants: search.infants ?? "",
-    segments: search.segments ?? "",
-  }),
-  loader: async ({ deps }) => {
-    const segs = parseSegments(deps.segments);
-    const isMulti = deps.trip === "multi-city" && segs.length >= 2;
-    const hasSimple = deps.departure && deps.origin && deps.destination;
-    if (!isMulti && !hasSimple) {
-      return { offers: [], query: deps, error: null as string | null };
-    }
-    try {
-      const adults = deps.adults ? Number(deps.adults) : adultsFromTravelers(deps.travelers);
-      const payload = isMulti
-        ? {
-            segments: segs.map((s) => ({
-              origin: toIata(s.origin),
-              destination: toIata(s.destination),
-              departure_date: s.departure,
-            })),
-            adults,
-            cabin: deps.cabin || undefined,
-            children: deps.children ? Number(deps.children) : undefined,
-            infants: deps.infants ? Number(deps.infants) : undefined,
-          }
-        : {
-            origin: toIata(deps.origin),
-            destination: toIata(deps.destination),
-            departure_date: deps.departure,
-            return_date: deps.returnDate || undefined,
-            adults,
-            cabin: deps.cabin || undefined,
-            children: deps.children ? Number(deps.children) : undefined,
-            infants: deps.infants ? Number(deps.infants) : undefined,
-          };
-      const res = await searchFlights({ data: payload });
-      return { offers: res?.data?.offers ?? [], query: deps, error: res?.error ?? null as string | null };
-    } catch (e: any) {
-      return { offers: [], query: deps, error: e?.message ?? "Search failed" };
-    }
-  },
   errorComponent: ({ error }) => (
     <div className="p-8 text-center text-destructive">Failed to load: {error.message}</div>
   ),
@@ -110,6 +62,7 @@ export const Route = createFileRoute("/flights")({
 });
 
 /* ----------------------------- helpers ----------------------------- */
+
 
 function fmtTime(iso?: string) {
   if (!iso) return "--:--";
