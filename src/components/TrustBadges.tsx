@@ -8,7 +8,7 @@ const BADGES = [
   { icon: ShieldCheck, text: "PCI-DSS Certified" },
   { icon: Lock, text: "SSL Encrypted" },
   { icon: BadgeCheck, text: "IATA Accredited" },
-  { icon: Award, text: "Trustpilot Excellent" },
+  { icon: Award, text: "5-Star Service" },
 ];
 
 export function TrustBadges() {
