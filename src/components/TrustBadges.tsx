@@ -1,7 +1,7 @@
 import { ShieldCheck, Lock, BadgeCheck, Award } from "lucide-react";
 
 const PARTNERS = [
-  "IATA", "ATOL", "Visa", "Mastercard", "PayPal", "Stripe", "Trustpilot", "Booking.com",
+  "IATA", "ATOL", "PCI-DSS", "GDPR", "ISO 27001", "SSL Secure", "24/7 Support", "Best Price",
 ];
 
 const BADGES = [
