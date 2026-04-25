@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap,
-  MapPin, Calendar, Users, Search, ArrowLeftRight,
+  MapPin, Calendar, Users, Search, ArrowLeftRight, Globe,
 } from "lucide-react";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
