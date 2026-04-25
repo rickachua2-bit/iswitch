@@ -1,13 +1,13 @@
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FlightForm } from "@/components/FlightForm";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
-import { searchFlights } from "@/server/travsify";
+import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
 import { toIata } from "@/lib/airports";
 import { Plane, Loader2, ArrowRight } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -22,9 +22,11 @@ const searchSchema = z.object({
   children: z.string().optional(),
   infants: z.string().optional(),
   segments: z.string().optional(),
-  stops: z.string().optional(),         // "any" | "0" | "1" | "2"
-  airlines: z.string().optional(),       // comma-separated IATA codes
+  stops: z.string().optional(),
+  airlines: z.string().optional(),
   sort: z.enum(["best", "cheapest", "fastest"]).optional(),
+  baggage: z.string().optional(),
+  recommended: z.string().optional(),
 });
 
 function adultsFromTravelers(s: string | undefined) {
@@ -53,56 +55,6 @@ export const Route = createFileRoute("/flights")({
     ],
   }),
   validateSearch: (s) => searchSchema.parse(s),
-  loaderDeps: ({ search }) => ({
-    origin: search.origin ?? "",
-    destination: search.destination ?? "",
-    departure: search.departure ?? "",
-    returnDate: search.returnDate ?? "",
-    travelers: search.travelers ?? "",
-    trip: search.trip ?? "round-trip",
-    cabin: search.cabin ?? "economy",
-    adults: search.adults ?? "",
-    children: search.children ?? "",
-    infants: search.infants ?? "",
-    segments: search.segments ?? "",
-  }),
-  loader: async ({ deps }) => {
-    const segs = parseSegments(deps.segments);
-    const isMulti = deps.trip === "multi-city" && segs.length >= 2;
-    const hasSimple = deps.departure && deps.origin && deps.destination;
-    if (!isMulti && !hasSimple) {
-      return { offers: [], query: deps, error: null as string | null };
-    }
-    try {
-      const adults = deps.adults ? Number(deps.adults) : adultsFromTravelers(deps.travelers);
-      const payload = isMulti
-        ? {
-            segments: segs.map((s) => ({
-              origin: toIata(s.origin),
-              destination: toIata(s.destination),
-              departure_date: s.departure,
-            })),
-            adults,
-            cabin: deps.cabin || undefined,
-            children: deps.children ? Number(deps.children) : undefined,
-            infants: deps.infants ? Number(deps.infants) : undefined,
-          }
-        : {
-            origin: toIata(deps.origin),
-            destination: toIata(deps.destination),
-            departure_date: deps.departure,
-            return_date: deps.returnDate || undefined,
-            adults,
-            cabin: deps.cabin || undefined,
-            children: deps.children ? Number(deps.children) : undefined,
-            infants: deps.infants ? Number(deps.infants) : undefined,
-          };
-      const res = await searchFlights({ data: payload });
-      return { offers: res?.data?.offers ?? [], query: deps, error: res?.error ?? null as string | null };
-    } catch (e: any) {
-      return { offers: [], query: deps, error: e?.message ?? "Search failed" };
-    }
-  },
   errorComponent: ({ error }) => (
     <div className="p-8 text-center text-destructive">Failed to load: {error.message}</div>
   ),
@@ -110,6 +62,7 @@ export const Route = createFileRoute("/flights")({
 });
 
 /* ----------------------------- helpers ----------------------------- */
+
 
 function fmtTime(iso?: string) {
   if (!iso) return "--:--";
@@ -189,16 +142,172 @@ function offerDurationMin(o: any): number {
   return slices.reduce((sum, s) => sum + parseDuration(s.duration), 0);
 }
 
+/* ----------------------------- polling hook ----------------------------- */
+
+type SearchState = {
+  status: "idle" | "starting" | "polling" | "completed" | "failed";
+  offers: any[];
+  error: string | null;
+};
+
+function useFlightSearch(search: any): SearchState & { query: any } {
+  const [state, setState] = useState<SearchState>({
+    status: "idle",
+    offers: [],
+    error: null,
+  });
+
+  const segs = parseSegments(search.segments);
+  const isMulti = search.trip === "multi-city" && segs.length >= 2;
+  const hasSimple = !!(search.departure && search.origin && search.destination);
+  const canSearch = isMulti || hasSimple;
+
+  const sig = JSON.stringify({
+    trip: search.trip ?? "round-trip",
+    origin: search.origin ?? "",
+    destination: search.destination ?? "",
+    departure: search.departure ?? "",
+    returnDate: search.returnDate ?? "",
+    adults: search.adults ?? "",
+    children: search.children ?? "",
+    infants: search.infants ?? "",
+    cabin: search.cabin ?? "",
+    segments: search.segments ?? "",
+  });
+
+  const activeSig = useRef<string>("");
+
+  useEffect(() => {
+    if (!canSearch) {
+      setState({ status: "idle", offers: [], error: null });
+      return;
+    }
+
+    activeSig.current = sig;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    setState({ status: "starting", offers: [], error: null });
+
+    const adults = search.adults ? Number(search.adults) : adultsFromTravelers(search.travelers);
+    const payload: any = isMulti
+      ? {
+          segments: segs.map((s) => ({
+            origin: toIata(s.origin),
+            destination: toIata(s.destination),
+            departure_date: s.departure,
+          })),
+          adults,
+          cabin: search.cabin || undefined,
+          children: search.children ? Number(search.children) : undefined,
+          infants: search.infants ? Number(search.infants) : undefined,
+        }
+      : {
+          origin: toIata(search.origin),
+          destination: toIata(search.destination),
+          departure_date: search.departure,
+          return_date: search.returnDate || undefined,
+          adults,
+          cabin: search.cabin || undefined,
+          children: search.children ? Number(search.children) : undefined,
+          infants: search.infants ? Number(search.infants) : undefined,
+        };
+
+    const isStale = () => cancelled || activeSig.current !== sig;
+
+    (async () => {
+      try {
+        const start: any = await startFlightSearch({ data: payload });
+        if (isStale()) return;
+
+        if (start?.error && !start?.search_id) {
+          setState({ status: "failed", offers: [], error: start.error });
+          return;
+        }
+
+        const inlineOffers: any[] = start?.data?.offers ?? [];
+        if (start?.search_id) {
+          setState({ status: "polling", offers: inlineOffers, error: null });
+
+          const MAX_ATTEMPTS = 30; // ~60s of polling
+          let attempts = 0;
+
+          const poll = async () => {
+            if (isStale()) return;
+            attempts += 1;
+            const res: any = await pollFlightSearch({
+              data: { search_id: start.search_id },
+            });
+            if (isStale()) return;
+
+            const offers: any[] = res?.data?.offers ?? [];
+            if (res?.status === "completed") {
+              setState({ status: "completed", offers, error: null });
+              return;
+            }
+            if (res?.status === "failed") {
+              setState({
+                status: "failed",
+                offers,
+                error: res?.error ?? "Search failed.",
+              });
+              return;
+            }
+            setState({ status: "polling", offers, error: null });
+
+            if (attempts >= MAX_ATTEMPTS) {
+              setState({
+                status: offers.length ? "completed" : "failed",
+                offers,
+                error: offers.length ? null : "Search took too long. Please try again.",
+              });
+              return;
+            }
+            timer = setTimeout(poll, 2000);
+          };
+
+          timer = setTimeout(poll, 2000);
+          return;
+        }
+
+        setState({ status: "completed", offers: inlineOffers, error: null });
+      } catch (err: any) {
+        if (isStale()) return;
+        setState({
+          status: "failed",
+          offers: [],
+          error: err?.message ?? "Search failed.",
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+
+  return {
+    ...state,
+    query: {
+      origin: search.origin ?? "",
+      destination: search.destination ?? "",
+      departure: search.departure ?? "",
+      returnDate: search.returnDate ?? "",
+      trip: search.trip ?? "round-trip",
+    },
+  };
+}
+
 /* ----------------------------- page ----------------------------- */
 
 function FlightsPage() {
-  const { offers, query, error } = Route.useLoaderData() as any;
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
-  const isSearching = useRouterState({
-    select: (s) => s.isLoading || s.isTransitioning,
-  });
+  const { offers, error, status, query } = useFlightSearch(search);
+  const isSearching = status === "starting" || status === "polling";
 
   const hasSearched = !!query.departure && !!query.origin && !!query.destination;
   const sort = search.sort ?? "best";

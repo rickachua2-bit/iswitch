@@ -35,21 +35,24 @@ function friendlyError(status: number | null, raw: string): string {
 
 const REQUEST_TIMEOUT_MS = 25_000;
 
-async function call<T = any>(path: string, body: unknown): Promise<T> {
+async function call<T = any>(path: string, body: unknown, method: "POST" | "GET" = "POST"): Promise<T> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
   const requestId = crypto.randomUUID();
   let res: Response;
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${getKey()}`,
+      "X-Request-Id": requestId,
+    };
+    if (method === "POST") {
+      headers["Content-Type"] = "application/json";
+      headers["Idempotency-Key"] = requestId;
+    }
     res = await fetch(`${BASE}${path}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getKey()}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": requestId,
-        "X-Request-Id": requestId,
-      },
-      body: JSON.stringify(body),
+      method,
+      headers,
+      body: method === "POST" ? JSON.stringify(body) : undefined,
       signal: ctrl.signal,
     });
   } catch (err: any) {
@@ -111,6 +114,81 @@ async function searchCall(path: string, body: unknown): Promise<any> {
 
 /* ----------------------------- FLIGHTS ----------------------------- */
 
+function normalizeFlightData(d: any) {
+  d = d ?? {};
+  if (!d.offers && Array.isArray(d.flights)) d.offers = d.flights;
+  if (!d.offers && Array.isArray(d.results)) d.offers = d.results;
+  return d;
+}
+
+/**
+ * Start a flight search. Returns a `search_id` quickly so the client can
+ * poll `pollFlightSearch` instead of holding the edge worker open past
+ * the 25s upstream timeout.
+ */
+export const startFlightSearch = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      origin?: string;
+      destination?: string;
+      departure_date?: string;
+      return_date?: string;
+      segments?: Array<{ origin: string; destination: string; departure_date: string }>;
+      adults: number;
+      children?: number;
+      infants?: number;
+      cabin?: string;
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    try {
+      const res: any = await call("/flights/search", data);
+      const payload = res?.data ?? res ?? {};
+      const search_id: string | undefined =
+        payload.search_id || payload.id || res?.search_id || res?.id;
+
+      // If the upstream returned offers synchronously (small searches),
+      // forward them so the client can render immediately.
+      const inlineData = normalizeFlightData(payload);
+      const hasInlineOffers = Array.isArray(inlineData.offers) && inlineData.offers.length > 0;
+
+      if (!search_id && !hasInlineOffers) {
+        return { search_id: null, data: { offers: [] }, error: "No results returned." };
+      }
+      return { search_id: search_id ?? null, data: inlineData, error: null };
+    } catch (err: any) {
+      const status: number | null = err?.status ?? null;
+      const requestId: string | null = err?.requestId ?? null;
+      const message = friendlyError(status, err?.message ?? "");
+      console.error("Travel search start failed", { status, requestId, raw: err?.message });
+      return { search_id: null, data: { offers: [] }, error: message, requestId };
+    }
+  });
+
+/**
+ * Poll a previously-started flight search. The client should call this
+ * every ~2 seconds until `status === "completed"` or `"failed"`.
+ */
+export const pollFlightSearch = createServerFn({ method: "POST" })
+  .inputValidator((input: { search_id: string }) => input)
+  .handler(async ({ data }) => {
+    try {
+      const res: any = await call(`/flights/search/${encodeURIComponent(data.search_id)}`, null, "GET");
+      const payload = res?.data ?? res ?? {};
+      const status: string =
+        payload.status || res?.status || (Array.isArray(payload.offers) ? "completed" : "processing");
+      const normalized = normalizeFlightData(payload);
+      return { status, data: normalized, error: null };
+    } catch (err: any) {
+      const status: number | null = err?.status ?? null;
+      const requestId: string | null = err?.requestId ?? null;
+      const message = friendlyError(status, err?.message ?? "");
+      console.error("Travel search poll failed", { status, requestId, raw: err?.message });
+      return { status: "failed", data: { offers: [] }, error: message, requestId };
+    }
+  });
+
+/** @deprecated Prefer startFlightSearch + pollFlightSearch from the client. */
 export const searchFlights = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
