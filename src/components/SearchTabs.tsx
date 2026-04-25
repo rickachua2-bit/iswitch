@@ -4,6 +4,7 @@ import {
   Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap,
   MapPin, Calendar, Users, Search, ArrowLeftRight, Globe,
 } from "lucide-react";
+import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
 
@@ -129,17 +130,13 @@ function FlightForm({ onSearch }: { onSearch: (q: Record<string, string>) => voi
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_1fr_1.1fr_auto]">
         <div className="relative md:col-span-2">
           <div className="grid grid-cols-2 gap-3">
-            <Field icon={MapPin} label="From">
-              <TextInput value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="City or airport" />
-            </Field>
-            <Field icon={MapPin} label="To">
-              <TextInput value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City or airport" />
-            </Field>
+            <AirportAutocomplete label="From" value={origin} onChange={(d) => setOrigin(d)} />
+            <AirportAutocomplete label="To" value={destination} onChange={(d) => setDestination(d)} />
           </div>
           <button
             type="button"
             onClick={() => { const o = origin; setOrigin(destination); setDestination(o); }}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card p-1.5 shadow-card hover:bg-secondary"
+            className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card p-1.5 shadow-card hover:bg-secondary"
             aria-label="Swap"
           >
             <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
