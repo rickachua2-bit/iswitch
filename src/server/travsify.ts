@@ -156,3 +156,37 @@ export const bookInsurance = createServerFn({ method: "POST" })
     }) => input,
   )
   .handler(async ({ data }) => call("/insurance/bookings", data));
+
+/* ---------------------------- TRANSFERS ---------------------------- */
+
+export const searchTransfers = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      pickup: string;
+      drop: string;
+      date: string;
+      time: string;
+      passengers?: number;
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    const res: any = await searchCall("/transfers/search", {
+      pickup_location: data.pickup,
+      dropoff_location: data.drop,
+      pickup_datetime: `${data.date}T${data.time || "12:00"}:00`,
+      passengers: data.passengers ?? 2,
+    });
+    const d = res?.data ?? {};
+    if (d && !d.vehicles && Array.isArray(d.transfers)) d.vehicles = d.transfers;
+    if (d && !d.vehicles && Array.isArray(d.offers)) d.vehicles = d.offers;
+    return { ...res, data: { ...d, vehicles: d.vehicles ?? [] } };
+  });
+
+export const bookTransfer = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      vehicle_id: string;
+      passenger: { firstName: string; lastName: string; email: string; phone?: string };
+    }) => input,
+  )
+  .handler(async ({ data }) => call("/transfers/bookings", data));
