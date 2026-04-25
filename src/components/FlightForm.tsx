@@ -171,7 +171,7 @@ function SimpleGrid(props: {
       )}
 
       <TravelersPopover value={travelers} onChange={setTravelers} />
-      <SubmitBtn />
+      <SubmitBtn pending={pending} />
     </div>
   );
 }
