@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Globe, Send, Camera, Briefcase, Mail, Phone, MapPin } from "lucide-react";
+import iswitchLogo from "@/assets/iswitch-logo.jpeg";
 
 export function Footer() {
   return (
