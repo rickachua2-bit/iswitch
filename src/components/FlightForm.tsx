@@ -133,9 +133,10 @@ function SimpleGrid(props: {
   departure: string; setDeparture: (s: string) => void;
   returnDate: string; setReturnDate: (s: string) => void;
   travelers: TravelersValue; setTravelers: (v: TravelersValue) => void;
+  pending?: boolean;
 }) {
   const { trip, origin, setOrigin, destination, setDestination,
-    departure, setDeparture, returnDate, setReturnDate, travelers, setTravelers } = props;
+    departure, setDeparture, returnDate, setReturnDate, travelers, setTravelers, pending } = props;
   const isRound = trip === "round-trip";
   const cols = isRound
     ? "md:grid-cols-[1fr_1fr_1fr_1fr_1.1fr_auto]"
