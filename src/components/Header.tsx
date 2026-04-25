@@ -162,7 +162,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
             to="/agents/apply"
             className="hidden items-center gap-1.5 rounded-md border border-white/20 px-3 py-1.5 text-xs font-semibold text-primary-foreground/90 transition hover:bg-white/10 md:flex"
           >
-            <Briefcase className="h-3.5 w-3.5" /> {t("cta.partner")}
+            <Briefcase className="h-3.5 w-3.5" /> B2B
           </Link>
 
           {/* Sign in / user menu */}
@@ -211,7 +211,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
             to="/consultations"
             className="hidden rounded-md bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90 md:inline-block"
           >
-            {t("cta.bookConsult")}
+            Consult
           </Link>
 
           <button
@@ -266,7 +266,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
             </div>
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link to="/agents/apply" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md border border-white/20 px-3 py-2 text-sm font-semibold text-primary-foreground">
-                <Briefcase className="h-4 w-4" /> {t("cta.partner")}
+                <Briefcase className="h-4 w-4" /> B2B
               </Link>
               {user ? (
                 <>
@@ -288,7 +288,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
                 </Link>
               )}
               <Link to="/consultations" onClick={() => setMobileOpen(false)} className="rounded-md bg-gradient-accent px-3 py-2 text-center text-sm font-bold uppercase text-accent-foreground shadow-glow">
-                {t("cta.bookConsult")}
+                Consult
               </Link>
             </div>
           </nav>
