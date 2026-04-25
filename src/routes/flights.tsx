@@ -1,15 +1,13 @@
-import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BookingDialog } from "@/components/BookingDialog";
 import { FlightForm } from "@/components/FlightForm";
-import { searchFlights, bookFlight } from "@/server/travsify";
+import { FlightResultCard } from "@/components/flights/FlightResultCard";
+import { FlightFilters } from "@/components/flights/FlightFilters";
+import { searchFlights } from "@/server/travsify";
 import { toIata } from "@/lib/airports";
-import {
-  Plane, Loader2,
-  Filter, Briefcase, Luggage, Wifi, Clock, ArrowRight, ChevronDown,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+import { Plane, Loader2, ArrowRight } from "lucide-react";
+import { useMemo } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
