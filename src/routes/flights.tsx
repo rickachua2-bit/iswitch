@@ -259,7 +259,9 @@ function FlightsPage() {
       <FlightSearchBar />
 
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        {!hasSearched ? (
+        {isSearching ? (
+          <SearchingState query={query} />
+        ) : !hasSearched ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
             Enter your origin, destination and departure date above to search live flights.
           </div>
@@ -267,7 +269,7 @@ function FlightsPage() {
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">{error}</div>
         ) : offers.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
-            <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> No offers found. Try different dates or airports.
+            <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
