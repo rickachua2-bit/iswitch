@@ -7,14 +7,14 @@ import {
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
 
-const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = [
-  { id: "flights", label: "Flights", icon: Plane, route: "/flights" },
-  { id: "stays", label: "Stays", icon: Hotel, route: "/stays" },
-  { id: "visas", label: "Visas", icon: FileCheck, route: "/visas" },
-  { id: "insurance", label: "Insurance", icon: Shield, route: "/insurance" },
-  { id: "tours", label: "Tours", icon: Map, route: "/tours" },
-  { id: "pickups", label: "Pickups", icon: Car, route: "/pickups" },
-  { id: "consultations", label: "Consultations", icon: GraduationCap, route: "/consultations" },
+const TABS: { id: TabId; label: string; sub: string; icon: typeof Plane; route: string }[] = [
+  { id: "flights", label: "Fly", sub: "Flights", icon: Plane, route: "/flights" },
+  { id: "stays", label: "Sleep", sub: "Stays", icon: Hotel, route: "/stays" },
+  { id: "visas", label: "Visa Pro", sub: "Visas", icon: FileCheck, route: "/visas" },
+  { id: "insurance", label: "Cover", sub: "Insurance", icon: Shield, route: "/insurance" },
+  { id: "tours", label: "Explore", sub: "Tours", icon: Map, route: "/tours" },
+  { id: "pickups", label: "Ride", sub: "Pickups", icon: Car, route: "/pickups" },
+  { id: "consultations", label: "Advise", sub: "Consultations", icon: GraduationCap, route: "/consultations" },
 ];
 
 export function SearchTabs() {
