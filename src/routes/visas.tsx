@@ -14,6 +14,15 @@ const searchSchema = z.object({
   visaType: z.string().optional().default("Tourist"),
 });
 
+// Travsify accepts: tourism | business | transit
+function toPurpose(v: string): "tourism" | "business" | "transit" {
+  const k = v.trim().toLowerCase();
+  if (k === "business") return "business";
+  if (k === "transit") return "transit";
+  // tourist, student, work, leisure, holiday → tourism
+  return "tourism";
+}
+
 const COUNTRY_CC: Record<string, string> = {
   nigeria: "NG", "united kingdom": "GB", uk: "GB", "united states": "US", usa: "US",
   canada: "CA", germany: "DE", france: "FR", "united arab emirates": "AE", uae: "AE",
@@ -45,7 +54,7 @@ export const Route = createFileRoute("/visas")({
         data: {
           nationality: toCC(deps.nationality),
           destination: toCC(deps.destination),
-          purpose: deps.visaType.toLowerCase(),
+          purpose: toPurpose(deps.visaType),
         },
       });
       return { visas: res?.data?.visas ?? [], query: deps, error: null as string | null };
