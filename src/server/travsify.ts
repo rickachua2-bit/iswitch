@@ -38,6 +38,7 @@ const REQUEST_TIMEOUT_MS = 25_000;
 async function call<T = any>(path: string, body: unknown): Promise<T> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  const requestId = crypto.randomUUID();
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
@@ -45,7 +46,8 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
       headers: {
         Authorization: `Bearer ${getKey()}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": crypto.randomUUID(),
+        "Idempotency-Key": requestId,
+        "X-Request-Id": requestId,
       },
       body: JSON.stringify(body),
       signal: ctrl.signal,
@@ -56,9 +58,11 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
     const msg = aborted ? "timeout" : err?.message || "network error";
     const e = new Error(msg) as any;
     e.status = aborted ? 524 : null;
+    e.requestId = requestId;
     throw e;
   }
   clearTimeout(timer);
+  const upstreamReqId = res.headers.get("x-request-id") || res.headers.get("cf-ray") || requestId;
   const text = await res.text();
   let json: any = null;
   try {
@@ -70,6 +74,7 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
     const detail = json?.error?.message || json?.message || text || `HTTP ${res.status}`;
     const e = new Error(detail) as any;
     e.status = res.status;
+    e.requestId = upstreamReqId;
     throw e;
   }
   return json as T;
@@ -98,9 +103,10 @@ async function searchCall(path: string, body: unknown): Promise<any> {
     }
   }
   const status: number | null = lastErr?.status ?? null;
+  const requestId: string | null = lastErr?.requestId ?? null;
   const message = friendlyError(status, lastErr?.message ?? "");
-  console.error("Travel search failed", { path, status, raw: lastErr?.message });
-  return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message };
+  console.error("Travel search failed", { path, status, requestId, raw: lastErr?.message });
+  return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message, requestId };
 }
 
 /* ----------------------------- FLIGHTS ----------------------------- */
