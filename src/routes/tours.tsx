@@ -18,7 +18,7 @@ export const Route = createFileRoute("/tours")({
   head: () => ({
     meta: [
       { title: "Tours & Experiences worldwide | iSwitch" },
-      { name: "description", content: "Curated tours and unique local experiences powered by GetYourGuide. Skip-the-line, food tours, day trips and more." },
+      { name: "description", content: "Curated tours and unique local experiences from iSwitch. Skip-the-line, food tours, day trips and more." },
       { property: "og:title", content: "Tours & Experiences | iSwitch" },
       { property: "og:description", content: "Discover the world with curated tours and local experiences." },
     ],
