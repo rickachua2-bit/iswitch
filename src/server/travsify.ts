@@ -58,7 +58,7 @@ export const searchFlights = createServerFn({ method: "POST" })
       cabin?: string;
     }) => input,
   )
-  .handler(async ({ data }) => call("/flights/search", data));
+  .handler(async ({ data }) => searchCall("/flights/search", data));
 
 export const bookFlight = createServerFn({ method: "POST" })
   .inputValidator(
@@ -81,7 +81,7 @@ export const searchHotels = createServerFn({ method: "POST" })
       currency?: string;
     }) => input,
   )
-  .handler(async ({ data }) => call("/hotels/search", data));
+  .handler(async ({ data }) => searchCall("/hotels/search", data));
 
 export const bookHotel = createServerFn({ method: "POST" })
   .inputValidator(
@@ -99,7 +99,7 @@ export const searchTours = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { destination: string; date: string; participants: number }) => input,
   )
-  .handler(async ({ data }) => call("/tours/search", data));
+  .handler(async ({ data }) => searchCall("/tours/search", data));
 
 export const bookTour = createServerFn({ method: "POST" })
   .inputValidator(
@@ -116,7 +116,7 @@ export const searchVisas = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { nationality: string; destination: string; purpose: string }) => input,
   )
-  .handler(async ({ data }) => call("/visas/search", data));
+  .handler(async ({ data }) => searchCall("/visas/search", data));
 
 export const bookVisa = createServerFn({ method: "POST" })
   .inputValidator(
@@ -139,7 +139,7 @@ export const searchInsurance = createServerFn({ method: "POST" })
       travelers: number;
     }) => input,
   )
-  .handler(async ({ data }) => call("/insurance/search", data));
+  .handler(async ({ data }) => searchCall("/insurance/search", data));
 
 export const bookInsurance = createServerFn({ method: "POST" })
   .inputValidator(
