@@ -256,7 +256,7 @@ function FlightsPage() {
       <Header />
 
       {/* compact gradient search bar (Trip.com-style) */}
-      <FlightSearchBar />
+      <FlightSearchBar pending={isSearching} />
 
       <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
         {isSearching ? (
