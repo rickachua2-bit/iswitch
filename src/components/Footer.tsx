@@ -38,9 +38,9 @@ export function Footer() {
           <div>
             <div className="mb-3 font-display text-sm font-bold uppercase tracking-wider text-accent">Contact</div>
             <ul className="space-y-2 text-sm text-primary-foreground/75">
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> hello@iswitch.com</li>
-              <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> +234 800 ISWITCH</li>
-              <li className="flex items-start gap-2"><MapPin className="h-3.5 w-3.5 mt-0.5" /> Lagos · London · Dubai · Toronto</li>
+              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /><span>hello@iswitch.com</span></li>
+              <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /><span>+234 800 ISWITCH</span></li>
+              <li className="flex items-start gap-2"><MapPin className="h-3.5 w-3.5 mt-0.5" /><span>Lagos · London · Dubai · Toronto</span></li>
             </ul>
           </div>
         </div>
