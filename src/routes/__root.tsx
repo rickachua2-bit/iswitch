@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import { AuthProvider } from "@/hooks/use-auth";
+import { CurrencyProvider } from "@/hooks/use-currency";
+import "@/i18n";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -74,7 +76,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
+      <CurrencyProvider>
+        <Outlet />
+      </CurrencyProvider>
     </AuthProvider>
   );
 }
