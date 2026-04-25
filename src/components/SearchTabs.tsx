@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 
-type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
+type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
 const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = [
   { id: "flights", label: "Flights", icon: Plane, route: "/flights" },
@@ -15,7 +15,6 @@ const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = 
   { id: "insurance", label: "Insurance", icon: Shield, route: "/insurance" },
   { id: "tours", label: "Tours", icon: Map, route: "/tours" },
   { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
-  { id: "consultations", label: "Consultations", icon: GraduationCap, route: "/consultations" },
 ];
 
 export function SearchTabs() {
@@ -25,7 +24,7 @@ export function SearchTabs() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
       {/* Tab strip — all 7 services, evenly distributed on desktop, scrollable on mobile */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide md:grid md:grid-cols-7 md:gap-1.5">
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide md:grid md:grid-cols-6 md:gap-1.5">
         {TABS.map((t) => {
           const Icon = t.icon;
           const isActive = active === t.id;
@@ -54,7 +53,6 @@ export function SearchTabs() {
         {active === "insurance" && <InsuranceForm onSearch={(q) => navigate({ to: "/insurance", search: q as never })} />}
         {active === "tours" && <ToursForm onSearch={(q) => navigate({ to: "/tours", search: q as never })} />}
         {active === "pickups" && <PickupForm onSearch={(q) => navigate({ to: "/pickups", search: q as never })} />}
-        {active === "consultations" && <ConsultForm onSearch={(q) => navigate({ to: "/consultations", search: q as never })} />}
       </div>
     </div>
   );
