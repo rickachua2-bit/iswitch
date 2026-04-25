@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { AirportAutocomplete } from "@/components/AirportAutocomplete";
 
-type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups" | "consultations";
+type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
 const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = [
   { id: "flights", label: "Flights", icon: Plane, route: "/flights" },
@@ -15,7 +15,6 @@ const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = 
   { id: "insurance", label: "Insurance", icon: Shield, route: "/insurance" },
   { id: "tours", label: "Tours", icon: Map, route: "/tours" },
   { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
-  { id: "consultations", label: "Consultations", icon: GraduationCap, route: "/consultations" },
 ];
 
 export function SearchTabs() {
