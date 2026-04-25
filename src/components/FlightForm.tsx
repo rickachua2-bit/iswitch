@@ -184,8 +184,9 @@ function MultiCity(props: {
   removeSegment: (i: number) => void;
   travelers: TravelersValue;
   setTravelers: (v: TravelersValue) => void;
+  pending?: boolean;
 }) {
-  const { segments, updateSegment, addSegment, removeSegment, travelers, setTravelers } = props;
+  const { segments, updateSegment, addSegment, removeSegment, travelers, setTravelers, pending } = props;
   return (
     <div className="space-y-3">
       {segments.map((seg, i) => (
