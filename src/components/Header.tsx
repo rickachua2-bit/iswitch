@@ -3,13 +3,13 @@ import { ChevronDown, Globe, Menu, User } from "lucide-react";
 import { useState } from "react";
 
 const NAV = [
-  { label: "Fly", to: "/flights" },
-  { label: "Sleep", to: "/stays" },
-  { label: "Visa Pro", to: "/visas" },
-  { label: "Cover", to: "/insurance" },
-  { label: "Explore", to: "/tours" },
-  { label: "Ride", to: "/pickups" },
-  { label: "Advise", to: "/consultations" },
+  { label: "Flights", to: "/flights" },
+  { label: "Hotels", to: "/stays" },
+  { label: "Visas", to: "/visas" },
+  { label: "Insurance", to: "/insurance" },
+  { label: "Tours", to: "/tours" },
+  { label: "Car Transfers", to: "/pickups" },
+  { label: "Consultations", to: "/consultations" },
 ] as const;
 
 export function Header({ transparent = false }: { transparent?: boolean }) {
