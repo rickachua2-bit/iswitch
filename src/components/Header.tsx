@@ -40,7 +40,6 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
     { label: t("nav.insurance"), to: "/insurance" as const },
     { label: t("nav.tours"), to: "/tours" as const },
     { label: t("nav.transfers"), to: "/pickups" as const },
-    { label: t("nav.consultations"), to: "/consultations" as const },
   ];
 
   const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) ?? SUPPORTED_LANGUAGES[0];
