@@ -23,6 +23,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 
 const VisasRoute = VisasRouteImport.update({
@@ -95,6 +96,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FlightsBookRoute = FlightsBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => FlightsRoute,
+} as any)
 const AgentsApplyRoute = AgentsApplyRouteImport.update({
   id: '/agents/apply',
   path: '/agents/apply',
@@ -106,7 +112,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRoute
-  '/flights': typeof FlightsRoute
+  '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
   '/login': typeof LoginRoute
@@ -117,13 +123,14 @@ export interface FileRoutesByFullPath {
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/flights/book': typeof FlightsBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRoute
-  '/flights': typeof FlightsRoute
+  '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
   '/login': typeof LoginRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/flights/book': typeof FlightsBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,7 +149,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRoute
-  '/flights': typeof FlightsRoute
+  '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRoute
   '/login': typeof LoginRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/tours': typeof ToursRoute
   '/visas': typeof VisasRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/flights/book': typeof FlightsBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/flights/book'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/flights/book'
   id:
     | '__root__'
     | '/'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/flights/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -212,7 +224,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ConsultationsRoute: typeof ConsultationsRoute
   DashboardRoute: typeof DashboardRoute
-  FlightsRoute: typeof FlightsRoute
+  FlightsRoute: typeof FlightsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InsuranceRoute: typeof InsuranceRoute
   LoginRoute: typeof LoginRoute
@@ -325,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/flights/book': {
+      id: '/flights/book'
+      path: '/book'
+      fullPath: '/flights/book'
+      preLoaderRoute: typeof FlightsBookRouteImport
+      parentRoute: typeof FlightsRoute
+    }
     '/agents/apply': {
       id: '/agents/apply'
       path: '/agents/apply'
@@ -335,12 +354,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface FlightsRouteChildren {
+  FlightsBookRoute: typeof FlightsBookRoute
+}
+
+const FlightsRouteChildren: FlightsRouteChildren = {
+  FlightsBookRoute: FlightsBookRoute,
+}
+
+const FlightsRouteWithChildren =
+  FlightsRoute._addFileChildren(FlightsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ConsultationsRoute: ConsultationsRoute,
   DashboardRoute: DashboardRoute,
-  FlightsRoute: FlightsRoute,
+  FlightsRoute: FlightsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   InsuranceRoute: InsuranceRoute,
   LoginRoute: LoginRoute,

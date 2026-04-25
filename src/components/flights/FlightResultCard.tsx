@@ -61,7 +61,10 @@ export function FlightResultCard({ offer }: { offer: any }) {
   function selectFare(fareId: string) {
     try {
       sessionStorage.setItem(`offer:${offer.id}`, JSON.stringify(offer));
-      sessionStorage.setItem(`fare:${offer.id}:${fareId}`, JSON.stringify(fares.find((f) => f.id === fareId)));
+      sessionStorage.setItem(
+        `fare:${offer.id}:${fareId}`,
+        JSON.stringify(fares.find((f: any) => f.id === fareId)),
+      );
     } catch { /* ignore */ }
     navigate({
       to: "/flights/book",
