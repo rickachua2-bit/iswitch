@@ -1,0 +1,347 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { Loader2, Briefcase, Upload, FileCheck2, Clock, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { useAuth } from "@/hooks/use-auth";
+
+export const Route = createFileRoute("/agents/apply")({
+  head: () => ({
+    meta: [
+      { title: "Apply as agent — iSwitch B2B" },
+      { name: "description", content: "Become an iSwitch travel agent. Earn commissions on every booking. KYB verification required." },
+    ],
+  }),
+  component: AgentApplyPage,
+});
+
+type ApplicationStatus = "pending" | "approved" | "rejected";
+
+function AgentApplyPage() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [mode, setMode] = useState<"signup" | "kyb" | "status">("signup");
+
+  // Signup fields
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // KYB fields
+  const [businessName, setBusinessName] = useState("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [country, setCountry] = useState("Nigeria");
+  const [contactPhone, setContactPhone] = useState("");
+  const [businessType, setBusinessType] = useState("Travel Agency");
+  const [website, setWebsite] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+
+  const [existingStatus, setExistingStatus] = useState<ApplicationStatus | null>(null);
+  const [existingBusiness, setExistingBusiness] = useState<string | null>(null);
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Decide which screen to show whenever auth/profile loads
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setMode("signup");
+      return;
+    }
+    void (async () => {
+      const { data } = await supabase
+        .from("agent_applications")
+        .select("status, business_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setExistingStatus(data.status as ApplicationStatus);
+        setExistingBusiness(data.business_name);
+        setMode("status");
+      } else {
+        setMode("kyb");
+      }
+    })();
+  }, [user, authLoading]);
+
+  async function handleSignup(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setLoading(true);
+    const { error: err } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/agents/apply`,
+        data: { display_name: displayName, phone, account_type: "agent" },
+      },
+    });
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setMode("kyb");
+  }
+
+  async function handleKyb(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!user) return;
+    if (files.length === 0) {
+      setError("Please upload at least one business document.");
+      return;
+    }
+    setLoading(true);
+
+    // Upload all files under <user_id>/<timestamp>-<filename>
+    const uploadedPaths: string[] = [];
+    for (const file of files) {
+      const path = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error: upErr } = await supabase.storage.from("kyb-documents").upload(path, file);
+      if (upErr) {
+        setError(`Upload failed: ${upErr.message}`);
+        setLoading(false);
+        return;
+      }
+      uploadedPaths.push(path);
+    }
+
+    const { error: insErr } = await supabase.from("agent_applications").insert({
+      user_id: user.id,
+      business_name: businessName,
+      registration_number: registrationNumber,
+      country,
+      contact_phone: contactPhone,
+      business_type: businessType,
+      website: website || null,
+      document_paths: uploadedPaths,
+    });
+
+    setLoading(false);
+    if (insErr) {
+      setError(insErr.message);
+      return;
+    }
+    setExistingStatus("pending");
+    setExistingBusiness(businessName);
+    setMode("status");
+  }
+
+  return (
+    <div className="min-h-screen bg-secondary/30">
+      <Header />
+      <section className="bg-gradient-hero py-12">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <span className="inline-block rounded-full bg-accent px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
+            B2B · Travel agents & businesses
+          </span>
+          <h1 className="mt-3 font-display text-3xl font-extrabold text-primary-foreground md:text-4xl">
+            Earn with iSwitch
+          </h1>
+          <p className="mt-2 text-sm text-primary-foreground/85">
+            Apply as an agent. Get approved. Earn commission on every flight, stay, visa & consultation you book for clients.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto -mt-8 max-w-2xl px-4 pb-16">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-elevated md:p-8">
+          {mode === "signup" && (
+            <SignupStep
+              displayName={displayName} setDisplayName={setDisplayName}
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              phone={phone} setPhone={setPhone}
+              loading={loading} error={error} onSubmit={handleSignup}
+            />
+          )}
+
+          {mode === "kyb" && (
+            <KybStep
+              businessName={businessName} setBusinessName={setBusinessName}
+              registrationNumber={registrationNumber} setRegistrationNumber={setRegistrationNumber}
+              country={country} setCountry={setCountry}
+              contactPhone={contactPhone} setContactPhone={setContactPhone}
+              businessType={businessType} setBusinessType={setBusinessType}
+              website={website} setWebsite={setWebsite}
+              files={files} setFiles={setFiles}
+              loading={loading} error={error} onSubmit={handleKyb}
+            />
+          )}
+
+          {mode === "status" && existingStatus && (
+            <StatusStep status={existingStatus} business={existingBusiness ?? ""} onContinue={() => navigate({ to: "/dashboard" })} />
+          )}
+        </div>
+      </section>
+      <Footer />
+
+      <style>{`.input{width:100%;border-radius:.375rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.5rem .75rem;font-size:.875rem}.input:focus{outline:none;border-color:hsl(var(--primary));box-shadow:0 0 0 2px color-mix(in oklab,hsl(var(--primary)) 20%,transparent)}`}</style>
+    </div>
+  );
+}
+
+function SignupStep(props: {
+  displayName: string; setDisplayName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  password: string; setPassword: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+  loading: boolean; error: string | null; onSubmit: (e: FormEvent) => void;
+}) {
+  return (
+    <form onSubmit={props.onSubmit} className="space-y-3">
+      <div className="mb-2">
+        <h2 className="font-display text-xl font-extrabold">Step 1 of 2 — Create your agent account</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Already have an iSwitch account?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link> first, then come back here to submit KYB.
+        </p>
+      </div>
+      <Field label="Your full name"><input required value={props.displayName} onChange={(e) => props.setDisplayName(e.target.value)} className="input" /></Field>
+      <Field label="Phone"><input value={props.phone} onChange={(e) => props.setPhone(e.target.value)} className="input" /></Field>
+      <Field label="Email"><input required type="email" value={props.email} onChange={(e) => props.setEmail(e.target.value)} className="input" /></Field>
+      <Field label="Password"><input required type="password" minLength={8} value={props.password} onChange={(e) => props.setPassword(e.target.value)} className="input" /></Field>
+      {props.error && <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{props.error}</div>}
+      <button type="submit" disabled={props.loading} className="flex w-full items-center justify-center gap-2 rounded-md bg-gradient-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-60">
+        {props.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
+        Continue to KYB
+      </button>
+    </form>
+  );
+}
+
+function KybStep(props: {
+  businessName: string; setBusinessName: (v: string) => void;
+  registrationNumber: string; setRegistrationNumber: (v: string) => void;
+  country: string; setCountry: (v: string) => void;
+  contactPhone: string; setContactPhone: (v: string) => void;
+  businessType: string; setBusinessType: (v: string) => void;
+  website: string; setWebsite: (v: string) => void;
+  files: File[]; setFiles: (f: File[]) => void;
+  loading: boolean; error: string | null; onSubmit: (e: FormEvent) => void;
+}) {
+  return (
+    <form onSubmit={props.onSubmit} className="space-y-3">
+      <div className="mb-2">
+        <h2 className="font-display text-xl font-extrabold">Step 2 of 2 — Business verification (KYB)</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Admin reviews applications within 1–3 business days.</p>
+      </div>
+
+      <Field label="Business name"><input required value={props.businessName} onChange={(e) => props.setBusinessName(e.target.value)} className="input" /></Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Registration #"><input required value={props.registrationNumber} onChange={(e) => props.setRegistrationNumber(e.target.value)} className="input" /></Field>
+        <Field label="Country"><input required value={props.country} onChange={(e) => props.setCountry(e.target.value)} className="input" /></Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Contact phone"><input required value={props.contactPhone} onChange={(e) => props.setContactPhone(e.target.value)} className="input" /></Field>
+        <Field label="Business type">
+          <select value={props.businessType} onChange={(e) => props.setBusinessType(e.target.value)} className="input">
+            {["Travel Agency", "Tour Operator", "Corporate Travel", "Education Consultant", "Immigration Consultant", "Other"].map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <Field label="Website (optional)"><input type="url" placeholder="https://..." value={props.website} onChange={(e) => props.setWebsite(e.target.value)} className="input" /></Field>
+
+      <div>
+        <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Business documents</span>
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground hover:border-primary hover:bg-secondary">
+          <Upload className="h-5 w-5" />
+          <span><b>Upload</b> CAC certificate, business license, etc. (PDF / JPG / PNG)</span>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+            onChange={(e) => props.setFiles(Array.from(e.target.files ?? []))}
+          />
+        </label>
+        {props.files.length > 0 && (
+          <ul className="mt-2 space-y-1 text-xs">
+            {props.files.map((f) => (
+              <li key={f.name} className="flex items-center justify-between rounded-md bg-secondary/60 px-2 py-1">
+                <span className="truncate"><FileCheck2 className="mr-1 inline h-3 w-3 text-success" />{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => props.setFiles(props.files.filter((x) => x !== f))}
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={`Remove ${f.name}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {props.error && <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{props.error}</div>}
+
+      <button type="submit" disabled={props.loading} className="flex w-full items-center justify-center gap-2 rounded-md bg-gradient-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-60">
+        {props.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck2 className="h-4 w-4" />}
+        Submit application
+      </button>
+    </form>
+  );
+}
+
+function StatusStep({ status, business, onContinue }: { status: ApplicationStatus; business: string; onContinue: () => void }) {
+  const config = {
+    pending: {
+      Icon: Clock,
+      title: "Application under review",
+      copy: `Thanks! We've received your KYB submission for ${business}. Our team typically responds within 1–3 business days.`,
+      tone: "warning" as const,
+    },
+    approved: {
+      Icon: FileCheck2,
+      title: "You're approved!",
+      copy: `${business} is now an approved iSwitch agent. Visit your dashboard to start booking and earning commission.`,
+      tone: "success" as const,
+    },
+    rejected: {
+      Icon: X,
+      title: "Application not approved",
+      copy: `Your application for ${business} was not approved. Please contact support@iswitch.com for next steps.`,
+      tone: "destructive" as const,
+    },
+  }[status];
+
+  const Icon = config.Icon;
+  const toneClass = {
+    success: "border-success/30 bg-success/10 text-success",
+    warning: "border-accent/40 bg-accent/10 text-accent-foreground",
+    destructive: "border-destructive/30 bg-destructive/10 text-destructive",
+  }[config.tone];
+
+  return (
+    <div className="text-center">
+      <div className={`mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border ${toneClass}`}>
+        <Icon className="h-7 w-7" />
+      </div>
+      <h2 className="mt-4 font-display text-xl font-extrabold">{config.title}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{config.copy}</p>
+      <button onClick={onContinue} className="mt-6 rounded-md bg-gradient-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-glow">
+        Go to dashboard
+      </button>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
