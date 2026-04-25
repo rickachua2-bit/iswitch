@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookingDialog } from "@/components/BookingDialog";
-import { AirportAutocomplete } from "@/components/AirportAutocomplete";
+import { FlightForm } from "@/components/FlightForm";
 import { searchFlights, bookFlight } from "@/server/travsify";
-import { findAirport, toIata } from "@/lib/airports";
+import { toIata } from "@/lib/airports";
 import {
-  Plane, Loader2, ArrowLeftRight, Calendar, Users, Search as SearchIcon,
+  Plane, Loader2,
   Filter, Briefcase, Luggage, Wifi, Clock, ArrowRight, ChevronDown,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -405,25 +405,8 @@ function FlightsPage() {
 /* ----------------------------- search bar ----------------------------- */
 
 function FlightSearchBar() {
-  const search = Route.useSearch();
   const navigate = Route.useNavigate();
-
-  const [trip, setTrip] = useState<"round-trip" | "one-way">((search.trip as any) === "one-way" ? "one-way" : "round-trip");
-  const [origin, setOrigin] = useState(search.origin ?? "Lagos (LOS)");
-  const [destination, setDestination] = useState(search.destination ?? "London (LHR)");
-  const [departure, setDeparture] = useState(search.departure ?? "");
-  const [returnDate, setReturnDate] = useState(search.returnDate ?? "");
-  const [travelers, setTravelers] = useState(search.travelers ?? "1 Adult, Economy");
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    navigate({
-      search: {
-        trip, origin, destination, departure, returnDate, travelers,
-        sort: search.sort ?? "best",
-      },
-    });
-  }
+  const search = Route.useSearch();
 
   return (
     <section className="bg-gradient-hero pb-8 pt-6 md:pb-10">
@@ -436,84 +419,16 @@ function FlightSearchBar() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="mx-auto w-full max-w-6xl px-4">
+      <div className="mx-auto w-full max-w-6xl px-4">
         <div className="rounded-2xl bg-card p-4 shadow-elevated md:p-5">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
-            <div className="flex gap-1 rounded-full bg-secondary p-1">
-              {(["round-trip", "one-way"] as const).map((t) => (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => setTrip(t)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold capitalize transition ${
-                    trip === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.replace("-", " ")}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_1fr_1.1fr_auto]">
-            <div className="relative md:col-span-2">
-              <div className="grid grid-cols-2 gap-3">
-                <AirportAutocomplete label="From" value={origin} onChange={(d) => setOrigin(d)} />
-                <AirportAutocomplete label="To" value={destination} onChange={(d) => setDestination(d)} />
-              </div>
-              <button
-                type="button"
-                onClick={() => { const o = origin; setOrigin(destination); setDestination(o); }}
-                className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-card p-1.5 shadow-card hover:bg-secondary"
-                aria-label="Swap"
-              >
-                <ArrowLeftRight className="h-3.5 w-3.5 text-primary" />
-              </button>
-            </div>
-
-            <BarField icon={Calendar} label="Departure">
-              <input
-                type="date" value={departure} onChange={(e) => setDeparture(e.target.value)}
-                className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
-                required
-              />
-            </BarField>
-            <BarField icon={Calendar} label="Return">
-              <input
-                type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)}
-                disabled={trip === "one-way"}
-                className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none disabled:opacity-50"
-              />
-            </BarField>
-            <BarField icon={Users} label="Travelers / Class">
-              <input
-                value={travelers} onChange={(e) => setTravelers(e.target.value)}
-                className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
-              />
-            </BarField>
-            <button
-              type="submit"
-              className="flex h-full min-h-[58px] items-center justify-center gap-2 rounded-xl bg-gradient-primary px-6 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95"
-            >
-              <SearchIcon className="h-4 w-4" strokeWidth={2.6} /> Search
-            </button>
-          </div>
+          <FlightForm
+            onSearch={(q) => navigate({
+              search: { ...q, sort: search.sort ?? "best" } as never,
+            })}
+          />
         </div>
-      </form>
-    </section>
-  );
-}
-
-function BarField({
-  icon: Icon, label, children,
-}: { icon: typeof Calendar; label: string; children: React.ReactNode }) {
-  return (
-    <label className="group flex flex-col gap-1 rounded-xl border border-border bg-background px-3.5 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
       </div>
-      {children}
-    </label>
+    </section>
   );
 }
 
