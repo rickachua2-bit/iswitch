@@ -8,16 +8,57 @@ function getKey() {
   return key;
 }
 
+/**
+ * Translate raw upstream errors into a user-friendly message.
+ * We never want to leak provider names, raw status codes or stack
+ * traces into the UI.
+ */
+function friendlyError(status: number | null, raw: string): string {
+  // Cloudflare upstream-timeout and friends.
+  if (status === 522 || status === 524 || status === 504 || /timeout|timed out|aborted/i.test(raw)) {
+    return "Live inventory is taking longer than usual to respond. Please try again in a moment.";
+  }
+  if (status === 502 || status === 503 || (status && status >= 500)) {
+    return "Live inventory is temporarily unavailable. Please try again in a minute.";
+  }
+  if (status === 401 || status === 403) {
+    return "Live inventory is temporarily unavailable. Please try again shortly.";
+  }
+  if (status === 429) {
+    return "Too many searches in a short time. Please wait a few seconds and try again.";
+  }
+  if (status === 400 || status === 422) {
+    return "Some of your search details were not accepted. Please review and try again.";
+  }
+  return "We couldn't load results right now. Please try again.";
+}
+
+const REQUEST_TIMEOUT_MS = 25_000;
+
 async function call<T = any>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${getKey()}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": crypto.randomUUID(),
-    },
-    body: JSON.stringify(body),
-  });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getKey()}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
+      },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+  } catch (err: any) {
+    clearTimeout(timer);
+    const aborted = err?.name === "AbortError";
+    const msg = aborted ? "timeout" : err?.message || "network error";
+    const e = new Error(msg) as any;
+    e.status = aborted ? 524 : null;
+    throw e;
+  }
+  clearTimeout(timer);
   const text = await res.text();
   let json: any = null;
   try {
@@ -26,27 +67,40 @@ async function call<T = any>(path: string, body: unknown): Promise<T> {
     /* keep raw */
   }
   if (!res.ok) {
-    const msg = json?.error?.message || json?.message || text || `HTTP ${res.status}`;
-    throw new Error(`Travsify ${path} ${res.status}: ${msg}`);
+    const detail = json?.error?.message || json?.message || text || `HTTP ${res.status}`;
+    const e = new Error(detail) as any;
+    e.status = res.status;
+    throw e;
   }
   return json as T;
 }
 
 async function searchCall(path: string, body: unknown): Promise<any> {
-  try {
-    const res: any = await call(path, body);
-    // Normalize Travsify's per-vertical keys (flights/hotels/tours/visas/plans)
-    // into the unified shape the UI consumes (offers/hotels/tours/visas/plans).
-    const d = res?.data ?? {};
-    if (d && !d.offers && Array.isArray(d.flights)) {
-      d.offers = d.flights;
+  // One retry for transient upstream issues (522/524/timeout/5xx).
+  let lastErr: any = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res: any = await call(path, body);
+      // Normalize per-vertical keys (flights/hotels/tours/visas/plans)
+      // into the unified shape the UI consumes (offers/hotels/tours/visas/plans).
+      const d = res?.data ?? {};
+      if (d && !d.offers && Array.isArray(d.flights)) {
+        d.offers = d.flights;
+      }
+      return { ...res, data: d };
+    } catch (error: any) {
+      lastErr = error;
+      const status: number | null = error?.status ?? null;
+      const transient = status === 522 || status === 524 || status === 504 || status === 502 || status === 503 || /timeout|aborted|network/i.test(error?.message ?? "");
+      if (!transient || attempt === 1) break;
+      // small backoff
+      await new Promise((r) => setTimeout(r, 600));
     }
-    return { ...res, data: d };
-  } catch (error: any) {
-    const message = error?.message ?? "Travel provider is currently unavailable.";
-    console.error("Travsify search failed", { path, message });
-    return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message };
   }
+  const status: number | null = lastErr?.status ?? null;
+  const message = friendlyError(status, lastErr?.message ?? "");
+  console.error("Travel search failed", { path, status, raw: lastErr?.message });
+  return { data: { offers: [], hotels: [], tours: [], visas: [], plans: [] }, error: message };
 }
 
 /* ----------------------------- FLIGHTS ----------------------------- */
