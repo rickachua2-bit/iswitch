@@ -411,7 +411,7 @@ function FlightsPage() {
 
 /* ----------------------------- search bar ----------------------------- */
 
-function FlightSearchBar() {
+function FlightSearchBar({ pending = false }: { pending?: boolean }) {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
 
@@ -429,6 +429,7 @@ function FlightSearchBar() {
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="rounded-2xl bg-card p-4 shadow-elevated md:p-5">
           <FlightForm
+            pending={pending}
             onSearch={(q) => navigate({
               search: { ...q, sort: search.sort ?? "best" } as never,
             })}
