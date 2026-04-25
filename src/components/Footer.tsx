@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook as FB, Instagram as IG, Linkedin as LI, Twitter as TW, Mail, Phone, MapPin } from "lucide-react";
+import { Globe, Send, Camera, Briefcase, Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
@@ -17,7 +17,7 @@ export function Footer() {
               The global mobility super app. Flights, stays, visas, insurance, tours, pickups and free expert consultations — all in one place.
             </p>
             <div className="mt-4 flex gap-2">
-              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+              {[Globe, Send, Camera, Briefcase].map((Icon, i) => (
                 <a key={i} href="#" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 transition hover:bg-accent hover:text-accent-foreground">
                   <Icon className="h-4 w-4" />
                 </a>
