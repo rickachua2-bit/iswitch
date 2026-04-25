@@ -1,11 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { SearchTabs } from "@/components/SearchTabs";
 import { BookingDialog } from "@/components/BookingDialog";
 import { searchHotels, bookHotel } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
-import { Star, Loader2, MapPin, ThumbsUp, Heart, Tag } from "lucide-react";
+import {
+  Star, Loader2, MapPin, ThumbsUp, Heart, Tag, Search,
+  Hotel, Plane, Home as HomeIcon, Briefcase, Compass, Car,
+  Calendar as CalendarIcon, Users, Plus,
+} from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import dubai from "@/assets/dest-dubai.jpg";
@@ -72,6 +75,15 @@ export const Route = createFileRoute("/stays")({
   component: StaysPage,
 });
 
+const TABS = [
+  { id: "stays", label: "Hotels", icon: Hotel, route: "/stays" as const, active: true },
+  { id: "flights", label: "Flights", icon: Plane, route: "/flights" as const },
+  { id: "homes", label: "Homes & Apts", icon: HomeIcon, route: "/stays" as const },
+  { id: "package", label: "Flight + Hotel", icon: Briefcase, route: "/flights" as const },
+  { id: "tours", label: "Activities", icon: Compass, route: "/tours" as const },
+  { id: "pickups", label: "Airport transfer", icon: Car, route: "/pickups" as const },
+];
+
 const TOP_DESTINATIONS = [
   { city: "Dubai", country: "United Arab Emirates", img: dubai, count: "12,408" },
   { city: "London", country: "United Kingdom", img: london, count: "9,114" },
@@ -81,46 +93,135 @@ const TOP_DESTINATIONS = [
 ];
 
 const PROMO_TILES = [
-  { tag: "Limited deal", title: "Up to 30% off", subtitle: "Citywide hotel sale", from: "from-pink-500", to: "to-rose-600" },
-  { tag: "Worldwide", title: "Last-minute escapes", subtitle: "Book today, leave tomorrow", from: "from-sky-500", to: "to-cyan-600" },
-  { tag: "New", title: "Genius members", subtitle: "Up to 20% bonus on app", from: "from-amber-500", to: "to-orange-600" },
+  { tag: "Limited deal", title: "Up to 30% off", subtitle: "Citywide hotel sale" },
+  { tag: "Worldwide", title: "Last-minute escapes", subtitle: "Book today, leave tomorrow" },
+  { tag: "New", title: "Member rewards", subtitle: "Up to 20% bonus on app" },
 ];
 
 function StaysPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
   const [selected, setSelected] = useState<any | null>(null);
   const formatPrice = usePriceFormat();
+  const navigate = useNavigate();
   const hasSearched = !!(query.checkIn && query.checkOut);
+
+  // Search form local state — seeded from URL
+  const [destination, setDestination] = useState(query.destination ?? "Dubai");
+  const [checkIn, setCheckIn] = useState(query.checkIn ?? "");
+  const [checkOut, setCheckOut] = useState(query.checkOut ?? "");
+  const [guests, setGuests] = useState(query.guests ?? "2 Guests, 1 Room");
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void navigate({ to: "/stays", search: { destination, checkIn, checkOut, guests } });
+  };
 
   return (
     <div className="min-h-screen bg-secondary/40">
       <Header />
 
-      {/* Brand hero — deep blue gradient + yellow accent */}
-      <section className="relative isolate overflow-hidden bg-gradient-hero pb-24 pt-10 md:pb-32">
-        <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(ellipse_at_top,oklch(1_0_0/0.12),transparent_60%)]" />
+      {/* Agoda-style hero — pale brand tint with white search card on top */}
+      <section className="relative isolate overflow-hidden bg-gradient-to-b from-primary via-primary-glow to-primary-glow/60 pb-32 pt-10 md:pb-40">
+        {/* soft top vignette */}
+        <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(ellipse_at_top,oklch(1_0_0/0.18),transparent_60%)]" />
+
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <span className="mb-3 inline-block rounded-full bg-accent/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-accent">
-            2M+ stays · Daily price refresh
-          </span>
-          <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-primary-foreground drop-shadow md:text-4xl">
+          <h1 className="font-display text-2xl font-extrabold uppercase tracking-[0.18em] text-primary-foreground drop-shadow md:text-3xl">
             See the world for less
           </h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">
-            Compare hotels, apartments and homes worldwide — instant confirmation, free cancellation on most rooms.
-          </p>
         </div>
-        <SearchTabs defaultTab="stays" />
+
+        {/* White search card — tabs INSIDE the card */}
+        <div className="mx-auto w-full max-w-5xl px-4">
+          <div className="rounded-3xl bg-card shadow-elevated">
+            {/* Tab strip inside the card (Agoda style) */}
+            <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 pt-1 scrollbar-hide md:gap-0 md:px-4">
+              {TABS.map((t) => {
+                const Icon = t.icon;
+                return (
+                  <Link
+                    key={t.id}
+                    to={t.route}
+                    {...(t.route === "/stays"
+                      ? { search: { destination, checkIn, checkOut, guests } }
+                      : {})}
+                    className={`flex min-w-fit items-center gap-1.5 px-3 py-3 text-sm font-semibold transition md:px-5 md:py-4 ${
+                      t.active
+                        ? "border-b-2 border-primary text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={2.4} />
+                    <span className="whitespace-nowrap">{t.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Form body */}
+            <form onSubmit={onSubmit} className="p-4 md:p-5">
+              {/* Destination — full-width row like Agoda */}
+              <label className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <input
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="Enter a destination or property"
+                  className="w-full bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+              </label>
+
+              {/* Dates + guests row */}
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1.2fr]">
+                <DateField icon={CalendarIcon} label="Check-in" value={checkIn} onChange={setCheckIn} />
+                <DateField icon={CalendarIcon} label="Check-out" value={checkOut} onChange={setCheckOut} />
+                <label className="flex flex-col gap-0.5 rounded-xl border border-border bg-background px-4 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <Users className="h-3 w-3" /> Guests / Rooms
+                  </span>
+                  <input
+                    value={guests}
+                    onChange={(e) => setGuests(e.target.value)}
+                    className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
+                  />
+                </label>
+              </div>
+
+              {/* Add a flight inline link (Agoda) */}
+              <button
+                type="button"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add a flight
+              </button>
+
+              {/* Floating SEARCH pill */}
+              <div className="-mb-12 mt-5 flex justify-center md:-mb-16">
+                <button
+                  type="submit"
+                  className="rounded-full bg-gradient-primary px-12 py-4 text-sm font-extrabold uppercase tracking-widest text-primary-foreground shadow-glow transition hover:opacity-95 md:px-16 md:py-5 md:text-base"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </section>
+
+      {/* Spacer for floating button */}
+      <div className="h-10 md:h-14" />
 
       {/* Live results */}
       {hasSearched && (
-        <section className="mx-auto -mt-16 max-w-7xl px-4 pb-12 md:px-6">
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6">
           {error ? (
             <div className="rounded-2xl border border-destructive/30 bg-card p-6 text-sm shadow-card">
               <div className="font-bold text-destructive">Hotel provider is temporarily unavailable</div>
               <div className="mt-1 text-muted-foreground">
-                Our hotel inventory partner returned an error ({error.includes("522") ? "Cloudflare 522 — origin timeout" : error}). Flights and other services are unaffected. Please try again in a minute.
+                Our hotel inventory partner returned an error
+                {error.includes("522") ? " (Cloudflare 522 — origin timeout)" : ` (${error})`}.
+                Flights and other services are unaffected. Please try again in a minute.
               </div>
             </div>
           ) : hotels.length === 0 ? (
@@ -133,7 +234,9 @@ function StaysPage() {
                 <h2 className="font-display text-xl font-bold text-foreground md:text-2xl">
                   {hotels.length} stays in <span className="text-primary">{query.destination}</span>
                 </h2>
-                <div className="text-xs text-muted-foreground">{query.checkIn} → {query.checkOut} · {query.guests}</div>
+                <div className="text-xs text-muted-foreground">
+                  {query.checkIn} → {query.checkOut} · {query.guests}
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {hotels.map((h: any) => (
@@ -187,7 +290,9 @@ function StaysPage() {
                         </div>
                       )}
                       <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Price for 1 night</div>
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          Price for 1 night
+                        </div>
                         <div className="text-right">
                           {h.original_price && Number(h.original_price) > Number(h.price) && (
                             <div className="text-[11px] text-muted-foreground line-through">
@@ -214,10 +319,12 @@ function StaysPage() {
         </section>
       )}
 
-      {/* Top destinations */}
+      {/* Top destinations — Agoda layout */}
       <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
         <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">Top destinations worldwide</h2>
+          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
+            Top destinations worldwide
+          </h2>
           <Link
             to="/stays"
             search={{ destination: "Dubai", checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
@@ -226,20 +333,25 @@ function StaysPage() {
             View all →
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {TOP_DESTINATIONS.map((d) => (
             <Link
               key={d.city}
               to="/stays"
               search={{ destination: d.city, checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
-              className="group relative aspect-square overflow-hidden rounded-2xl shadow-card transition hover:shadow-elevated"
+              className="group block"
             >
-              <img src={d.img} alt={d.city} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/80 via-primary-dark/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-3 text-primary-foreground">
-                <div className="text-base font-extrabold leading-tight">{d.city}</div>
-                <div className="text-[11px] opacity-90">{d.country}</div>
-                <div className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-accent">{d.count} stays</div>
+              <div className="relative aspect-square overflow-hidden rounded-2xl shadow-card transition group-hover:shadow-elevated">
+                <img
+                  src={d.img}
+                  alt={d.city}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                />
+              </div>
+              <div className="mt-3 px-1">
+                <div className="text-base font-extrabold text-foreground">{d.city}</div>
+                <div className="text-xs text-muted-foreground">{d.count} accommodations</div>
               </div>
             </Link>
           ))}
@@ -249,8 +361,10 @@ function StaysPage() {
       {/* Accommodation promotions */}
       <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
         <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">Accommodation promotions</h2>
-          <span className="text-sm font-semibold text-primary">Limited time</span>
+          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
+            Accommodation promotions
+          </h2>
+          <span className="text-sm font-semibold text-primary">View all →</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {PROMO_TILES.map((p) => (
@@ -263,30 +377,6 @@ function StaysPage() {
               <div className="mt-1 font-display text-2xl font-extrabold">{p.title}</div>
               <div className="mt-1 text-sm opacity-95">{p.subtitle}</div>
               <button className="mt-4 rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90">
-                See deals
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Accommodation promotions strip */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">Accommodation promotions</h2>
-          <span className="text-sm font-semibold text-[#1d96a6]">Limited time</span>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {PROMO_TILES.map((p) => (
-            <div
-              key={p.title}
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${p.from} ${p.to} p-6 text-white shadow-card`}
-            >
-              <Tag className="absolute -right-4 -top-4 h-24 w-24 opacity-15" />
-              <div className="text-[11px] font-bold uppercase tracking-wider opacity-90">{p.tag}</div>
-              <div className="mt-1 font-display text-2xl font-extrabold">{p.title}</div>
-              <div className="mt-1 text-sm opacity-95">{p.subtitle}</div>
-              <button className="mt-4 rounded-lg bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-wide text-foreground transition hover:bg-white">
                 See deals
               </button>
             </div>
@@ -319,5 +409,28 @@ function StaysPage() {
       )}
       <Footer />
     </div>
+  );
+}
+
+function DateField({
+  icon: Icon, label, value, onChange,
+}: {
+  icon: typeof CalendarIcon;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-0.5 rounded-xl border border-border bg-background px-4 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-3 w-3" /> {label}
+      </span>
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
+      />
+    </label>
   );
 }
