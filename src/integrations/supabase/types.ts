@@ -73,6 +73,9 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
+          guest_email: string | null
+          guest_name: string | null
+          guest_phone: string | null
           id: string
           notes: string | null
           service_id: string
@@ -80,12 +83,15 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           tier_id: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount_cents: number
           created_at?: string
           currency?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           notes?: string | null
           service_id: string
@@ -93,12 +99,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           tier_id: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount_cents?: number
           created_at?: string
           currency?: string
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           notes?: string | null
           service_id?: string
@@ -106,7 +115,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           tier_id?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -240,6 +249,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      currencies: {
+        Row: {
+          code: string
+          created_at: string
+          is_enabled: boolean
+          name: string
+          rate_to_usd: number
+          sort_order: number
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_enabled?: boolean
+          name: string
+          rate_to_usd?: number
+          sort_order?: number
+          symbol: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_enabled?: boolean
+          name?: string
+          rate_to_usd?: number
+          sort_order?: number
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
