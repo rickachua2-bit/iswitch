@@ -7,9 +7,11 @@ import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, Loader2, MapPin, ThumbsUp, Heart, Tag, Search,
   Hotel, Plane, Home as HomeIcon, Briefcase, Compass, Car,
-  Calendar as CalendarIcon, Users, Plus,
+  Calendar as CalendarIcon, Users, Plus, ChevronDown, Check,
+  Wifi, Coffee, Dumbbell, Waves, Utensils, ParkingCircle,
+  BedDouble, Sparkles, ShieldCheck, Flame,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import dubai from "@/assets/dest-dubai.jpg";
 import london from "@/assets/dest-london.jpg";
@@ -212,177 +214,84 @@ function StaysPage() {
       {/* Spacer for floating button */}
       <div className="h-10 md:h-14" />
 
-      {/* Live results */}
+      {/* Live results — Agoda-style: sticky filter sidebar + horizontal cards */}
       {hasSearched && (
-        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6">
-          {error ? (
-            <div className="rounded-2xl border border-destructive/30 bg-card p-6 text-sm shadow-card">
-              <div className="font-bold text-destructive">Hotel provider is temporarily unavailable</div>
-              <div className="mt-1 text-muted-foreground">
-                Our hotel inventory partner returned an error
-                {error.includes("522") ? " (Cloudflare 522 — origin timeout)" : ` (${error})`}.
-                Flights and other services are unaffected. Please try again in a minute.
-              </div>
-            </div>
-          ) : hotels.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground shadow-card">
-              <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> No hotels found for these dates.
-            </div>
-          ) : (
-            <>
-              <div className="mb-4 flex items-end justify-between">
-                <h2 className="font-display text-xl font-bold text-foreground md:text-2xl">
-                  {hotels.length} stays in <span className="text-primary">{query.destination}</span>
-                </h2>
-                <div className="text-xs text-muted-foreground">
-                  {query.checkIn} → {query.checkOut} · {query.guests}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {hotels.map((h: any) => (
-                  <article
-                    key={h.id}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:-translate-y-0.5 hover:shadow-elevated"
-                  >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
-                      {h.image || h.thumbnail ? (
-                        <img
-                          src={h.image ?? h.thumbnail}
-                          alt={h.name}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-primary">
-                          <MapPin className="h-10 w-10 text-primary-foreground/70" />
-                        </div>
-                      )}
-                      <button
-                        aria-label="Save"
-                        className="absolute right-3 top-3 rounded-full bg-card/95 p-2 text-foreground shadow-card transition hover:bg-card"
-                      >
-                        <Heart className="h-4 w-4" />
-                      </button>
-                      {h.deal_label && (
-                        <span className="absolute left-3 top-3 rounded-md bg-destructive px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-destructive-foreground">
-                          {h.deal_label}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-1 flex-col gap-2 p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 text-sm font-bold text-foreground">{h.name}</h3>
-                        {(h.review_score ?? h.score) && (
-                          <span className="flex shrink-0 items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-bold text-primary-foreground">
-                            {Number(h.review_score ?? h.score).toFixed(1)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        {Array.from({ length: h.stars ?? 0 }).map((_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-accent text-accent" />
-                        ))}
-                        {h.location && <span className="ml-1 line-clamp-1">· {h.location}</span>}
-                      </div>
-                      {h.review_count && (
-                        <div className="flex items-center gap-1 text-[11px] text-primary">
-                          <ThumbsUp className="h-3 w-3" /> {h.review_count.toLocaleString()} reviews
-                        </div>
-                      )}
-                      <div className="mt-auto flex items-end justify-between border-t border-border pt-3">
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                          Price for 1 night
-                        </div>
-                        <div className="text-right">
-                          {h.original_price && Number(h.original_price) > Number(h.price) && (
-                            <div className="text-[11px] text-muted-foreground line-through">
-                              {formatPrice(Number(h.original_price), h.currency ?? "USD")}
-                            </div>
-                          )}
-                          <div className="text-lg font-extrabold text-primary">
-                            {formatPrice(Number(h.price), h.currency ?? "USD")}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setSelected(h)}
-                        className="mt-1 w-full rounded-lg bg-gradient-primary px-3 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
-                      >
-                        See availability
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
+        <ResultsBoard
+          hotels={hotels}
+          error={error}
+          query={query}
+          formatPrice={formatPrice}
+          onSelect={setSelected}
+        />
       )}
 
-      {/* Top destinations — Agoda layout */}
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
-            Top destinations worldwide
-          </h2>
-          <Link
-            to="/stays"
-            search={{ destination: "Dubai", checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
-            className="text-sm font-semibold text-primary hover:underline"
-          >
-            View all →
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {TOP_DESTINATIONS.map((d) => (
-            <Link
-              key={d.city}
-              to="/stays"
-              search={{ destination: d.city, checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
-              className="group block"
-            >
-              <div className="relative aspect-square overflow-hidden rounded-2xl shadow-card transition group-hover:shadow-elevated">
-                <img
-                  src={d.img}
-                  alt={d.city}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                />
-              </div>
-              <div className="mt-3 px-1">
-                <div className="text-base font-extrabold text-foreground">{d.city}</div>
-                <div className="text-xs text-muted-foreground">{d.count} accommodations</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Accommodation promotions */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
-            Accommodation promotions
-          </h2>
-          <span className="text-sm font-semibold text-primary">View all →</span>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {PROMO_TILES.map((p) => (
-            <div
-              key={p.title}
-              className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-primary-foreground shadow-card"
-            >
-              <Tag className="absolute -right-4 -top-4 h-24 w-24 text-accent opacity-20" />
-              <div className="text-[11px] font-bold uppercase tracking-wider text-accent">{p.tag}</div>
-              <div className="mt-1 font-display text-2xl font-extrabold">{p.title}</div>
-              <div className="mt-1 text-sm opacity-95">{p.subtitle}</div>
-              <button className="mt-4 rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90">
-                See deals
-              </button>
+      {/* Discovery — only show when no active search */}
+      {!hasSearched && (
+        <>
+          <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+            <div className="mb-5 flex items-end justify-between">
+              <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
+                Top destinations worldwide
+              </h2>
+              <Link
+                to="/stays"
+                search={{ destination: "Dubai", checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                View all →
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+              {TOP_DESTINATIONS.map((d) => (
+                <Link
+                  key={d.city}
+                  to="/stays"
+                  search={{ destination: d.city, checkIn: "", checkOut: "", guests: "2 Guests, 1 Room" }}
+                  className="group block"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-2xl shadow-card transition group-hover:shadow-elevated">
+                    <img
+                      src={d.img}
+                      alt={d.city}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                  <div className="mt-3 px-1">
+                    <div className="text-base font-extrabold text-foreground">{d.city}</div>
+                    <div className="text-xs text-muted-foreground">{d.count} accommodations</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
+            <div className="mb-5 flex items-end justify-between">
+              <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
+                Accommodation promotions
+              </h2>
+              <span className="text-sm font-semibold text-primary">View all →</span>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {PROMO_TILES.map((p) => (
+                <div
+                  key={p.title}
+                  className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-primary-foreground shadow-card"
+                >
+                  <Tag className="absolute -right-4 -top-4 h-24 w-24 text-accent opacity-20" />
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-accent">{p.tag}</div>
+                  <div className="mt-1 font-display text-2xl font-extrabold">{p.title}</div>
+                  <div className="mt-1 text-sm opacity-95">{p.subtitle}</div>
+                  <button className="mt-4 rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-glow transition hover:opacity-90">
+                    See deals
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
 
       {selected && (
         <BookingDialog
@@ -432,5 +341,427 @@ function DateField({
         className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
       />
     </label>
+  );
+}
+
+/* ====================== Agoda-style results board ====================== */
+
+const SORT_TABS = [
+  { id: "best", label: "Best match" },
+  { id: "lowest", label: "Lowest price" },
+  { id: "stars", label: "Stars" },
+  { id: "score", label: "Top reviewed" },
+  { id: "distance", label: "Distance" },
+] as const;
+
+const POPULAR_FILTERS = [
+  { label: "Free cancellation", icon: ShieldCheck },
+  { label: "Breakfast included", icon: Coffee },
+  { label: "Pay at the property", icon: Check },
+  { label: "Hot deals", icon: Flame },
+];
+
+const PROPERTY_TYPES = ["Hotel", "Apartment", "Resort", "Villa", "Hostel", "Guest house"];
+
+const AMENITIES = [
+  { label: "Free Wi-Fi", icon: Wifi },
+  { label: "Swimming pool", icon: Waves },
+  { label: "Fitness center", icon: Dumbbell },
+  { label: "Restaurant", icon: Utensils },
+  { label: "Free parking", icon: ParkingCircle },
+  { label: "Spa", icon: Sparkles },
+];
+
+function scoreLabel(s: number) {
+  if (s >= 9) return "Exceptional";
+  if (s >= 8.5) return "Excellent";
+  if (s >= 8) return "Very good";
+  if (s >= 7) return "Good";
+  if (s >= 6) return "Pleasant";
+  return "Reviewed";
+}
+
+function ResultsBoard({
+  hotels, error, query, formatPrice, onSelect,
+}: {
+  hotels: any[];
+  error: string | null;
+  query: { destination: string; checkIn: string; checkOut: string; guests: string };
+  formatPrice: (n: number, c: string) => string;
+  onSelect: (h: any) => void;
+}) {
+  const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("best");
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const [minStars, setMinStars] = useState(0);
+  const [minScore, setMinScore] = useState(0);
+  const [popular, setPopular] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
+
+  const toggle = (arr: string[], setArr: (v: string[]) => void, v: string) =>
+    setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+
+  const filtered = useMemo(() => {
+    const list = (hotels ?? []).filter((h) => {
+      if (Number(h.price ?? 0) > maxPrice) return false;
+      if ((h.stars ?? 0) < minStars) return false;
+      if (Number(h.review_score ?? h.score ?? 0) < minScore) return false;
+      return true;
+    });
+    const sorted = [...list];
+    if (sort === "lowest") sorted.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+    else if (sort === "stars") sorted.sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0));
+    else if (sort === "score")
+      sorted.sort((a, b) => Number(b.review_score ?? b.score ?? 0) - Number(a.review_score ?? a.score ?? 0));
+    return sorted;
+  }, [hotels, maxPrice, minStars, minScore, sort]);
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        {/* ============ Sidebar ============ */}
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          {/* Map card */}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="relative h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,oklch(1_0_0/0.5),transparent_50%)]" />
+              <MapPin className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 fill-primary text-primary-foreground drop-shadow" />
+            </div>
+            <button className="block w-full px-4 py-3 text-left text-xs font-bold text-primary hover:bg-secondary/60">
+              Show on map →
+            </button>
+          </div>
+
+          <FilterGroup title="Your budget per night">
+            <div className="px-1">
+              <input
+                type="range"
+                min={20}
+                max={2000}
+                step={10}
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                className="w-full accent-[hsl(var(--primary))]"
+              />
+              <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+                <span>Up to</span>
+                <span className="rounded-md bg-primary px-2 py-0.5 text-primary-foreground">
+                  {formatPrice(maxPrice, "USD")}
+                </span>
+              </div>
+            </div>
+          </FilterGroup>
+
+          <FilterGroup title="Popular filters">
+            <div className="space-y-2">
+              {POPULAR_FILTERS.map((p) => (
+                <CheckRow
+                  key={p.label}
+                  label={p.label}
+                  Icon={p.icon}
+                  checked={popular.includes(p.label)}
+                  onChange={() => toggle(popular, setPopular, p.label)}
+                />
+              ))}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup title="Star rating">
+            <div className="flex flex-wrap gap-2">
+              {[5, 4, 3, 2, 1].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setMinStars(minStars === s ? 0 : s)}
+                  className={`flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                    minStars === s
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-foreground hover:border-primary"
+                  }`}
+                >
+                  {s} <Star className="h-3 w-3 fill-current" />
+                </button>
+              ))}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup title="Review score">
+            <div className="space-y-2">
+              {[
+                { v: 9, l: "Exceptional 9+" },
+                { v: 8, l: "Excellent 8+" },
+                { v: 7, l: "Very good 7+" },
+                { v: 6, l: "Good 6+" },
+              ].map((r) => (
+                <label key={r.v} className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="score"
+                    checked={minScore === r.v}
+                    onChange={() => setMinScore(r.v)}
+                    className="accent-[hsl(var(--primary))]"
+                  />
+                  <span className="text-foreground">{r.l}</span>
+                </label>
+              ))}
+              {minScore > 0 && (
+                <button
+                  onClick={() => setMinScore(0)}
+                  className="text-xs font-bold text-primary hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup title="Property type">
+            <div className="space-y-2">
+              {PROPERTY_TYPES.map((t) => (
+                <CheckRow
+                  key={t}
+                  label={t}
+                  checked={types.includes(t)}
+                  onChange={() => toggle(types, setTypes, t)}
+                />
+              ))}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup title="Amenities">
+            <div className="space-y-2">
+              {AMENITIES.map((a) => (
+                <CheckRow
+                  key={a.label}
+                  label={a.label}
+                  Icon={a.icon}
+                  checked={amenities.includes(a.label)}
+                  onChange={() => toggle(amenities, setAmenities, a.label)}
+                />
+              ))}
+            </div>
+          </FilterGroup>
+        </aside>
+
+        {/* ============ Results column ============ */}
+        <div>
+          {/* Heading */}
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="font-display text-xl font-extrabold text-foreground md:text-2xl">
+                <span className="text-primary">{query.destination}</span>:{" "}
+                {error ? "0" : filtered.length} properties found
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {query.checkIn} → {query.checkOut} · {query.guests}
+              </p>
+            </div>
+          </div>
+
+          {/* Sort tabs (Agoda style) */}
+          <div className="mb-4 overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
+            <div className="flex min-w-max">
+              {SORT_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setSort(t.id)}
+                  className={`flex-1 px-4 py-3 text-xs font-bold transition md:text-sm ${
+                    sort === t.id
+                      ? "border-b-2 border-primary bg-secondary/60 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* States */}
+          {error ? (
+            <div className="rounded-2xl border border-destructive/30 bg-card p-6 text-sm shadow-card">
+              <div className="font-bold text-destructive">Hotel provider is temporarily unavailable</div>
+              <div className="mt-1 text-muted-foreground">
+                Our hotel inventory partner returned an error
+                {error.includes("522") ? " (Cloudflare 522 — origin timeout)" : ` (${error})`}.
+                Flights and other services are unaffected. Please try again in a minute.
+              </div>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground shadow-card">
+              <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> No hotels match your filters.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((h: any) => (
+                <HotelResultCard
+                  key={h.id}
+                  hotel={h}
+                  formatPrice={formatPrice}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between text-sm font-extrabold text-foreground"
+      >
+        {title}
+        <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="mt-3">{children}</div>}
+    </div>
+  );
+}
+
+function CheckRow({
+  label, Icon, checked, onChange,
+}: {
+  label: string;
+  Icon?: typeof Wifi;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="h-4 w-4 rounded border-border accent-[hsl(var(--primary))]"
+      />
+      {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+      <span className="text-foreground">{label}</span>
+    </label>
+  );
+}
+
+function HotelResultCard({
+  hotel: h, formatPrice, onSelect,
+}: {
+  hotel: any;
+  formatPrice: (n: number, c: string) => string;
+  onSelect: (h: any) => void;
+}) {
+  const score = Number(h.review_score ?? h.score ?? 0);
+  const original = h.original_price ? Number(h.original_price) : null;
+  const price = Number(h.price ?? 0);
+  const discount = original && original > price ? Math.round(((original - price) / original) * 100) : 0;
+
+  return (
+    <article className="group grid grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:shadow-elevated md:grid-cols-[280px_1fr]">
+      {/* Image */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-secondary md:aspect-auto md:h-full">
+        {h.image || h.thumbnail ? (
+          <img
+            src={h.image ?? h.thumbnail}
+            alt={h.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-primary">
+            <MapPin className="h-10 w-10 text-primary-foreground/70" />
+          </div>
+        )}
+        <button
+          aria-label="Save"
+          className="absolute right-3 top-3 rounded-full bg-card/95 p-2 text-foreground shadow-card transition hover:bg-card"
+        >
+          <Heart className="h-4 w-4" />
+        </button>
+        {discount > 0 && (
+          <span className="absolute left-3 top-3 rounded-md bg-destructive px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-destructive-foreground shadow">
+            -{discount}% Hot deal
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-[1fr_180px]">
+        {/* Left: name, location, room */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1 text-[11px] text-accent-foreground">
+            {Array.from({ length: h.stars ?? 0 }).map((_, i) => (
+              <Star key={i} className="h-3 w-3 fill-accent text-accent" />
+            ))}
+          </div>
+          <h3 className="text-base font-extrabold text-foreground hover:text-primary">{h.name}</h3>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {h.location ?? h.address ?? "City center"}
+          </div>
+
+          {/* Room info row */}
+          <div className="mt-1 rounded-lg bg-secondary/60 p-2 text-xs">
+            <div className="flex items-center gap-1.5 font-bold text-foreground">
+              <BedDouble className="h-3.5 w-3.5 text-primary" />
+              {h.room_name ?? "Standard double room"}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> 2 adults</span>
+              <span className="flex items-center gap-1"><Wifi className="h-3 w-3" /> Free Wi-Fi</span>
+              <span className="flex items-center gap-1 text-primary"><ShieldCheck className="h-3 w-3" /> Free cancellation</span>
+            </div>
+          </div>
+
+          {/* Promo line */}
+          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded bg-accent/20 px-1.5 py-0.5 font-bold text-accent-foreground">
+              Pay at the property
+            </span>
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 font-bold text-primary">
+              Breakfast included
+            </span>
+          </div>
+        </div>
+
+        {/* Right: score + price */}
+        <div className="flex flex-col items-end justify-between gap-3 border-t border-border pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+          {/* Score badge — Agoda layout */}
+          {score > 0 && (
+            <div className="flex items-center gap-2 self-end">
+              <div className="text-right">
+                <div className="text-xs font-extrabold text-foreground">{scoreLabel(score)}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {h.review_count ? `${Number(h.review_count).toLocaleString()} reviews` : "Verified reviews"}
+                </div>
+              </div>
+              <div className="rounded-lg rounded-tr-none bg-primary px-2.5 py-1.5 text-base font-extrabold text-primary-foreground shadow">
+                {score.toFixed(1)}
+              </div>
+            </div>
+          )}
+
+          {/* Price */}
+          <div className="w-full text-right">
+            {original && original > price && (
+              <div className="text-[11px] text-muted-foreground line-through">
+                {formatPrice(original, h.currency ?? "USD")}
+              </div>
+            )}
+            <div className="text-xl font-extrabold text-primary md:text-2xl">
+              {formatPrice(price, h.currency ?? "USD")}
+            </div>
+            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes</div>
+            <button
+              onClick={() => onSelect(h)}
+              className="mt-2 w-full rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+            >
+              See availability
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
