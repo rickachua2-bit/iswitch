@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrency } from "@/hooks/use-currency";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
+import iswitchLogo from "@/assets/iswitch-logo.jpeg";
 
 export function Header({ transparent = false }: { transparent?: boolean }) {
   const { t, i18n } = useTranslation();
@@ -67,11 +68,12 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         {/* Logo + nav */}
         <div className="flex min-w-0 items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-accent shadow-glow">
-              <span className="font-display text-lg font-black text-accent-foreground">i</span>
-            </div>
-            <span className="font-display text-xl font-extrabold tracking-tight text-primary-foreground">iSwitch</span>
+          <Link to="/" className="flex items-center" aria-label="iSwitch home">
+            <img
+              src={iswitchLogo}
+              alt="iSwitch"
+              className="h-10 w-auto rounded-lg bg-white object-contain p-1 shadow-card md:h-11"
+            />
           </Link>
           <nav className="hidden items-center gap-0.5 lg:flex">
             {NAV.map((item) => {
