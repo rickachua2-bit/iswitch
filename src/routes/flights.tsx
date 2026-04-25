@@ -199,6 +199,15 @@ function FlightsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
+  // Detect pending navigation/loader runs to show a real loading state on Search click
+  const isSearching = useRouterState({
+    select: (s) =>
+      s.isLoading ||
+      s.isTransitioning ||
+      s.pendingMatches?.some((m) => m.routeId === "/flights") ||
+      false,
+  });
+
   const hasSearched = !!query.departure && !!query.origin && !!query.destination;
   const sort = search.sort ?? "best";
   const stopsFilter = search.stops ?? "any";
