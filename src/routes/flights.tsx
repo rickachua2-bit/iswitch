@@ -89,9 +89,9 @@ function fmtDate(iso?: string) {
   return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
 }
 
-function parseDuration(d?: string): number {
+function parseDuration(d?: string | number): number {
   // ISO 8601 PT2H45M → minutes
-  if (!d) return 0;
+  if (d == null) return 0;
   if (typeof d === "number") return d;
   const m = String(d).match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
   if (!m) return 0;
