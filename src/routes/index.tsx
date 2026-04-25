@@ -73,19 +73,13 @@ function Home() {
         </div>
       </section>
 
-      <TrustBadges />
       <ServicesGrid />
       <TrendingDeals />
       <HandpickedRoutes />
-      <InspirationGrid />
-      <HowItWorks />
-      <PriceGuarantee />
-      <StatsStrip />
       <AviationLounge />
-      <Testimonials />
       <WhyBook />
+      <Testimonials />
       <Newsletter />
-      <AppBanner />
       <Footer />
     </div>
   );
