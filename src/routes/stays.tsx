@@ -80,10 +80,10 @@ export const Route = createFileRoute("/stays")({
 const TABS = [
   { id: "stays", label: "Hotels", icon: Hotel, route: "/stays" as const, active: true },
   { id: "flights", label: "Flights", icon: Plane, route: "/flights" as const },
-  { id: "homes", label: "Homes & Apts", icon: HomeIcon, route: "/stays" as const },
-  { id: "package", label: "Flight + Hotel", icon: Briefcase, route: "/flights" as const },
-  { id: "tours", label: "Activities", icon: Compass, route: "/tours" as const },
-  { id: "pickups", label: "Airport transfer", icon: Car, route: "/pickups" as const },
+  { id: "visas", label: "Visas", icon: Briefcase, route: "/visas" as const },
+  { id: "insurance", label: "Insurance", icon: ShieldCheck, route: "/insurance" as const },
+  { id: "tours", label: "Tours", icon: Compass, route: "/tours" as const },
+  { id: "pickups", label: "Car transfer", icon: Car, route: "/pickups" as const },
 ];
 
 const TOP_DESTINATIONS = [
