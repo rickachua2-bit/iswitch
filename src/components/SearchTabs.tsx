@@ -222,7 +222,7 @@ function VisaForm({ onSearch }: { onSearch: (q: Record<string, string>) => void 
   );
 }
 
-import { Globe } from "lucide-react";
+
 
 /* ----- Insurance ----- */
 function InsuranceForm({ onSearch }: { onSearch: (q: Record<string, string>) => void }) {
