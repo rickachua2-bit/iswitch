@@ -11,6 +11,7 @@ import { AviationLounge } from "@/components/AviationLounge";
 import { WhyBook } from "@/components/WhyBook";
 import { Testimonials } from "@/components/Testimonials";
 import { Newsletter } from "@/components/Newsletter";
+import { AppBanner } from "@/components/AppBanner";
 import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/")({
@@ -73,6 +74,7 @@ function Home() {
       <AviationLounge />
       <WhyBook />
       <Testimonials />
+      <AppBanner />
       <Newsletter />
       <Footer />
     </div>
