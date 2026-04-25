@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, GraduationCap, Clock, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Loader2, GraduationCap, Clock, CheckCircle2, ArrowLeft, LogIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -59,19 +59,24 @@ function ConsultationsPage() {
     [selectedService, slots],
   );
 
+  function requireAuth(): boolean {
+    if (user) return true;
+    void navigate({ to: "/login", search: { redirect: "/consultations" } });
+    return false;
+  }
+
+  function pickService(s: Service) {
+    if (!requireAuth()) return;
+    setSelectedService(s);
+  }
+
   async function handleConfirm() {
     setError(null);
     if (!selectedService || !selectedTier || !selectedSlot) return;
-    if (!user) {
-      void navigate({ to: "/login" });
-      return;
-    }
+    if (!requireAuth()) return;
     setBooking(true);
-    // Mark slot booked first (RLS allows admins; users can't UPDATE slots — so we use an RPC-style two-step)
-    // Since users can't update slots directly, the booking insert succeeds; admins/cron can later mark slot booked.
-    // For now, we do a best-effort insert and then attempt slot update (may no-op for non-admin — that's OK, unique constraint on slot_id prevents double-booking).
     const { error: insErr } = await supabase.from("consultation_bookings").insert({
-      user_id: user.id,
+      user_id: user!.id,
       slot_id: selectedSlot.id,
       tier_id: selectedTier.id,
       service_id: selectedService.id,
@@ -131,6 +136,23 @@ function ConsultationsPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 md:px-6">
+        {!user && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-center gap-2 text-sm">
+              <LogIn className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-foreground">Sign in to book a consultation.</span>
+              <span className="text-muted-foreground">Bookings are tied to your account email.</span>
+            </div>
+            <Link
+              to="/login"
+              search={{ redirect: "/consultations" }}
+              className="rounded-md bg-gradient-primary px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-glow"
+            >
+              Sign in
+            </Link>
+          </div>
+        )}
+
         {/* Step 1: Service */}
         {!selectedService && (
           <>
@@ -139,7 +161,7 @@ function ConsultationsPage() {
               {services.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setSelectedService(s)}
+                  onClick={() => pickService(s)}
                   className="group rounded-2xl border border-border bg-card p-5 text-left shadow-card transition hover:-translate-y-1 hover:shadow-elevated"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
