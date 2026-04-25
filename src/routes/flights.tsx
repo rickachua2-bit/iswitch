@@ -20,6 +20,10 @@ const searchSchema = z.object({
   travelers: z.string().optional(),
   trip: z.string().optional(),
   cabin: z.string().optional(),
+  adults: z.string().optional(),
+  children: z.string().optional(),
+  infants: z.string().optional(),
+  segments: z.string().optional(),
   stops: z.string().optional(),         // "any" | "0" | "1" | "2"
   airlines: z.string().optional(),       // comma-separated IATA codes
   sort: z.enum(["best", "cheapest", "fastest"]).optional(),
@@ -29,6 +33,16 @@ function adultsFromTravelers(s: string | undefined) {
   if (!s) return 1;
   const m = s.match(/(\d+)/);
   return m ? Number(m[1]) : 1;
+}
+
+type Segment = { origin: string; destination: string; departure: string };
+function parseSegments(s: string | undefined): Segment[] {
+  if (!s) return [];
+  try {
+    const arr = JSON.parse(s);
+    if (Array.isArray(arr)) return arr.filter((x) => x?.origin && x?.destination && x?.departure);
+  } catch { /* ignore */ }
+  return [];
 }
 
 export const Route = createFileRoute("/flights")({
@@ -47,21 +61,45 @@ export const Route = createFileRoute("/flights")({
     departure: search.departure ?? "",
     returnDate: search.returnDate ?? "",
     travelers: search.travelers ?? "",
+    trip: search.trip ?? "round-trip",
+    cabin: search.cabin ?? "economy",
+    adults: search.adults ?? "",
+    children: search.children ?? "",
+    infants: search.infants ?? "",
+    segments: search.segments ?? "",
   }),
   loader: async ({ deps }) => {
-    if (!deps.departure || !deps.origin || !deps.destination) {
+    const segs = parseSegments(deps.segments);
+    const isMulti = deps.trip === "multi-city" && segs.length >= 2;
+    const hasSimple = deps.departure && deps.origin && deps.destination;
+    if (!isMulti && !hasSimple) {
       return { offers: [], query: deps, error: null as string | null };
     }
     try {
-      const res = await searchFlights({
-        data: {
-          origin: toIata(deps.origin),
-          destination: toIata(deps.destination),
-          departure_date: deps.departure,
-          return_date: deps.returnDate || undefined,
-          adults: adultsFromTravelers(deps.travelers),
-        },
-      });
+      const adults = deps.adults ? Number(deps.adults) : adultsFromTravelers(deps.travelers);
+      const payload = isMulti
+        ? {
+            segments: segs.map((s) => ({
+              origin: toIata(s.origin),
+              destination: toIata(s.destination),
+              departure_date: s.departure,
+            })),
+            adults,
+            cabin: deps.cabin || undefined,
+            children: deps.children ? Number(deps.children) : undefined,
+            infants: deps.infants ? Number(deps.infants) : undefined,
+          }
+        : {
+            origin: toIata(deps.origin),
+            destination: toIata(deps.destination),
+            departure_date: deps.departure,
+            return_date: deps.returnDate || undefined,
+            adults,
+            cabin: deps.cabin || undefined,
+            children: deps.children ? Number(deps.children) : undefined,
+            infants: deps.infants ? Number(deps.infants) : undefined,
+          };
+      const res = await searchFlights({ data: payload });
       return { offers: res?.data?.offers ?? [], query: deps, error: null as string | null };
     } catch (e: any) {
       return { offers: [], query: deps, error: e?.message ?? "Search failed" };
