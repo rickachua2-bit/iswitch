@@ -39,7 +39,10 @@ export function SearchTabs() {
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
-              <span className="whitespace-nowrap">{t.label}</span>
+              <span className="flex flex-col items-start leading-tight">
+                <span className="whitespace-nowrap">{t.label}</span>
+                <span className={`text-[9px] font-semibold uppercase tracking-wider ${isActive ? "text-muted-foreground" : "text-primary-foreground/60"}`}>{t.sub}</span>
+              </span>
             </button>
           );
         })}
