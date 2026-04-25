@@ -28,6 +28,7 @@ export interface FlightSearchPayload {
 
 interface Props {
   onSearch: (q: Record<string, string>) => void;
+  pending?: boolean;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
