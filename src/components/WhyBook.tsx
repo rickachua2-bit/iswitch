@@ -1,49 +1,30 @@
-import { Crown, CreditCard, PlaneTakeoff, Headphones } from "lucide-react";
+import { Award, BadgeCheck, Headphones, ShieldCheck } from "lucide-react";
 
-const FEATURES = [
-  {
-    icon: CreditCard,
-    title: "Multi-Currency Wallet",
-    body: "Pay effortlessly in NGN, USD, GBP, or EUR from a single wallet. We instantly handle the forex, guaranteeing 0% payment drop-offs globally.",
-    tone: "bg-blue-500/15 text-blue-300",
-  },
-  {
-    icon: PlaneTakeoff,
-    title: "500+ Top Airlines",
-    body: "Through our deep market integrations, we offer real-time inventory on the world's most luxurious and reliable airlines at exclusive wholesale rates.",
-    tone: "bg-success/15 text-success",
-  },
-  {
-    icon: Headphones,
-    title: "24/7 Global Concierge",
-    body: "Change of plans? Flight delayed? Our human-in-the-loop AI support team rebooks, refunds, and assists you within minutes, anywhere in the world.",
-    tone: "bg-primary/20 text-primary",
-  },
+const ITEMS = [
+  { icon: BadgeCheck, title: "Best price guarantee", desc: "Found cheaper? We'll refund the difference." },
+  { icon: ShieldCheck, title: "Secure & trusted", desc: "Bank-grade encryption on every booking." },
+  { icon: Headphones, title: "24/7 customer care", desc: "Real humans across every timezone." },
+  { icon: Award, title: "Award-winning service", desc: "Rated 4.8 by 50,000+ travelers." },
 ];
 
 export function WhyBook() {
   return (
-    <section className="mx-auto max-w-7xl px-6 pb-20">
-      <div className="rounded-3xl border border-border/60 bg-gradient-card p-8 shadow-card md:p-12">
-        <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-primary/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
-            <Crown className="h-3 w-3" /> Why Book with iSwitch
-          </div>
-          <h3 className="mt-3 font-display text-3xl font-extrabold md:text-4xl">The Ultimate Flight Experience</h3>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            We don't just sell tickets. We guarantee the smoothest travel lifecycle on the planet with real-time multi-currency payments and zero gateway failures.
-          </p>
+    <section className="bg-background py-14 md:py-20">
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
+        <div className="mb-8 text-center">
+          <h2 className="font-display text-2xl font-extrabold text-foreground md:text-3xl">Why book with iSwitch</h2>
+          <p className="mt-1 text-sm text-muted-foreground">The trusted global mobility partner</p>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {FEATURES.map((f) => {
-            const Icon = f.icon;
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {ITEMS.map((it) => {
+            const Icon = it.icon;
             return (
-              <div key={f.title} className="rounded-2xl border border-border/60 bg-background/40 p-5">
-                <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${f.tone}`}>
+              <div key={it.title} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h4 className="font-display text-base font-bold">{f.title}</h4>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+                <div className="font-display text-base font-bold text-foreground">{it.title}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{it.desc}</div>
               </div>
             );
           })}

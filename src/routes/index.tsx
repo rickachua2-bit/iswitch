@@ -1,64 +1,60 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import heroSky from "@/assets/hero-sky.jpg";
+import heroImg from "@/assets/hero-travel.jpg";
 import { Header } from "@/components/Header";
 import { SearchTabs } from "@/components/SearchTabs";
+import { ServicesGrid } from "@/components/ServicesGrid";
 import { HandpickedRoutes } from "@/components/HandpickedRoutes";
 import { AviationLounge } from "@/components/AviationLounge";
 import { WhyBook } from "@/components/WhyBook";
+import { AppBanner } from "@/components/AppBanner";
 import { Footer } from "@/components/Footer";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "iSwitch — Flights, Stays, Visas & Free Travel Consultations" },
+      { name: "description", content: "Book flights, hotels, visas, insurance, tours and airport pickups. Plus free expert consultations on study abroad, immigration, work abroad and global business setup." },
+      { property: "og:title", content: "iSwitch — Your Global Mobility Super App" },
+      { property: "og:description", content: "Everything you need to travel, study, work and do business abroad — in one app." },
+      { property: "og:image", content: heroImg },
+      { name: "twitter:image", content: heroImg },
+    ],
+  }),
+  component: Home,
 });
 
-function Index() {
+function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
+      <Header transparent />
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroSky} alt="Sky at dusk with airplane wing" className="h-full w-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
+      <section className="relative">
+        <div className="absolute inset-0 -z-10">
+          <img src={heroImg} alt="Crystal blue tropical beach" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.30_0.16_260/0.85)] via-[oklch(0.30_0.16_260/0.65)] to-[oklch(0.30_0.16_260/0.95)]" />
         </div>
 
-        <Header />
-
-        <div className="relative px-6 pt-32 pb-12 md:pt-40">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="mx-auto max-w-3xl text-center"
-          >
-            <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-primary">
-              ✦ The Future of Mobility
-            </div>
-            <h1 className="font-display text-5xl font-black leading-[1.05] tracking-tight md:text-7xl">
-              Limitless Travel.
+        <div className="px-4 pt-12 pb-8 md:pt-16 md:pb-12">
+          <div className="mx-auto mb-8 max-w-4xl text-center">
+            <h1 className="font-display text-3xl font-extrabold leading-[1.1] tracking-tight text-primary-foreground md:text-5xl">
+              Where will you go next?
               <br />
-              <span className="text-gradient-orange">Zero Friction.</span>
+              <span className="text-accent">Book it all in one place.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-md text-base text-muted-foreground">
-              Connect flights, stays, and visas in one intelligent vault.
+            <p className="mx-auto mt-3 max-w-xl text-sm text-primary-foreground/80 md:text-base">
+              Flights · Stays · Visas · Insurance · Tours · Pickups · Free expert consultations.
             </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="mt-10"
-          >
-            <SearchTabs />
-          </motion.div>
+          </div>
+          <SearchTabs />
         </div>
       </section>
 
+      <ServicesGrid />
       <HandpickedRoutes />
       <AviationLounge />
       <WhyBook />
+      <AppBanner />
       <Footer />
-    </main>
+    </div>
   );
 }
