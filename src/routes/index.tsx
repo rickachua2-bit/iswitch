@@ -32,23 +32,23 @@ function Home() {
     <div className="min-h-screen bg-background text-foreground">
       <Header transparent />
       {/* HERO — bold, prominent, trip.com-inspired */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
+      <section className="relative isolate -mt-[72px] overflow-hidden bg-primary-dark pt-[72px]">
+        <div className="absolute inset-0 z-0">
           <img
             src={heroImg}
             alt="Tropical beach, world landmarks and airplane wing — your global mobility super app"
             width={1920}
             height={1080}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-center"
           />
-          {/* Cinematic gradient — keeps image vivid on top, deepens to brand at bottom for legibility */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.20_0.10_260/0.30)] via-[oklch(0.22_0.12_260/0.55)] to-[oklch(0.22_0.12_260/0.96)]" />
+          {/* Cinematic gradient — keeps image vivid up top, deepens to brand at bottom for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.22_0.12_260/0.55)] via-[oklch(0.22_0.12_260/0.65)] to-[oklch(0.22_0.12_260/0.96)]" />
           {/* Side vignettes for focus */}
-          <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[oklch(0.20_0.10_260/0.40)] to-transparent" />
-          <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-[oklch(0.20_0.10_260/0.40)] to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[oklch(0.20_0.10_260/0.55)] to-transparent" />
+          <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-[oklch(0.20_0.10_260/0.55)] to-transparent" />
         </div>
 
-        <div className="px-4 pt-20 pb-12 md:pt-32 md:pb-20">
+        <div className="relative z-10 px-4 pt-16 pb-14 md:pt-24 md:pb-20">
           <div className="mx-auto mb-10 max-w-5xl text-center md:mb-14">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/95 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground shadow-glow">
               <Sparkles className="h-3 w-3" /> The Global Mobility Super App
