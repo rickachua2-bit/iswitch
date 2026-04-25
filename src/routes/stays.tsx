@@ -7,9 +7,11 @@ import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, Loader2, MapPin, ThumbsUp, Heart, Tag, Search,
   Hotel, Plane, Home as HomeIcon, Briefcase, Compass, Car,
-  Calendar as CalendarIcon, Users, Plus,
+  Calendar as CalendarIcon, Users, Plus, ChevronDown, Check,
+  Wifi, Coffee, Dumbbell, Waves, Utensils, ParkingCircle,
+  BedDouble, Sparkles, ShieldCheck, Flame,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import dubai from "@/assets/dest-dubai.jpg";
 import london from "@/assets/dest-london.jpg";
