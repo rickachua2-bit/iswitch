@@ -34,7 +34,7 @@ export const Route = createFileRoute("/insurance")({
   head: () => ({
     meta: [
       { title: "Travel Insurance — Cover from $4/day | iSwitch" },
-      { name: "description", content: "Affordable travel and medical insurance powered by SafetyWing. Schengen-approved, COVID-19 cover, instant policy." },
+      { name: "description", content: "Affordable travel and medical insurance from iSwitch. Schengen-approved, COVID-19 cover, instant policy." },
       { property: "og:title", content: "Travel Insurance | iSwitch" },
       { property: "og:description", content: "Protect every trip with comprehensive travel insurance." },
     ],
@@ -73,7 +73,7 @@ function InsurancePage() {
       <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
           <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Travel insurance, instant policy.</h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">SafetyWing-powered · Quote and bind in one call</p>
+          <p className="mt-2 text-sm text-primary-foreground/80">Quote and bind in one call · Worldwide cover</p>
         </div>
         <SearchTabs />
       </section>
