@@ -16,8 +16,8 @@ interface SearchingOverlayProps {
 export function SearchingOverlay({ match, label = "Searching…", sublabel }: SearchingOverlayProps) {
   const isPending = useRouterState({
     select: (s) =>
-      s.isLoading &&
-      s.pendingMatches.some((m) => m.pathname.startsWith(match)),
+      (s.status === "pending" || s.isLoading) &&
+      s.matches.some((m: { pathname: string }) => m.pathname.startsWith(match)),
   });
 
   if (!isPending) return null;
