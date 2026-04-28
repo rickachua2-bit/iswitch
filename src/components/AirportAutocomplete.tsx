@@ -56,7 +56,7 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
         <input
           ref={inputRef}
           value={query}
-          placeholder={placeholder ?? "City or airport code"}
+          placeholder={open && !query && previousValueRef.current ? previousValueRef.current : (placeholder ?? "City or airport code")}
           onFocus={(e) => {
             previousValueRef.current = query;
             setQuery("");
