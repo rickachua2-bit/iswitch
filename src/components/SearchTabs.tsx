@@ -5,6 +5,11 @@ import {
   MapPin, Calendar, Users, Search, Globe,
 } from "lucide-react";
 import { FlightForm } from "@/components/FlightForm";
+import {
+  GuestsRoomsPopover,
+  guestsRoomsDisplay,
+  parseGuestsRooms,
+} from "@/components/GuestsRoomsPopover";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
@@ -112,11 +117,14 @@ function StayForm({ onSearch }: { onSearch: (q: Record<string, string>) => void 
   const [destination, setDestination] = useState("Dubai");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState("2 Guests, 1 Room");
+  const [guestsRooms, setGuestsRooms] = useState(() => parseGuestsRooms("2 Guests, 1 Room"));
 
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); onSearch({ destination, checkIn, checkOut, guests }); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSearch({ destination, checkIn, checkOut, guests: guestsRoomsDisplay(guestsRooms) });
+      }}
       className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_1fr_1.1fr_auto]"
     >
       <Field icon={MapPin} label="Destination">
@@ -128,9 +136,7 @@ function StayForm({ onSearch }: { onSearch: (q: Record<string, string>) => void 
       <Field icon={Calendar} label="Check-out">
         <TextInput type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
       </Field>
-      <Field icon={Users} label="Guests / Rooms">
-        <TextInput value={guests} onChange={(e) => setGuests(e.target.value)} />
-      </Field>
+      <GuestsRoomsPopover value={guestsRooms} onChange={setGuestsRooms} />
       <SubmitBtn />
     </form>
   );
