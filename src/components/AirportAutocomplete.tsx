@@ -23,7 +23,15 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        // If user dismissed without picking, restore the prior value
+        setOpen((wasOpen) => {
+          if (wasOpen) {
+            setQuery(previousValueRef.current);
+          }
+          return false;
+        });
+      }
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
