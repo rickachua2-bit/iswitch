@@ -288,9 +288,22 @@ export const searchInsurance = createServerFn({ method: "POST" })
       start_date: string;
       end_date: string;
       travelers: number;
+      ages?: number[];
     }) => input,
   )
-  .handler(async ({ data }) => searchCall("/insurance/search", data));
+  .handler(async ({ data }) => {
+    const count = Math.max(1, Number(data.travelers) || 1);
+    const ages = (data.ages && data.ages.length === count)
+      ? data.ages
+      : Array.from({ length: count }, () => 30);
+    return searchCall("/insurance/search", {
+      nationality: data.nationality,
+      destination: data.destination,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      travelers: ages.map((age) => ({ age })),
+    });
+  });
 
 export const bookInsurance = createServerFn({ method: "POST" })
   .inputValidator(
