@@ -119,12 +119,21 @@ export function FlightResultCard({ offer }: { offer: any }) {
             </div>
             <div className="text-[11px] text-muted-foreground">per adult, taxes incl.</div>
           </div>
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-card transition hover:bg-primary-glow"
-          >
-            Select <ChevronRight className={`h-4 w-4 transition ${open ? "rotate-90" : ""}`} />
-          </button>
+          <div className="flex flex-col items-stretch gap-1.5 md:items-end">
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="inline-flex items-center justify-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-card transition hover:bg-primary-glow"
+            >
+              Select <ChevronRight className={`h-4 w-4 transition ${open ? "rotate-90" : ""}`} />
+            </button>
+            <button
+              onClick={() => setShowDetails((v) => !v)}
+              className="inline-flex items-center justify-center gap-1 rounded-md border border-primary/30 bg-card px-4 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/5"
+            >
+              {showDetails ? "Hide details" : "Learn more"}
+              <ChevronDown className={`h-3.5 w-3.5 transition ${showDetails ? "rotate-180" : ""}`} />
+            </button>
+          </div>
         </div>
       </div>
 
