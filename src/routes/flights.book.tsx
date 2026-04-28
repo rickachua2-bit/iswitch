@@ -241,6 +241,8 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
     <form onSubmit={submit} className="space-y-4">
       <FlightSummaryCard offer={offer} fare={fare} />
 
+      <FareAndTransitRules offer={offer} fare={fare} />
+
       <SectionCard
         title="Passenger details"
         subtitle="Enter the lead traveller's information exactly as on their passport."
