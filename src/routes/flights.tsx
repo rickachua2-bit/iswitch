@@ -5,6 +5,7 @@ import { FlightForm } from "@/components/FlightForm";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
 import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
+import { TravelTip } from "@/components/SearchingOverlay";
 import { toIata } from "@/lib/airports";
 import { Plane, Loader2, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -491,6 +492,8 @@ function SearchingState({ query }: { query: any }) {
         </div>
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
+
+      <TravelTip category="flights" />
 
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="overflow-hidden rounded-xl border border-border bg-card p-5 shadow-card">
