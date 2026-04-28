@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
+import { CountryAutocomplete } from "@/components/CountryAutocomplete";
 
 /* ---------- Field primitives ---------- */
 function Field({
