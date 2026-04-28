@@ -54,7 +54,7 @@ export const Route = createFileRoute("/insurance")({
           travelers: Number(deps.travelers) || 1,
         },
       });
-      return { plans: res?.data?.plans ?? [], query: deps, error: null };
+      return { plans: res?.data?.plans ?? [], query: deps, error: (res?.error as string | null) ?? null };
     } catch (e: any) {
       return { plans: [], query: deps, error: e?.message ?? "Search failed" };
     }

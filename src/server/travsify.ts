@@ -89,13 +89,19 @@ async function searchCall(path: string, body: unknown): Promise<any> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res: any = await call(path, body);
-      // Normalize per-vertical keys (flights/hotels/tours/visas/plans)
-      // into the unified shape the UI consumes (offers/hotels/tours/visas/plans).
+      // Normalize per-vertical keys into the unified shape the UI consumes.
       const d = res?.data ?? {};
-      if (d && !d.offers && Array.isArray(d.flights)) {
-        d.offers = d.flights;
-      }
-      return { ...res, data: d };
+      if (d && !d.offers && Array.isArray(d.flights)) d.offers = d.flights;
+      if (d && !d.plans && Array.isArray(d.policies)) d.plans = d.policies;
+      if (d && !d.vehicles && Array.isArray(d.transfers)) d.vehicles = d.transfers;
+      // Surface upstream warning (e.g. provider fallback / temporarily unavailable)
+      // as a friendly error string so the UI can display it.
+      const warn = res?.warning;
+      const warningMsg =
+        warn?.code === "search_unavailable"
+          ? "Live inventory for this route is temporarily unavailable. Please try again shortly."
+          : warn?.message ?? null;
+      return { ...res, data: d, error: warningMsg };
     } catch (error: any) {
       lastErr = error;
       const status: number | null = error?.status ?? null;
@@ -282,9 +288,22 @@ export const searchInsurance = createServerFn({ method: "POST" })
       start_date: string;
       end_date: string;
       travelers: number;
+      ages?: number[];
     }) => input,
   )
-  .handler(async ({ data }) => searchCall("/insurance/search", data));
+  .handler(async ({ data }) => {
+    const count = Math.max(1, Number(data.travelers) || 1);
+    const ages = (data.ages && data.ages.length === count)
+      ? data.ages
+      : Array.from({ length: count }, () => 30);
+    return searchCall("/insurance/search", {
+      nationality: data.nationality,
+      destination: data.destination,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      travelers: ages.map((age) => ({ age })),
+    });
+  });
 
 export const bookInsurance = createServerFn({ method: "POST" })
   .inputValidator(
