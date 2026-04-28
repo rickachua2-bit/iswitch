@@ -75,7 +75,7 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
             if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, results.length - 1)); }
             else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
             else if (e.key === "Enter" && results[highlight]) { e.preventDefault(); pick(results[highlight]); }
-            else if (e.key === "Escape") setOpen(false);
+            else if (e.key === "Escape") { setQuery(previousValueRef.current); setOpen(false); inputRef.current?.blur(); }
           }}
           className="w-full bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
           autoComplete="off"
