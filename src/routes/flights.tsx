@@ -238,8 +238,9 @@ function useFlightSearch(search: any): SearchState & { query: any } {
         if (start?.search_id) {
           setState({ status: "polling", offers: inlineOffers, error: null });
 
-          const MAX_ATTEMPTS = 30; // ~60s of polling
+          const MAX_ATTEMPTS = 12; // ~12s of polling — keep results swift
           let attempts = 0;
+          const POLL_MS = 1000;
 
           const poll = async () => {
             if (isStale()) return;
@@ -264,6 +265,12 @@ function useFlightSearch(search: any): SearchState & { query: any } {
             }
             setState({ status: "polling", offers, error: null });
 
+            // As soon as we have a healthy batch, stop early — show what we have.
+            if (offers.length >= 8) {
+              setState({ status: "completed", offers, error: null });
+              return;
+            }
+
             if (attempts >= MAX_ATTEMPTS) {
               setState({
                 status: offers.length ? "completed" : "failed",
@@ -272,10 +279,10 @@ function useFlightSearch(search: any): SearchState & { query: any } {
               });
               return;
             }
-            timer = setTimeout(poll, 2000);
+            timer = setTimeout(poll, POLL_MS);
           };
 
-          timer = setTimeout(poll, 2000);
+          timer = setTimeout(poll, POLL_MS);
           return;
         }
 
