@@ -548,4 +548,3 @@ function SearchingState({ query }: { query: any }) {
     </div>
   );
 }
-
