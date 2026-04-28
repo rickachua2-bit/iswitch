@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
-import { CountryAutocomplete } from "@/components/CountryAutocomplete";
+import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
+import { getCatalog } from "@/server/travsify";
 
 /* ---------- Field primitives ---------- */
 function Field({
@@ -74,6 +75,24 @@ export function VisaInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
   const [nationality, setNationality] = useState(initial?.nationality ?? "Nigeria");
   const [destination, setDestination] = useState(initial?.destination ?? "United Kingdom");
   const [visaType, setVisaType] = useState(initial?.visaType ?? "Tourist");
+  const [catalogReady, setCatalogReady] = useState(false);
+
+  // Ensure the catalog is loaded so getDestinationsForNationality has data.
+  useEffect(() => { getCatalog().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true)); }, []);
+
+  const allowedDestinations = useMemo(
+    () => (catalogReady ? getDestinationsForNationality(nationality) : []),
+    [catalogReady, nationality],
+  );
+
+  // If selected destination is no longer eligible for the chosen nationality, clear it.
+  useEffect(() => {
+    if (!catalogReady || allowedDestinations.length === 0) return;
+    if (!allowedDestinations.some((d) => d.toLowerCase() === destination.trim().toLowerCase())) {
+      setDestination("");
+    }
+  }, [allowedDestinations, catalogReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); onSearch({ nationality, destination, visaType }); }}
@@ -83,7 +102,12 @@ export function VisaInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
         <CountryAutocomplete value={nationality} onChange={setNationality} placeholder="e.g. Nigeria" />
       </Field>
       <Field icon={MapPin} label="Destination">
-        <CountryAutocomplete value={destination} onChange={setDestination} placeholder="Where are you going?" />
+        <CountryAutocomplete
+          value={destination}
+          onChange={setDestination}
+          placeholder={allowedDestinations.length ? "Where are you going?" : "Pick a nationality first"}
+          restrictTo={allowedDestinations}
+        />
       </Field>
       <Field icon={FileCheck} label="Visa type">
         <select
