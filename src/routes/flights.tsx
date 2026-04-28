@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FlightForm } from "@/components/FlightForm";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
 import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
