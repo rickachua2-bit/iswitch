@@ -418,7 +418,7 @@ function FlightsPage() {
               <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm">
                   <span className="font-bold text-foreground">{filtered.length}</span>
-                  <span className="text-muted-foreground"> flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} → {query.destination?.split(" ")[0] ?? toIata(query.destination)}</span>
+                  <span className="text-muted-foreground"> flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} {"→"} {query.destination?.split(" ")[0] ?? toIata(query.destination)}</span>
                 </div>
                 <div className="flex gap-1 rounded-full bg-secondary p-1">
                   {(["best", "cheapest", "fastest"] as const).map((t) => (
