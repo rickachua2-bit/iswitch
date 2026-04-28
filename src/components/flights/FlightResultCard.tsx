@@ -285,7 +285,7 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
       <div className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {index === 0 ? "Outbound" : `Leg ${index + 1}`}
         <span className="ml-2 font-medium normal-case text-muted-foreground/80">
-          {codeOf(sliceOrigin) || "—"} → {codeOf(sliceDest) || "—"}
+          {codeOf(sliceOrigin) || "—"} {"→"} {codeOf(sliceDest) || "—"}
         </span>
       </div>
       <div className="space-y-3">
@@ -310,32 +310,32 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
             "";
 
           return (
-          <div key={i} className="grid grid-cols-[80px_1fr] items-start gap-3 border-l-2 border-primary/30 pl-3">
-            <div className="text-right text-xs">
-              <div className="font-bold">{fmtTime(seg.departing_at)}</div>
-              <div className="text-muted-foreground">{oCode || "—"}</div>
+            <div key={i} className="grid grid-cols-[80px_1fr] items-start gap-3 border-l-2 border-primary/30 pl-3">
+              <div className="text-right text-xs">
+                <div className="font-bold">{fmtTime(seg.departing_at)}</div>
+                <div className="text-muted-foreground">{oCode || "—"}</div>
+              </div>
+              <div className="text-sm">
+                <div className="font-semibold">
+                  {oName} {"→"} {dName}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {carrierName || carrierCode || "Airline"}
+                  {carrierCode && carrierName ? ` (${carrierCode})` : ""}
+                  {seg.flight_number ? ` ${seg.flight_number}` : ""}
+                  {seg.aircraft?.name ? ` · ${seg.aircraft.name}` : ""}
+                  {seg.duration ? (
+                    <>
+                      {" · "}
+                      <Clock className="inline h-3 w-3" /> {fmtDuration(parseDuration(seg.duration))}
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-1 text-xs">
+                  <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at {dName}
+                </div>
+              </div>
             </div>
-            <div className="text-sm">
-              <div className="font-semibold">
-                {oName} → {dName}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {carrierName || carrierCode || "Airline"}
-                {carrierCode && carrierName ? ` (${carrierCode})` : ""}
-                {seg.flight_number ? ` ${seg.flight_number}` : ""}
-                {seg.aircraft?.name && <> · {seg.aircraft.name}</>}
-                {seg.duration && (
-                  <>
-                    {" "}· <Clock className="inline h-3 w-3" /> {fmtDuration(parseDuration(seg.duration))}
-                  </>
-                )}
-              </div>
-              <div className="mt-1 text-xs">
-                <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at{" "}
-                {dName}
-              </div>
-            </div>
-          </div>
           );
         })}
       </div>
