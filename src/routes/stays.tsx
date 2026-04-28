@@ -35,10 +35,22 @@ const CITY_TO_CC: Record<string, string> = {
   johannesburg: "ZA", accra: "GH", cairo: "EG", toronto: "CA", sydney: "AU", berlin: "DE",
 };
 
+const COUNTRY_TO_CC: Record<string, string> = {
+  "united arab emirates": "AE", uae: "AE", france: "FR", "united kingdom": "GB", uk: "GB",
+  "great britain": "GB", "united states": "US", usa: "US", japan: "JP", nigeria: "NG",
+  turkey: "TR", italy: "IT", spain: "ES", thailand: "TH", malaysia: "MY", kenya: "KE",
+  "south africa": "ZA", ghana: "GH", egypt: "EG", canada: "CA", australia: "AU", germany: "DE",
+};
+
 function guessCC(s: string) {
-  const k = s.trim().toLowerCase();
-  if (CITY_TO_CC[k]) return CITY_TO_CC[k];
-  if (/^[a-z]{2}$/i.test(s.trim())) return s.trim().toUpperCase();
+  const raw = s.trim();
+  const parts = raw.split(",").map((part) => part.trim().toLowerCase()).filter(Boolean);
+  const candidates = [raw.toLowerCase(), ...parts];
+  for (const candidate of candidates) {
+    if (CITY_TO_CC[candidate]) return CITY_TO_CC[candidate];
+    if (COUNTRY_TO_CC[candidate]) return COUNTRY_TO_CC[candidate];
+  }
+  if (/^[a-z]{2}$/i.test(raw)) return raw.toUpperCase();
   return "AE";
 }
 
