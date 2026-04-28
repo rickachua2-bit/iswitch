@@ -356,13 +356,30 @@ function FlightsPage() {
       <Header />
       <FlightSearchBar pending={isSearching} />
 
-      <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-        {isSearching ? (
-          <SearchingState query={query} />
-        ) : !hasSearched ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-            Enter your origin, destination and departure date above to search live flights.
-          </div>
+      {!hasSearched && !isSearching ? (
+        <>
+          <QuickRouteChips
+            onPick={(o, d) =>
+              navigate({
+                search: (prev: any) => ({
+                  ...prev,
+                  origin: o,
+                  destination: d,
+                }),
+              })
+            }
+          />
+          <HandpickedRoutes />
+          <CabinClasses />
+          <TrendingDeals />
+          <FlightValueProps />
+          <FlightFAQ />
+        </>
+      ) : (
+        <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+          {isSearching ? (
+            <SearchingState query={query} />
+          ) : null}
         ) : error ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
             <div className="font-bold text-foreground">Flights are taking a moment</div>
