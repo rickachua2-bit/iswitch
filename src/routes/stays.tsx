@@ -109,16 +109,7 @@ function StaysPage() {
   const navigate = useNavigate();
   const hasSearched = !!(query.checkIn && query.checkOut);
 
-  // Search form local state — seeded from URL
-  const [destination, setDestination] = useState(query.destination ?? "Dubai");
-  const [checkIn, setCheckIn] = useState(query.checkIn ?? "");
-  const [checkOut, setCheckOut] = useState(query.checkOut ?? "");
-  const [guests, setGuests] = useState(query.guests ?? "2 Guests, 1 Room");
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    void navigate({ to: "/stays", search: { destination, checkIn, checkOut, guests } });
-  };
 
   return (
     <div className="min-h-screen bg-secondary/40">
