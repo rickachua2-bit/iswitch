@@ -160,7 +160,7 @@ function VisasPage() {
           setDismissed(true);
           navigate({ to: "/visas", search: {} as never });
         }}
-        onRetry={error ? () => navigate({ search: (prev: any) => ({ ...prev }) }) : undefined}
+        onRetry={error ? () => navigate({ to: "/visas", search: query as never }) : undefined}
       />
 
       <UnifiedSearchBar
