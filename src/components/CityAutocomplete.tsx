@@ -28,6 +28,17 @@ function searchCities(query: string, limit = 8): City[] {
   return [...starts, ...contains].slice(0, limit);
 }
 
+function displayCity(c: City) {
+  return `${c.city}, ${c.country}`;
+}
+
+function bestCityDisplay(input: string) {
+  const typed = input.trim();
+  if (!typed) return "";
+  const exact = CITIES.find((c) => c.city.toLowerCase() === typed.toLowerCase());
+  return exact ? displayCity(exact) : typed;
+}
+
 interface Props {
   label: string;
   value: string;
@@ -41,29 +52,40 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
   const [query, setQuery] = useState(value);
   const [highlight, setHighlight] = useState(0);
   const previousValueRef = useRef(value);
+  const queryRef = useRef(value);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setQuery(value), [value]);
+  useEffect(() => {
+    queryRef.current = value;
+    setQuery(value);
+  }, [value]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!wrapRef.current?.contains(e.target as Node)) {
         setOpen((wasOpen) => {
-          if (wasOpen) setQuery(previousValueRef.current);
+          if (wasOpen) {
+            const display = bestCityDisplay(queryRef.current || previousValueRef.current);
+            previousValueRef.current = display;
+            queryRef.current = display;
+            setQuery(display);
+            onChange(display);
+          }
           return false;
         });
       }
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  }, [onChange]);
 
   const results = useMemo(() => searchCities(query, 8), [query]);
 
   function pick(c: City) {
-    const display = `${c.city}, ${c.country}`;
+    const display = displayCity(c);
     previousValueRef.current = display;
+    queryRef.current = display;
     onChange(display, c);
     setQuery(display);
     setOpen(false);
@@ -80,14 +102,16 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
           value={query}
           placeholder={open && !query && previousValueRef.current ? previousValueRef.current : (placeholder ?? "City or area")}
           onFocus={(e) => {
-            previousValueRef.current = query;
-            setQuery("");
+            previousValueRef.current = queryRef.current;
             setHighlight(0);
             setOpen(true);
             requestAnimationFrame(() => e.target?.select?.());
           }}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const next = e.target.value;
+            queryRef.current = next;
+            setQuery(next);
+            onChange(next);
             setOpen(true);
             setHighlight(0);
           }}
