@@ -574,17 +574,33 @@ function currencySymbol(cur: string) {
 }
 
 function layoverInfo(segs: any[]) {
-  // build "2h 10m in CDG" style label using the first connection
+  // Build a compact label that lists all layovers, e.g.
+  // "2h 10m in CDG · 1h 30m in DXB"
   if (segs.length < 2) return "";
-  const a = segs[0];
-  const b = segs[1];
-  if (!a?.arriving_at || !b?.departing_at) return `${segs.length - 1} stop`;
-  const mins = Math.round(
-    (new Date(b.departing_at).getTime() - new Date(a.arriving_at).getTime()) / 60000,
+  const parts: string[] = [];
+  for (let i = 0; i < segs.length - 1; i++) {
+    const a = segs[i];
+    const b = segs[i + 1];
+    if (!a?.arriving_at || !b?.departing_at) continue;
+    const mins = Math.round(
+      (new Date(b.departing_at).getTime() - new Date(a.arriving_at).getTime()) / 60000,
+    );
+    const place =
+      (typeof b?.origin === "object" ? b.origin?.iata_code : b?.origin) ||
+      (typeof a?.destination === "object" ? a.destination?.iata_code : a?.destination) ||
+      "stop";
+    if (mins > 0) parts.push(`${fmtDuration(mins)} in ${place}`);
+  }
+  if (!parts.length) return `${segs.length - 1} stop${segs.length > 2 ? "s" : ""}`;
+  return parts.join(" · ");
+}
+
+/** Compute layover minutes between two consecutive segments. */
+function layoverMins(prev: any, next: any): number {
+  if (!prev?.arriving_at || !next?.departing_at) return 0;
+  return Math.round(
+    (new Date(next.departing_at).getTime() - new Date(prev.arriving_at).getTime()) / 60000,
   );
-  const place = b?.origin?.iata_code ?? b?.origin ?? "";
-  if (mins <= 0) return `${segs.length - 1} stop`;
-  return `${fmtDuration(mins)} in ${place}`;
 }
 
 function buildFares(offer: any, price: number, cur: string) {
