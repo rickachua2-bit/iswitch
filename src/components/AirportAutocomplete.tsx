@@ -41,6 +41,7 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
 
   function pick(a: Airport) {
     const display = `${a.city} (${a.code})`;
+    previousValueRef.current = display;
     onChange(display, a);
     setQuery(display);
     setOpen(false);
@@ -53,9 +54,17 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
           <Icon className="h-3 w-3" /> {label}
         </div>
         <input
+          ref={inputRef}
           value={query}
           placeholder={placeholder ?? "City or airport code"}
-          onFocus={() => setOpen(true)}
+          onFocus={(e) => {
+            previousValueRef.current = query;
+            setQuery("");
+            setHighlight(0);
+            setOpen(true);
+            // ensure cursor at start in cleared field
+            requestAnimationFrame(() => e.target?.select?.());
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);
