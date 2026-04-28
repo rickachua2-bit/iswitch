@@ -446,8 +446,9 @@ function FlightsPage() {
               )}
             </div>
           </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       <Footer />
     </div>
