@@ -332,11 +332,12 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
               </div>
               <div className="mt-1 text-xs">
                 <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at{" "}
-                {seg.destination?.name ?? seg.destination}
+                {dName}
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
