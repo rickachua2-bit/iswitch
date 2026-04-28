@@ -149,6 +149,20 @@ function VisasPage() {
       <Header />
       <SearchingOverlay match="/visas" label="Checking visa requirements…" sublabel={searchedRoute} category="visas" />
 
+      <VisaNoResultsDialog
+        open={showNoResults}
+        title={error ? "Visa search is taking a moment" : "No visa options found"}
+        message={
+          error ??
+          `We couldn't find a visa for ${searchedRoute}. Try a different destination or purpose, or contact our visa concierge.`
+        }
+        onClose={() => {
+          setDismissed(true);
+          navigate({ to: "/visas", search: {} as never });
+        }}
+        onRetry={error ? () => navigate({ search: (prev: any) => ({ ...prev }) }) : undefined}
+      />
+
       <UnifiedSearchBar
         active="visas"
         title="Visa requirements, made simple."
