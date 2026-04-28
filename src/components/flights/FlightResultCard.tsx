@@ -285,7 +285,7 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
       <div className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {index === 0 ? "Outbound" : `Leg ${index + 1}`}
         <span className="ml-2 font-medium normal-case text-muted-foreground/80">
-          {codeOf(sliceOrigin) || "—"} → {codeOf(sliceDest) || "—"}
+          {codeOf(sliceOrigin) || "—"} {"→"} {codeOf(sliceDest) || "—"}
         </span>
       </div>
       <div className="space-y-3">
