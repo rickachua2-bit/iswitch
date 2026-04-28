@@ -203,7 +203,7 @@ function SliceRow({ slice, carrier }: { slice: any; carrier: { name: string; cod
     <div className="grid grid-cols-[auto_1fr] items-center gap-4">
       {/* airline mark */}
       <div className="flex w-24 flex-col items-start gap-1">
-        <CarrierBadge code={carrier.code} />
+        <CarrierBadge code={carrier.code} name={carrier.name} />
         <div className="truncate text-[11px] font-semibold text-muted-foreground">
           {carrier.name}
         </div>
