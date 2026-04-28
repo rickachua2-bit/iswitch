@@ -4,6 +4,11 @@ import {
 } from "lucide-react";
 import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
 import { getCatalog } from "@/server/travsify";
+import {
+  GuestsRoomsPopover,
+  guestsRoomsDisplay,
+  parseGuestsRooms,
+} from "@/components/GuestsRoomsPopover";
 
 /* ---------- Field primitives ---------- */
 function Field({
@@ -47,10 +52,13 @@ export function StayInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
   const [destination, setDestination] = useState(initial?.destination ?? "Dubai");
   const [checkIn, setCheckIn] = useState(initial?.checkIn ?? "");
   const [checkOut, setCheckOut] = useState(initial?.checkOut ?? "");
-  const [guests, setGuests] = useState(initial?.guests ?? "2 Guests, 1 Room");
+  const [guestsRooms, setGuestsRooms] = useState(() => parseGuestsRooms(initial?.guests));
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); onSearch({ destination, checkIn, checkOut, guests }); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSearch({ destination, checkIn, checkOut, guests: guestsRoomsDisplay(guestsRooms) });
+      }}
       className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_1fr_1.1fr_auto]"
     >
       <Field icon={MapPin} label="Destination">
@@ -62,9 +70,7 @@ export function StayInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
       <Field icon={Calendar} label="Check-out">
         <TextInput type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
       </Field>
-      <Field icon={Users} label="Guests / Rooms">
-        <TextInput value={guests} onChange={(e) => setGuests(e.target.value)} />
-      </Field>
+      <GuestsRoomsPopover value={guestsRooms} onChange={setGuestsRooms} />
       <SubmitBtn />
     </form>
   );
