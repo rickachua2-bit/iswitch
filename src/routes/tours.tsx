@@ -47,7 +47,7 @@ function ToursPage() {
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
-      <SearchingOverlay match="/tours" label="Searching for tours…" />
+      <SearchingOverlay match="/tours" label="Searching for tours…" category="tours" />
       <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
           <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Unforgettable experiences.</h1>

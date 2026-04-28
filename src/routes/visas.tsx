@@ -75,7 +75,7 @@ function VisasPage() {
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
-      <SearchingOverlay match="/visas" label="Searching for visas…" sublabel={`${query.nationality} → ${query.destination}`} />
+      <SearchingOverlay match="/visas" label="Searching for visas…" sublabel={`${query.nationality} → ${query.destination}`} category="visas" />
       <section className="bg-gradient-hero pb-10 pt-8 md:pb-14">
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-card/15 text-primary-foreground ring-1 ring-primary-foreground/20">
