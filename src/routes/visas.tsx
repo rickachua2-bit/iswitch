@@ -1,9 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { BookingDialog } from "@/components/BookingDialog";
 import { searchVisas, bookVisa } from "@/server/travsify";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   FileSearch,
   ShieldCheck,
@@ -12,7 +20,6 @@ import {
   Globe2,
   Clock,
   FileCheck2,
-  Plane,
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
@@ -124,7 +131,9 @@ export const Route = createFileRoute("/visas")({
 
 function VisasPage() {
   const { visas, query, error } = Route.useLoaderData() as any;
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<any | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const searchedRoute = `${query.nationality} → ${query.destination}`;
 
   // Annotate each result with kinds, then sort: e-Visa & visa-free first.
@@ -133,10 +142,26 @@ function VisasPage() {
     k === "visa-free" ? 0 : k === "evisa" ? 1 : k === "voa" ? 2 : k === "biometrics" ? 3 : k === "interview" ? 4 : 5;
   annotated.sort((a, b) => Math.min(...a._kinds.map(rank)) - Math.min(...b._kinds.map(rank)));
 
+  const showNoResults = !dismissed && (!!error || annotated.length === 0);
+
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
       <Header />
       <SearchingOverlay match="/visas" label="Checking visa requirements…" sublabel={searchedRoute} category="visas" />
+
+      <VisaNoResultsDialog
+        open={showNoResults}
+        title={error ? "Visa search is taking a moment" : "No visa options found"}
+        message={
+          error ??
+          `We couldn't find a visa for ${searchedRoute}. Try a different destination or purpose, or contact our visa concierge.`
+        }
+        onClose={() => {
+          setDismissed(true);
+          navigate({ to: "/visas", search: {} as never });
+        }}
+        onRetry={error ? () => navigate({ search: (prev: any) => ({ ...prev }) }) : undefined}
+      />
 
       <UnifiedSearchBar
         active="visas"
@@ -308,5 +333,50 @@ function VisasPage() {
       )}
       <Footer />
     </div>
+  );
+}
+
+/* ----------------------------- no results dialog ----------------------------- */
+function VisaNoResultsDialog({
+  open,
+  title,
+  message,
+  onClose,
+  onRetry,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  onRetry?: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <ShieldCheck className="h-6 w-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center">{title}</DialogTitle>
+          <DialogDescription className="text-center">{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+            >
+              Try again
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-foreground transition hover:bg-secondary"
+          >
+            Back to visas
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
