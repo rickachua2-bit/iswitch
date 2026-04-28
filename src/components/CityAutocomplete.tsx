@@ -52,18 +52,23 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
   const [query, setQuery] = useState(value);
   const [highlight, setHighlight] = useState(0);
   const previousValueRef = useRef(value);
+  const queryRef = useRef(value);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setQuery(value), [value]);
+  useEffect(() => {
+    queryRef.current = value;
+    setQuery(value);
+  }, [value]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!wrapRef.current?.contains(e.target as Node)) {
         setOpen((wasOpen) => {
           if (wasOpen) {
-            const display = bestCityDisplay(query || previousValueRef.current);
+            const display = bestCityDisplay(queryRef.current || previousValueRef.current);
             previousValueRef.current = display;
+            queryRef.current = display;
             setQuery(display);
             onChange(display);
           }
@@ -73,13 +78,14 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [onChange, query]);
+  }, [onChange]);
 
   const results = useMemo(() => searchCities(query, 8), [query]);
 
   function pick(c: City) {
     const display = displayCity(c);
     previousValueRef.current = display;
+    queryRef.current = display;
     onChange(display, c);
     setQuery(display);
     setOpen(false);
@@ -96,13 +102,14 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
           value={query}
           placeholder={open && !query && previousValueRef.current ? previousValueRef.current : (placeholder ?? "City or area")}
           onFocus={(e) => {
-            previousValueRef.current = query;
+            previousValueRef.current = queryRef.current;
             setHighlight(0);
             setOpen(true);
             requestAnimationFrame(() => e.target?.select?.());
           }}
           onChange={(e) => {
             const next = e.target.value;
+            queryRef.current = next;
             setQuery(next);
             onChange(next);
             setOpen(true);
