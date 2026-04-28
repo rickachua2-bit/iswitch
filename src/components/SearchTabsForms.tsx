@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
-import { CountryAutocomplete } from "@/components/CountryAutocomplete";
+import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
+import { getCatalog } from "@/server/travsify";
 
 /* ---------- Field primitives ---------- */
 function Field({
