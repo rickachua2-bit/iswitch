@@ -159,22 +159,28 @@ export function FlightResultCard({ offer }: { offer: any }) {
       )}
 
       {/* ---- show flight details (segment-level) ---- */}
-      <details className="group border-t border-border">
-        <summary className="flex cursor-pointer items-center justify-between gap-3 bg-card px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-secondary/50">
-          <span className="flex items-center gap-1.5">
-            <Plane className="h-3.5 w-3.5" /> Flight details
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
-        </summary>
-        <div className="space-y-4 border-t border-border bg-background p-4">
-          {slices.map((slice: any, i: number) => (
-            <SegmentDetails key={i} slice={slice} index={i} />
-          ))}
-          {slices.length === 0 && (
-            <div className="text-xs text-muted-foreground">Detailed segments unavailable.</div>
-          )}
+      {showDetails && (
+        <div className="border-t border-border bg-background">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/30 px-4 py-2 text-xs font-semibold text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <CarrierBadge code={carrier.code} />
+              <span className="text-foreground">{carrier.name}</span>
+              <span className="text-muted-foreground">· Full itinerary</span>
+            </span>
+            <span className="text-[11px]">
+              {slices.length} {slices.length === 1 ? "leg" : "legs"} · {formatPrice(price, cur)}
+            </span>
+          </div>
+          <div className="space-y-4 p-4">
+            {slices.map((slice: any, i: number) => (
+              <SegmentDetails key={i} slice={slice} index={i} />
+            ))}
+            {slices.length === 0 && (
+              <div className="text-xs text-muted-foreground">Detailed segments unavailable.</div>
+            )}
+          </div>
         </div>
-      </details>
+      )}
     </div>
   );
 }
