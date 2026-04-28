@@ -163,7 +163,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
         <div className="border-t border-border bg-background">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/30 px-4 py-2 text-xs font-semibold text-muted-foreground">
             <span className="flex items-center gap-2">
-              <CarrierBadge code={carrier.code} />
+              <CarrierBadge code={carrier.code} name={carrier.name} />
               <span className="text-foreground">{carrier.name}</span>
               <span className="text-muted-foreground">· Full itinerary</span>
             </span>
