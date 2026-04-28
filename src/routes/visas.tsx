@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { SearchTabs } from "@/components/SearchTabs";
 import { BookingDialog } from "@/components/BookingDialog";
 import { searchVisas, bookVisa } from "@/server/travsify";
-import { Loader2 } from "lucide-react";
+import { FileSearch, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -57,7 +57,7 @@ export const Route = createFileRoute("/visas")({
           purpose: toPurpose(deps.visaType),
         },
       });
-      return { visas: res?.data?.visas ?? [], query: deps, error: null as string | null };
+      return { visas: res?.data?.visas ?? [], query: deps, error: (res?.error as string | null) ?? null };
     } catch (e: any) {
       return { visas: [], query: deps, error: e?.message ?? "Search failed" };
     }
@@ -69,23 +69,37 @@ export const Route = createFileRoute("/visas")({
 function VisasPage() {
   const { visas, query, error } = Route.useLoaderData() as any;
   const [selected, setSelected] = useState<any | null>(null);
+  const searchedRoute = `${query.nationality} → ${query.destination}`;
 
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
-      <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
+      <section className="bg-gradient-hero pb-10 pt-8 md:pb-14">
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Get your visa, stress-free.</h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">Sherpa-powered e-Visas · Document review · Fulfilment included</p>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-card/15 text-primary-foreground ring-1 ring-primary-foreground/20">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Visa requirements, checked live.</h1>
+          <p className="mt-2 text-sm text-primary-foreground/80">Search by passport, destination and travel purpose.</p>
         </div>
-        <SearchTabs />
+        <SearchTabs defaultTab="visas" />
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {error ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive">{error}</div>
+          <div className="rounded-xl border border-border bg-card p-8 text-center shadow-card">
+            <FileSearch className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
+            <h2 className="font-display text-xl font-bold text-foreground">Search is not available.</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{error}</p>
+          </div>
         ) : visas.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground"><Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" /> No e-visas found for this combination.</div>
+          <div className="rounded-xl border border-border bg-card p-8 text-center shadow-card">
+            <FileSearch className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
+            <h2 className="font-display text-xl font-bold text-foreground">Search is not available.</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+              Sorry, visa is not found at this time for {searchedRoute}. Please try another destination or check again later.
+            </p>
+          </div>
         ) : (
           <>
             <h2 className="mb-4 font-display text-xl font-bold">{visas.length} options · {query.nationality} → {query.destination}</h2>
