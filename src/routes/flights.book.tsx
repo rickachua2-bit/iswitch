@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { bookFlight } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { FareAndTransitRules } from "@/components/flights/FareAndTransitRules";
 
 const bookSchema = z.object({
   offer_id: z.string(),
@@ -239,6 +240,8 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
   return (
     <form onSubmit={submit} className="space-y-4">
       <FlightSummaryCard offer={offer} fare={fare} />
+
+      <FareAndTransitRules offer={offer} fare={fare} />
 
       <SectionCard
         title="Passenger details"

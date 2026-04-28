@@ -309,32 +309,69 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
             (typeof seg.marketing_carrier === "object" && seg.marketing_carrier?.iata_code) ||
             "";
 
+          const nextSeg = segs[i + 1];
+          const layMins = nextSeg ? layoverMins(seg, nextSeg) : 0;
+          const longLayover = layMins >= 6 * 60; // 6h+ → highlight transit
+          const shortLayover = layMins > 0 && layMins < 60; // tight connection
+
           return (
-            <div key={i} className="grid grid-cols-[80px_1fr] items-start gap-3 border-l-2 border-primary/30 pl-3">
-              <div className="text-right text-xs">
-                <div className="font-bold">{fmtTime(seg.departing_at)}</div>
-                <div className="text-muted-foreground">{oCode || "—"}</div>
+            <div key={i}>
+              <div className="grid grid-cols-[80px_1fr] items-start gap-3 border-l-2 border-primary/30 pl-3">
+                <div className="text-right text-xs">
+                  <div className="font-bold">{fmtTime(seg.departing_at)}</div>
+                  <div className="text-muted-foreground">{oCode || "—"}</div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-semibold">
+                    {oName} {"→"} {dName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {carrierName || carrierCode || "Airline"}
+                    {carrierCode && carrierName ? ` (${carrierCode})` : ""}
+                    {seg.flight_number ? ` ${seg.flight_number}` : ""}
+                    {seg.aircraft?.name ? ` · ${seg.aircraft.name}` : ""}
+                    {seg.duration ? (
+                      <>
+                        {" · "}
+                        <Clock className="inline h-3 w-3" /> {fmtDuration(parseDuration(seg.duration))}
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="mt-1 text-xs">
+                    <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at {dName}
+                  </div>
+                </div>
               </div>
-              <div className="text-sm">
-                <div className="font-semibold">
-                  {oName} {"→"} {dName}
+
+              {nextSeg && layMins > 0 && (
+                <div
+                  className={`my-2 ml-3 flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
+                    longLayover
+                      ? "border-amber-500/40 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                      : shortLayover
+                      ? "border-destructive/40 bg-destructive/5 text-destructive"
+                      : "border-border bg-secondary/50 text-muted-foreground"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  <span className="font-semibold">
+                    {fmtDuration(layMins)} layover
+                  </span>
+                  <span className="opacity-70">
+                    in {codeOf(seg.destination) || codeOf(nextSeg.origin) || "transit"}
+                  </span>
+                  {longLayover && (
+                    <span className="ml-auto rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      Long stop · transit visa may apply
+                    </span>
+                  )}
+                  {shortLayover && (
+                    <span className="ml-auto rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      Tight connection
+                    </span>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {carrierName || carrierCode || "Airline"}
-                  {carrierCode && carrierName ? ` (${carrierCode})` : ""}
-                  {seg.flight_number ? ` ${seg.flight_number}` : ""}
-                  {seg.aircraft?.name ? ` · ${seg.aircraft.name}` : ""}
-                  {seg.duration ? (
-                    <>
-                      {" · "}
-                      <Clock className="inline h-3 w-3" /> {fmtDuration(parseDuration(seg.duration))}
-                    </>
-                  ) : null}
-                </div>
-                <div className="mt-1 text-xs">
-                  <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at {dName}
-                </div>
-              </div>
+              )}
             </div>
           );
         })}
@@ -574,17 +611,33 @@ function currencySymbol(cur: string) {
 }
 
 function layoverInfo(segs: any[]) {
-  // build "2h 10m in CDG" style label using the first connection
+  // Build a compact label that lists all layovers, e.g.
+  // "2h 10m in CDG · 1h 30m in DXB"
   if (segs.length < 2) return "";
-  const a = segs[0];
-  const b = segs[1];
-  if (!a?.arriving_at || !b?.departing_at) return `${segs.length - 1} stop`;
-  const mins = Math.round(
-    (new Date(b.departing_at).getTime() - new Date(a.arriving_at).getTime()) / 60000,
+  const parts: string[] = [];
+  for (let i = 0; i < segs.length - 1; i++) {
+    const a = segs[i];
+    const b = segs[i + 1];
+    if (!a?.arriving_at || !b?.departing_at) continue;
+    const mins = Math.round(
+      (new Date(b.departing_at).getTime() - new Date(a.arriving_at).getTime()) / 60000,
+    );
+    const place =
+      (typeof b?.origin === "object" ? b.origin?.iata_code : b?.origin) ||
+      (typeof a?.destination === "object" ? a.destination?.iata_code : a?.destination) ||
+      "stop";
+    if (mins > 0) parts.push(`${fmtDuration(mins)} in ${place}`);
+  }
+  if (!parts.length) return `${segs.length - 1} stop${segs.length > 2 ? "s" : ""}`;
+  return parts.join(" · ");
+}
+
+/** Compute layover minutes between two consecutive segments. */
+function layoverMins(prev: any, next: any): number {
+  if (!prev?.arriving_at || !next?.departing_at) return 0;
+  return Math.round(
+    (new Date(next.departing_at).getTime() - new Date(prev.arriving_at).getTime()) / 60000,
   );
-  const place = b?.origin?.iata_code ?? b?.origin ?? "";
-  if (mins <= 0) return `${segs.length - 1} stop`;
-  return `${fmtDuration(mins)} in ${place}`;
 }
 
 function buildFares(offer: any, price: number, cur: string) {

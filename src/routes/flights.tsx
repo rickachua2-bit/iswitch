@@ -238,8 +238,9 @@ function useFlightSearch(search: any): SearchState & { query: any } {
         if (start?.search_id) {
           setState({ status: "polling", offers: inlineOffers, error: null });
 
-          const MAX_ATTEMPTS = 30; // ~60s of polling
+          const MAX_ATTEMPTS = 12; // ~12s of polling — keep results swift
           let attempts = 0;
+          const POLL_MS = 1000;
 
           const poll = async () => {
             if (isStale()) return;
@@ -264,6 +265,12 @@ function useFlightSearch(search: any): SearchState & { query: any } {
             }
             setState({ status: "polling", offers, error: null });
 
+            // As soon as we have a healthy batch, stop early — show what we have.
+            if (offers.length >= 8) {
+              setState({ status: "completed", offers, error: null });
+              return;
+            }
+
             if (attempts >= MAX_ATTEMPTS) {
               setState({
                 status: offers.length ? "completed" : "failed",
@@ -272,10 +279,10 @@ function useFlightSearch(search: any): SearchState & { query: any } {
               });
               return;
             }
-            timer = setTimeout(poll, 2000);
+            timer = setTimeout(poll, POLL_MS);
           };
 
-          timer = setTimeout(poll, 2000);
+          timer = setTimeout(poll, POLL_MS);
           return;
         }
 
@@ -494,58 +501,74 @@ function SearchingState({ query }: { query: any }) {
   const from = query.origin?.split(" ")[0] || toIata(query.origin) || "Origin";
   const to = query.destination?.split(" ")[0] || toIata(query.destination) || "Destination";
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5 shadow-card">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-primary shadow-glow">
-              <Plane className="h-5 w-5 animate-pulse text-primary-foreground" />
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+      {/* sidebar skeleton — preserves trip.com layout while loading */}
+      <aside className="hidden lg:block">
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-card">
+          <div className="h-3 w-24 animate-pulse rounded bg-secondary" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
+              <div className="h-2.5 w-20 animate-pulse rounded bg-secondary/80" />
+              <div className="h-2 w-full animate-pulse rounded bg-secondary/60" />
+              <div className="h-2 w-3/4 animate-pulse rounded bg-secondary/60" />
             </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-              Searching live flights
-              <span className="inline-flex gap-0.5">
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
-              </span>
-            </div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              {from} <ArrowRight className="inline h-3 w-3" /> {to} · Comparing 500+ airlines in real time
-            </div>
-          </div>
+          ))}
         </div>
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </aside>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5 shadow-card">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-primary shadow-glow">
+                <Plane className="h-5 w-5 animate-pulse text-primary-foreground" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                Searching live flights
+                <span className="inline-flex gap-0.5">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+                </span>
+              </div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {from} <ArrowRight className="inline h-3 w-3" /> {to} · Comparing 500+ airlines in real time
+              </div>
+            </div>
+          </div>
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+
+        <TravelTip category="flights" />
+
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="overflow-hidden rounded-xl border border-border bg-card p-5 shadow-card">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-1 items-center gap-4">
+                <div className="h-10 w-10 animate-pulse rounded-full bg-secondary" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 animate-pulse rounded bg-secondary" />
+                  <div className="h-2.5 w-48 animate-pulse rounded bg-secondary/70" />
+                </div>
+                <div className="hidden flex-1 items-center justify-between gap-3 md:flex">
+                  <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+                  <div className="h-px flex-1 bg-border" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-secondary/70" />
+                  <div className="h-px flex-1 bg-border" />
+                  <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <div className="h-7 w-24 animate-pulse rounded bg-secondary" />
+                <div className="h-8 w-24 animate-pulse rounded-lg bg-primary/20" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <TravelTip category="flights" />
-
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="overflow-hidden rounded-xl border border-border bg-card p-5 shadow-card">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-1 items-center gap-4">
-              <div className="h-10 w-10 animate-pulse rounded-full bg-secondary" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-32 animate-pulse rounded bg-secondary" />
-                <div className="h-2.5 w-48 animate-pulse rounded bg-secondary/70" />
-              </div>
-              <div className="hidden flex-1 items-center justify-between gap-3 md:flex">
-                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
-                <div className="h-px flex-1 bg-border" />
-                <div className="h-4 w-16 animate-pulse rounded bg-secondary/70" />
-                <div className="h-px flex-1 bg-border" />
-                <div className="h-6 w-14 animate-pulse rounded bg-secondary" />
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="h-7 w-24 animate-pulse rounded bg-secondary" />
-              <div className="h-8 w-24 animate-pulse rounded-lg bg-primary/20" />
-            </div>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
