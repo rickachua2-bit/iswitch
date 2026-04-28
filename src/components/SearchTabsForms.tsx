@@ -4,6 +4,11 @@ import {
 } from "lucide-react";
 import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
 import { getCatalog } from "@/server/travsify";
+import {
+  GuestsRoomsPopover,
+  guestsRoomsDisplay,
+  parseGuestsRooms,
+} from "@/components/GuestsRoomsPopover";
 
 /* ---------- Field primitives ---------- */
 function Field({
