@@ -5,6 +5,7 @@ import { FlightForm } from "@/components/FlightForm";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
 import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
+import { TravelTip } from "@/components/SearchingOverlay";
 import { toIata } from "@/lib/airports";
 import { Plane, Loader2, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
