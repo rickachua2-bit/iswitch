@@ -18,6 +18,14 @@ import {
   FlightValueProps,
   FlightFAQ,
 } from "@/components/flights/FlightLandingExtras";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const searchSchema = z.object({
   origin: z.string().optional(),
@@ -385,23 +393,29 @@ function FlightsPage() {
       ) : (
         <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
           {isSearching && <SearchingState query={query} />}
-          {!isSearching && error && (
-            <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
-              <div className="font-bold text-foreground">Flights are taking a moment</div>
-              <div className="mt-1 text-muted-foreground">{error}</div>
-              <button
-                onClick={() => navigate({ search: (prev: any) => ({ ...prev }) })}
-                className="mt-3 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-          {!isSearching && !error && offers.length === 0 && (
-            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
-              <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
-            </div>
-          )}
+
+          <NoResultsDialog
+            open={!isSearching && (!!error || offers.length === 0)}
+            title={error ? "Flights are taking a moment" : "No flights found"}
+            message={
+              error ??
+              "We couldn't find any flights for these dates and route. Try different dates, nearby airports, or another cabin class."
+            }
+            onClose={() =>
+              navigate({
+                search: {
+                  trip: query.trip ?? "round-trip",
+                  cabin: query.cabin ?? "economy",
+                } as never,
+              })
+            }
+            onRetry={
+              error
+                ? () => navigate({ search: (prev: any) => ({ ...prev }) })
+                : undefined
+            }
+          />
+
           {!isSearching && !error && offers.length > 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
               <FlightFilters
@@ -570,5 +584,50 @@ function SearchingState({ query }: { query: any }) {
         ))}
       </div>
     </div>
+  );
+}
+/* ----------------------------- no results dialog ----------------------------- */
+
+function NoResultsDialog({
+  open,
+  title,
+  message,
+  onClose,
+  onRetry,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  onRetry?: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <Plane className="h-6 w-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center">{title}</DialogTitle>
+          <DialogDescription className="text-center">{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+            >
+              Try again
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-foreground transition hover:bg-secondary"
+          >
+            Back to flights
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
