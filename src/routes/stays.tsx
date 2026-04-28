@@ -584,16 +584,18 @@ function HotelResultCard({
   const original = h.original_price ? Number(h.original_price) : null;
   const price = Number(h.price ?? 0);
   const discount = original && original > price ? Math.round(((original - price) / original) * 100) : 0;
+  const img = pickHotelImage(h);
 
   return (
     <article className="group grid grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:shadow-elevated md:grid-cols-[280px_1fr]">
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-secondary md:aspect-auto md:h-full">
-        {h.image || h.thumbnail ? (
+        {img ? (
           <img
-            src={h.image ?? h.thumbnail}
+            src={img}
             alt={h.name}
             loading="lazy"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
@@ -641,12 +643,12 @@ function HotelResultCard({
             </div>
           </div>
 
-          {/* Promo line */}
+          {/* Promo line — prepay only */}
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
-            <span className="rounded bg-accent/20 px-1.5 py-0.5 font-bold text-accent-foreground">
-              Pay at the property
+            <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 font-bold text-primary">
+              <ShieldCheck className="h-3 w-3" /> Prepay · instant confirmation
             </span>
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 font-bold text-primary">
+            <span className="rounded bg-accent/20 px-1.5 py-0.5 font-bold text-accent-foreground">
               Breakfast included
             </span>
           </div>
@@ -679,12 +681,12 @@ function HotelResultCard({
             <div className="text-xl font-extrabold text-primary md:text-2xl">
               {formatPrice(price, h.currency ?? "USD")}
             </div>
-            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes</div>
+            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes · pay now</div>
             <button
               onClick={() => onSelect(h)}
               className="mt-2 w-full rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
             >
-              See availability
+              Book & pay now
             </button>
           </div>
         </div>
