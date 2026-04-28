@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchTabs } from "@/components/SearchTabs";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { BookingDialog } from "@/components/BookingDialog";
 import { searchVisas, bookVisa } from "@/server/travsify";
 import { FileSearch, ShieldCheck } from "lucide-react";
