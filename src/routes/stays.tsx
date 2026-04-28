@@ -206,8 +206,8 @@ function StaysPage() {
         <BookingDialog
           open={!!selected}
           onOpenChange={(o) => !o && setSelected(null)}
-          title={`Book ${selected.name}`}
-          summary={`${formatPrice(Number(selected.price), selected.currency ?? "USD")} · ${query.checkIn} → ${query.checkOut}`}
+          title={`Book & pay: ${selected.name}`}
+          summary={`${formatPrice(Number(selected.price), selected.currency ?? "USD")} · ${query.checkIn} → ${query.checkOut} · payment required to confirm`}
           fields={[
             { name: "firstName", label: "First name", required: true },
             { name: "lastName", label: "Last name", required: true },
