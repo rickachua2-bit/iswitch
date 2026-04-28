@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { searchHotels, bookHotel } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
@@ -124,97 +125,12 @@ function StaysPage() {
       <Header />
       <SearchingOverlay match="/stays" label="Searching for stays…" category="stays" />
 
-      {/* Agoda-style hero — pale brand tint with white search card on top */}
-      <section className="relative isolate overflow-hidden bg-gradient-to-b from-primary via-primary-glow to-primary-glow/60 pb-32 pt-10 md:pb-40">
-        {/* soft top vignette */}
-        <div className="absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(ellipse_at_top,oklch(1_0_0/0.18),transparent_60%)]" />
-
-        <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <h1 className="font-display text-2xl font-extrabold uppercase tracking-[0.18em] text-primary-foreground drop-shadow md:text-3xl">
-            See the world for less
-          </h1>
-        </div>
-
-        {/* White search card — tabs INSIDE the card */}
-        <div className="mx-auto w-full max-w-5xl px-4">
-          <div className="rounded-3xl bg-card shadow-elevated">
-            {/* Tab strip inside the card (Agoda style) */}
-            <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 pt-1 scrollbar-hide md:gap-0 md:px-4">
-              {TABS.map((t) => {
-                const Icon = t.icon;
-                return (
-                  <Link
-                    key={t.id}
-                    to={t.route}
-                    {...(t.route === "/stays"
-                      ? { search: { destination, checkIn, checkOut, guests } }
-                      : {})}
-                    className={`flex min-w-fit items-center gap-1.5 px-3 py-3 text-sm font-semibold transition md:px-5 md:py-4 ${
-                      t.active
-                        ? "border-b-2 border-primary text-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={2.4} />
-                    <span className="whitespace-nowrap">{t.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Form body */}
-            <form onSubmit={onSubmit} className="p-4 md:p-5">
-              {/* Destination — full-width row like Agoda */}
-              <label className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <input
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="Enter a destination or property"
-                  className="w-full bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
-                />
-              </label>
-
-              {/* Dates + guests row */}
-              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1.2fr]">
-                <DateField icon={CalendarIcon} label="Check-in" value={checkIn} onChange={setCheckIn} />
-                <DateField icon={CalendarIcon} label="Check-out" value={checkOut} onChange={setCheckOut} />
-                <label className="flex flex-col gap-0.5 rounded-xl border border-border bg-background px-4 py-2.5 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <Users className="h-3 w-3" /> Guests / Rooms
-                  </span>
-                  <input
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
-                  />
-                </label>
-              </div>
-
-              {/* Add a flight inline link (Agoda) */}
-              <button
-                type="button"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
-              >
-                <Plus className="h-3.5 w-3.5" /> Add a flight
-              </button>
-
-              {/* Floating SEARCH pill */}
-              <div className="-mb-12 mt-5 flex justify-center md:-mb-16">
-                <button
-                  type="submit"
-                  className="rounded-full bg-gradient-primary px-12 py-4 text-sm font-extrabold uppercase tracking-widest text-primary-foreground shadow-glow transition hover:opacity-95 md:px-16 md:py-5 md:text-base"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Spacer for floating button */}
-      <div className="h-10 md:h-14" />
+      <UnifiedSearchBar
+        active="stays"
+        title="See the world for less"
+        subtitle="Compare 2M+ hotels and homes worldwide · Best price guarantee"
+        initial={query}
+      />
 
       {/* Live results — Agoda-style: sticky filter sidebar + horizontal cards */}
       {hasSearched && (
