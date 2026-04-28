@@ -200,10 +200,22 @@ export function TravelTip({
   intervalMs?: number;
   className?: string;
 }) {
-  const tips = useMemo(() => TIPS[category] ?? TIPS.general, [category]);
-  const [idx, setIdx] = useState(() => Math.floor(Math.random() * tips.length));
+  // Shuffle tips on each mount so every search shows a new sequence and we
+  // don't repeat the same opening tip the user just saw.
+  const tips = useMemo(() => {
+    const source = TIPS[category] ?? TIPS.general;
+    const arr = [...source];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+  const [idx, setIdx] = useState(0);
 
   useEffect(() => {
+    setIdx(0);
     const id = setInterval(() => {
       setIdx((i) => (i + 1) % tips.length);
     }, intervalMs);
