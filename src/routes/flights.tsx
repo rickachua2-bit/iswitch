@@ -493,6 +493,8 @@ function SearchingState({ query }: { query: any }) {
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
 
+      <TravelTip category="flights" />
+
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="overflow-hidden rounded-xl border border-border bg-card p-5 shadow-card">
           <div className="flex items-center justify-between gap-4">
