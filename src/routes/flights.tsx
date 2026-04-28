@@ -481,31 +481,13 @@ function FlightsPage() {
 /* ----------------------------- search bar ----------------------------- */
 
 function FlightSearchBar({ pending = false }: { pending?: boolean }) {
-  const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-
   return (
-    <section className="bg-gradient-hero pb-8 pt-6 md:pb-10">
-      <div className="mx-auto mb-5 max-w-4xl px-4 text-center">
-        <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">
-          Compare cheap flights worldwide
-        </h1>
-        <p className="mt-2 text-sm text-primary-foreground/80">
-          Live NDC + GDS inventory · 500+ airlines · Real-time confirmation
-        </p>
-      </div>
-
-      <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="rounded-2xl bg-card p-4 shadow-elevated md:p-5">
-          <FlightForm
-            pending={pending}
-            onSearch={(q) => navigate({
-              search: { ...q, sort: search.sort ?? "best" } as never,
-            })}
-          />
-        </div>
-      </div>
-    </section>
+    <UnifiedSearchBar
+      active="flights"
+      pending={pending}
+      title="Compare cheap flights worldwide"
+      subtitle="Live NDC + GDS inventory · 500+ airlines · Real-time confirmation"
+    />
   );
 }
 
