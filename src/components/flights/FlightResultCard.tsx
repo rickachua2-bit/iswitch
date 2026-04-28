@@ -263,28 +263,66 @@ function SliceRow({ slice, carrier }: { slice: any; carrier: { name: string; cod
   );
 }
 
+function codeOf(v: any): string {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  return v.iata_code ?? v.code ?? v.airport_code ?? "";
+}
+function nameOf(v: any): string {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  return v.name ?? v.city_name ?? v.airport_name ?? v.iata_code ?? "";
+}
+
 function SegmentDetails({ slice, index }: { slice: any; index: number }) {
   const segs = slice.segments ?? [];
+  const sliceOrigin = slice.origin;
+  const sliceDest = slice.destination;
+  const lastIdx = segs.length - 1;
+
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         {index === 0 ? "Outbound" : `Leg ${index + 1}`}
+        <span className="ml-2 font-medium normal-case text-muted-foreground/80">
+          {codeOf(sliceOrigin) || "—"} → {codeOf(sliceDest) || "—"}
+        </span>
       </div>
       <div className="space-y-3">
-        {segs.map((seg: any, i: number) => (
+        {segs.map((seg: any, i: number) => {
+          // The Travsify response often only carries times + carrier on each
+          // segment. Derive origin/destination from the slice when missing:
+          // first segment uses slice.origin, last uses slice.destination,
+          // intermediates fall back to a "Connection" label.
+          const segOrigin = seg.origin ?? (i === 0 ? sliceOrigin : null);
+          const segDest = seg.destination ?? (i === lastIdx ? sliceDest : null);
+          const oCode = codeOf(segOrigin);
+          const dCode = codeOf(segDest);
+          const oName = nameOf(segOrigin) || oCode || "Connection";
+          const dName = nameOf(segDest) || dCode || "Connection";
+          const carrierName =
+            (typeof seg.marketing_carrier === "object" && seg.marketing_carrier?.name) ||
+            (typeof seg.operating_carrier === "object" && seg.operating_carrier?.name) ||
+            "";
+          const carrierCode =
+            (typeof seg.marketing_carrier === "string" && seg.marketing_carrier) ||
+            (typeof seg.marketing_carrier === "object" && seg.marketing_carrier?.iata_code) ||
+            "";
+
+          return (
           <div key={i} className="grid grid-cols-[80px_1fr] items-start gap-3 border-l-2 border-primary/30 pl-3">
             <div className="text-right text-xs">
               <div className="font-bold">{fmtTime(seg.departing_at)}</div>
-              <div className="text-muted-foreground">{seg.origin?.iata_code ?? seg.origin}</div>
+              <div className="text-muted-foreground">{oCode || "—"}</div>
             </div>
             <div className="text-sm">
               <div className="font-semibold">
-                {(seg.origin?.name ?? seg.origin) + " → " + (seg.destination?.name ?? seg.destination)}
+                {oName} → {dName}
               </div>
               <div className="text-xs text-muted-foreground">
-                {(seg.marketing_carrier?.name ?? seg.marketing_carrier) || "Airline"}
-                {" "}
-                {seg.marketing_carrier?.iata_code ?? ""} {seg.flight_number}
+                {carrierName || carrierCode || "Airline"}
+                {carrierCode && carrierName ? ` (${carrierCode})` : ""}
+                {seg.flight_number ? ` ${seg.flight_number}` : ""}
                 {seg.aircraft?.name && <> · {seg.aircraft.name}</>}
                 {seg.duration && (
                   <>
@@ -294,11 +332,12 @@ function SegmentDetails({ slice, index }: { slice: any; index: number }) {
               </div>
               <div className="mt-1 text-xs">
                 <span className="font-bold">{fmtTime(seg.arriving_at)}</span> arrives at{" "}
-                {seg.destination?.name ?? seg.destination}
+                {dName}
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
