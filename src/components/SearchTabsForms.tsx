@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
+import { CountryAutocomplete } from "@/components/CountryAutocomplete";
 
 /* ---------- Field primitives ---------- */
 function Field({
@@ -79,10 +80,10 @@ export function VisaInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
       className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_auto]"
     >
       <Field icon={Globe} label="Nationality">
-        <TextInput value={nationality} onChange={(e) => setNationality(e.target.value)} />
+        <CountryAutocomplete value={nationality} onChange={setNationality} placeholder="e.g. Nigeria" />
       </Field>
       <Field icon={MapPin} label="Destination">
-        <TextInput value={destination} onChange={(e) => setDestination(e.target.value)} />
+        <CountryAutocomplete value={destination} onChange={setDestination} placeholder="Where are you going?" />
       </Field>
       <Field icon={FileCheck} label="Visa type">
         <select
