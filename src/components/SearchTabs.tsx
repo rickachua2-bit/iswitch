@@ -5,6 +5,7 @@ import {
   MapPin, Calendar, Users, Search, Globe,
 } from "lucide-react";
 import { FlightForm } from "@/components/FlightForm";
+import { StayInlineForm } from "@/components/SearchTabsForms";
 
 type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
@@ -63,7 +64,7 @@ export function SearchTabs({ defaultTab }: { defaultTab?: TabId } = {}) {
       {/* Panel */}
       <div className="rounded-b-2xl rounded-tr-2xl bg-card p-4 shadow-elevated md:p-6">
         {active === "flights" && <FlightForm onSearch={(q) => navigate({ to: "/flights", search: q as never })} />}
-        {active === "stays" && <StayForm onSearch={(q) => navigate({ to: "/stays", search: q as never })} />}
+        {active === "stays" && <StayInlineForm onSearch={(q) => navigate({ to: "/stays", search: q as never })} />}
         {active === "visas" && <VisaForm onSearch={(q) => navigate({ to: "/visas", search: q as never })} />}
         {active === "insurance" && <InsuranceForm onSearch={(q) => navigate({ to: "/insurance", search: q as never })} />}
         {active === "tours" && <ToursForm onSearch={(q) => navigate({ to: "/tours", search: q as never })} />}
@@ -104,35 +105,6 @@ function SubmitBtn() {
     >
       <Search className="h-4 w-4" strokeWidth={2.6} /> Search
     </button>
-  );
-}
-
-/* ----- Stays ----- */
-function StayForm({ onSearch }: { onSearch: (q: Record<string, string>) => void }) {
-  const [destination, setDestination] = useState("Dubai");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState("2 Guests, 1 Room");
-
-  return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); onSearch({ destination, checkIn, checkOut, guests }); }}
-      className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_1fr_1.1fr_auto]"
-    >
-      <Field icon={MapPin} label="Destination">
-        <TextInput value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, hotel or area" />
-      </Field>
-      <Field icon={Calendar} label="Check-in">
-        <TextInput type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
-      </Field>
-      <Field icon={Calendar} label="Check-out">
-        <TextInput type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
-      </Field>
-      <Field icon={Users} label="Guests / Rooms">
-        <TextInput value={guests} onChange={(e) => setGuests(e.target.value)} />
-      </Field>
-      <SubmitBtn />
-    </form>
   );
 }
 
