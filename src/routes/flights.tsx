@@ -10,6 +10,14 @@ import { toIata } from "@/lib/airports";
 import { Plane, Loader2, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { TrendingDeals } from "@/components/TrendingDeals";
+import { HandpickedRoutes } from "@/components/HandpickedRoutes";
+import {
+  QuickRouteChips,
+  CabinClasses,
+  FlightValueProps,
+  FlightFAQ,
+} from "@/components/flights/FlightLandingExtras";
 
 const searchSchema = z.object({
   origin: z.string().optional(),
