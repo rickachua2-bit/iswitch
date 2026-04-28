@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { bookFlight } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { FareAndTransitRules } from "@/components/flights/FareAndTransitRules";
 
 const bookSchema = z.object({
   offer_id: z.string(),
