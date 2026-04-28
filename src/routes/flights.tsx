@@ -18,6 +18,14 @@ import {
   FlightValueProps,
   FlightFAQ,
 } from "@/components/flights/FlightLandingExtras";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const searchSchema = z.object({
   origin: z.string().optional(),
