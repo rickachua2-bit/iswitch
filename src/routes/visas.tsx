@@ -131,7 +131,9 @@ export const Route = createFileRoute("/visas")({
 
 function VisasPage() {
   const { visas, query, error } = Route.useLoaderData() as any;
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<any | null>(null);
+  const [dismissed, setDismissed] = useState(false);
   const searchedRoute = `${query.nationality} → ${query.destination}`;
 
   // Annotate each result with kinds, then sort: e-Visa & visa-free first.
@@ -139,6 +141,8 @@ function VisasPage() {
   const rank = (k: VisaKind) =>
     k === "visa-free" ? 0 : k === "evisa" ? 1 : k === "voa" ? 2 : k === "biometrics" ? 3 : k === "interview" ? 4 : 5;
   annotated.sort((a, b) => Math.min(...a._kinds.map(rank)) - Math.min(...b._kinds.map(rank)));
+
+  const showNoResults = !dismissed && (!!error || annotated.length === 0);
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
