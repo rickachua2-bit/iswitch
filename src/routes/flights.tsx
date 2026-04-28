@@ -422,17 +422,18 @@ function FlightsPage() {
                     <span className="text-muted-foreground"> flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} {"→"} {query.destination?.split(" ")[0] ?? toIata(query.destination)}</span>
                   </div>
                   <div className="flex gap-1 rounded-full bg-secondary p-1">
-                    {(["best", "cheapest", "fastest"] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setSearch({ sort: t })}
-                        className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
-                          sort === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
+                    {(["best", "cheapest", "fastest"] as Array<"best"|"cheapest"|"fastest">).map((t) => {
+                      const active = sort === t;
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setSearch({ sort: t })}
+                          className={"rounded-full px-3 py-1.5 text-xs font-bold capitalize transition " + (active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -548,4 +549,3 @@ function SearchingState({ query }: { query: any }) {
     </div>
   );
 }
-
