@@ -3,6 +3,7 @@ import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
 import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
+import { CityAutocomplete } from "@/components/CityAutocomplete";
 import { getCatalog } from "@/server/travsify";
 import {
   GuestsRoomsPopover,
