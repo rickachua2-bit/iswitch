@@ -379,8 +379,7 @@ function FlightsPage() {
         <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
           {isSearching ? (
             <SearchingState query={query} />
-          ) : null}
-        ) : error ? (
+          ) : error ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
             <div className="font-bold text-foreground">Flights are taking a moment</div>
             <div className="mt-1 text-muted-foreground">{error}</div>
