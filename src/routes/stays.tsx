@@ -266,9 +266,27 @@ const SORT_TABS = [
 const POPULAR_FILTERS = [
   { label: "Free cancellation", icon: ShieldCheck },
   { label: "Breakfast included", icon: Coffee },
-  { label: "Pay at the property", icon: Check },
+  { label: "Instant confirmation", icon: Check },
   { label: "Hot deals", icon: Flame },
 ];
+
+/** Pull the best available hotel image from Travsify's many possible field names. */
+function pickHotelImage(h: any): string | null {
+  if (!h) return null;
+  const direct = h.image ?? h.thumbnail ?? h.photo ?? h.picture ?? h.image_url ?? h.thumbnail_url ?? h.cover ?? h.cover_image;
+  if (typeof direct === "string" && direct) return direct;
+  const arrays = [h.images, h.photos, h.gallery, h.pictures, h.media];
+  for (const arr of arrays) {
+    if (Array.isArray(arr) && arr.length) {
+      const first = arr[0];
+      if (typeof first === "string") return first;
+      if (first && typeof first === "object") {
+        return first.url ?? first.src ?? first.href ?? first.image ?? first.thumbnail ?? null;
+      }
+    }
+  }
+  return null;
+}
 
 const PROPERTY_TYPES = ["Hotel", "Apartment", "Resort", "Villa", "Hostel", "Guest house"];
 
