@@ -57,7 +57,7 @@ export const Route = createFileRoute("/visas")({
           purpose: toPurpose(deps.visaType),
         },
       });
-      return { visas: res?.data?.visas ?? [], query: deps, error: null as string | null };
+      return { visas: res?.data?.visas ?? [], query: deps, error: (res?.error as string | null) ?? null };
     } catch (e: any) {
       return { visas: [], query: deps, error: e?.message ?? "Search failed" };
     }
