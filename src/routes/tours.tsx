@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchTabs } from "@/components/SearchTabs";
 import { BookingDialog } from "@/components/BookingDialog";
+import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchTours, bookTour } from "@/server/travsify";
 import { Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
