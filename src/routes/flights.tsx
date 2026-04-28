@@ -393,23 +393,29 @@ function FlightsPage() {
       ) : (
         <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
           {isSearching && <SearchingState query={query} />}
-          {!isSearching && error && (
-            <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
-              <div className="font-bold text-foreground">Flights are taking a moment</div>
-              <div className="mt-1 text-muted-foreground">{error}</div>
-              <button
-                onClick={() => navigate({ search: (prev: any) => ({ ...prev }) })}
-                className="mt-3 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-          {!isSearching && !error && offers.length === 0 && (
-            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
-              <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
-            </div>
-          )}
+
+          <NoResultsDialog
+            open={!isSearching && (!!error || offers.length === 0)}
+            title={error ? "Flights are taking a moment" : "No flights found"}
+            message={
+              error ??
+              "We couldn't find any flights for these dates and route. Try different dates, nearby airports, or another cabin class."
+            }
+            onClose={() =>
+              navigate({
+                search: {
+                  trip: query.trip ?? "round-trip",
+                  cabin: query.cabin ?? "economy",
+                } as never,
+              })
+            }
+            onRetry={
+              error
+                ? () => navigate({ search: (prev: any) => ({ ...prev }) })
+                : undefined
+            }
+          />
+
           {!isSearching && !error && offers.length > 0 && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
               <FlightFilters
