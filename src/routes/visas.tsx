@@ -81,7 +81,7 @@ function classifyVisa(v: any): VisaKind[] {
 
 const KIND_META: Record<VisaKind, { label: string; icon: any; cls: string }> = {
   evisa: { label: "e-Visa", icon: Globe2, cls: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
-  voa: { label: "Visa on arrival", icon: Plane, cls: "bg-sky-50 text-sky-700 ring-sky-200" },
+  voa: { label: "Visa on arrival", icon: Globe2, cls: "bg-sky-50 text-sky-700 ring-sky-200" },
   biometrics: { label: "Biometrics required", icon: Fingerprint, cls: "bg-amber-50 text-amber-800 ring-amber-200" },
   interview: { label: "Interview required", icon: Users, cls: "bg-rose-50 text-rose-700 ring-rose-200" },
   embassy: { label: "Embassy submission", icon: FileCheck2, cls: "bg-slate-100 text-slate-700 ring-slate-200" },
@@ -160,7 +160,7 @@ function VisasPage() {
           setDismissed(true);
           navigate({ to: "/visas", search: {} as never });
         }}
-        onRetry={error ? () => navigate({ search: (prev: any) => ({ ...prev }) }) : undefined}
+        onRetry={error ? () => navigate({ to: "/visas", search: query as never }) : undefined}
       />
 
       <UnifiedSearchBar
