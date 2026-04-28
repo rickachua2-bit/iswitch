@@ -10,10 +10,10 @@ import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  pickup: z.string().optional().default("Murtala Muhammed Airport (LOS)"),
-  drop: z.string().optional().default("Eko Hotel, Victoria Island"),
-  date: z.string().optional().default(""),
-  time: z.string().optional().default(""),
+  pickup: z.coerce.string().optional().default("Murtala Muhammed Airport (LOS)"),
+  drop: z.coerce.string().optional().default("Eko Hotel, Victoria Island"),
+  date: z.coerce.string().optional().default(""),
+  time: z.coerce.string().optional().default(""),
 });
 
 export const Route = createFileRoute("/pickups")({

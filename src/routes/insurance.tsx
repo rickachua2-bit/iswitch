@@ -10,11 +10,11 @@ import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  destination: z.string().optional().default("Schengen Area"),
-  start: z.string().optional().default(""),
-  end: z.string().optional().default(""),
-  travelers: z.string().optional().default("1"),
-  nationality: z.string().optional().default("Nigeria"),
+  destination: z.coerce.string().optional().default("Schengen Area"),
+  start: z.coerce.string().optional().default(""),
+  end: z.coerce.string().optional().default(""),
+  travelers: z.coerce.string().optional().default("1"),
+  nationality: z.coerce.string().optional().default("Nigeria"),
 });
 
 const COUNTRY_CC: Record<string, string> = {

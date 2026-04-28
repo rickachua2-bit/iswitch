@@ -22,10 +22,10 @@ import newyork from "@/assets/dest-newyork.jpg";
 import tokyo from "@/assets/dest-tokyo.jpg";
 
 const searchSchema = z.object({
-  destination: z.string().optional().default("Dubai"),
-  checkIn: z.string().optional().default(""),
-  checkOut: z.string().optional().default(""),
-  guests: z.string().optional().default("2 Guests, 1 Room"),
+  destination: z.coerce.string().optional().default("Dubai"),
+  checkIn: z.coerce.string().optional().default(""),
+  checkOut: z.coerce.string().optional().default(""),
+  guests: z.coerce.string().optional().default("2 Guests, 1 Room"),
 });
 
 const CITY_TO_CC: Record<string, string> = {

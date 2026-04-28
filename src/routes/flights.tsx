@@ -29,22 +29,22 @@ import {
 } from "@/components/ui/dialog";
 
 const searchSchema = z.object({
-  origin: z.string().optional(),
-  destination: z.string().optional(),
-  departure: z.string().optional(),
-  returnDate: z.string().optional(),
-  travelers: z.string().optional(),
-  trip: z.string().optional(),
-  cabin: z.string().optional(),
-  adults: z.string().optional(),
-  children: z.string().optional(),
-  infants: z.string().optional(),
-  segments: z.string().optional(),
-  stops: z.string().optional(),
-  airlines: z.string().optional(),
+  origin: z.coerce.string().optional(),
+  destination: z.coerce.string().optional(),
+  departure: z.coerce.string().optional(),
+  returnDate: z.coerce.string().optional(),
+  travelers: z.coerce.string().optional(),
+  trip: z.coerce.string().optional(),
+  cabin: z.coerce.string().optional(),
+  adults: z.coerce.string().optional(),
+  children: z.coerce.string().optional(),
+  infants: z.coerce.string().optional(),
+  segments: z.coerce.string().optional(),
+  stops: z.coerce.string().optional(),
+  airlines: z.coerce.string().optional(),
   sort: z.enum(["best", "cheapest", "fastest"]).optional(),
-  baggage: z.string().optional(),
-  recommended: z.string().optional(),
+  baggage: z.coerce.string().optional(),
+  recommended: z.coerce.string().optional(),
 });
 
 function adultsFromTravelers(s: string | undefined) {

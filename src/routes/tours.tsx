@@ -10,9 +10,9 @@ import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  destination: z.string().optional().default("Dubai"),
-  date: z.string().optional().default(""),
-  guests: z.string().optional().default("2"),
+  destination: z.coerce.string().optional().default("Dubai"),
+  date: z.coerce.string().optional().default(""),
+  guests: z.coerce.string().optional().default("2"),
 });
 
 export const Route = createFileRoute("/tours")({
