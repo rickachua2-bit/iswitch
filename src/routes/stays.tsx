@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BookingDialog } from "@/components/BookingDialog";
+import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchHotels, bookHotel } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
@@ -121,6 +122,7 @@ function StaysPage() {
   return (
     <div className="min-h-screen bg-secondary/40">
       <Header />
+      <SearchingOverlay match="/stays" label="Searching for stays…" />
 
       {/* Agoda-style hero — pale brand tint with white search card on top */}
       <section className="relative isolate overflow-hidden bg-gradient-to-b from-primary via-primary-glow to-primary-glow/60 pb-32 pt-10 md:pb-40">

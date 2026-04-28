@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchTabs } from "@/components/SearchTabs";
 import { BookingDialog } from "@/components/BookingDialog";
+import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchTransfers, bookTransfer } from "@/server/travsify";
 import { Car, Users, Briefcase, Snowflake, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -49,6 +50,7 @@ function PickupsPage() {
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
+      <SearchingOverlay match="/pickups" label="Searching for transfers…" />
       <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
         <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
           <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">
