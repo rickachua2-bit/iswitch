@@ -15,7 +15,9 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const [highlight, setHighlight] = useState(0);
+  const previousValueRef = useRef(value);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setQuery(value), [value]);
 
