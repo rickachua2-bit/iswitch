@@ -48,6 +48,7 @@ function fmtDuration(min: number) {
 
 export function FlightResultCard({ offer }: { offer: any }) {
   const [open, setOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const navigate = useNavigate();
   const formatPrice = usePriceFormat();
 
