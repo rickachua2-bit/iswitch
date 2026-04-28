@@ -28,6 +28,17 @@ function searchCities(query: string, limit = 8): City[] {
   return [...starts, ...contains].slice(0, limit);
 }
 
+function displayCity(c: City) {
+  return `${c.city}, ${c.country}`;
+}
+
+function bestCityDisplay(input: string) {
+  const typed = input.trim();
+  if (!typed) return "";
+  const exact = CITIES.find((c) => c.city.toLowerCase() === typed.toLowerCase());
+  return exact ? displayCity(exact) : typed;
+}
+
 interface Props {
   label: string;
   value: string;
@@ -50,19 +61,24 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
     function onDoc(e: MouseEvent) {
       if (!wrapRef.current?.contains(e.target as Node)) {
         setOpen((wasOpen) => {
-          if (wasOpen) setQuery(previousValueRef.current);
+          if (wasOpen) {
+            const display = bestCityDisplay(query || previousValueRef.current);
+            previousValueRef.current = display;
+            setQuery(display);
+            onChange(display);
+          }
           return false;
         });
       }
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  }, [onChange, query]);
 
   const results = useMemo(() => searchCities(query, 8), [query]);
 
   function pick(c: City) {
-    const display = `${c.city}, ${c.country}`;
+    const display = displayCity(c);
     previousValueRef.current = display;
     onChange(display, c);
     setQuery(display);
@@ -81,13 +97,14 @@ export function CityAutocomplete({ label, value, onChange, placeholder, icon: Ic
           placeholder={open && !query && previousValueRef.current ? previousValueRef.current : (placeholder ?? "City or area")}
           onFocus={(e) => {
             previousValueRef.current = query;
-            setQuery("");
             setHighlight(0);
             setOpen(true);
             requestAnimationFrame(() => e.target?.select?.());
           }}
           onChange={(e) => {
-            setQuery(e.target.value);
+            const next = e.target.value;
+            setQuery(next);
+            onChange(next);
             setOpen(true);
             setHighlight(0);
           }}
