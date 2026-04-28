@@ -368,12 +368,29 @@ function Amenity({ icon: Icon, label }: { icon: any; label: string }) {
 }
 
 function CarrierBadge({ code }: { code: string }) {
+  const [errored, setErrored] = useState(false);
+  const valid = code && code !== "??" && code.length >= 2;
+  const src = valid
+    ? `https://daisycon.io/images/airline/?width=120&height=60&color=ffffff&iata=${encodeURIComponent(code)}`
+    : "";
   return (
     <div
-      className="flex h-7 w-10 items-center justify-center rounded-md bg-gradient-to-br from-primary/10 to-accent/10 text-[11px] font-extrabold tracking-wider text-primary"
+      className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md border border-border bg-card p-1 shadow-sm"
       title={code}
     >
-      {code === "??" ? <Plane className="h-3 w-3" /> : code}
+      {valid && !errored ? (
+        <img
+          src={src}
+          alt={`${code} logo`}
+          className="h-full w-full object-contain"
+          loading="lazy"
+          onError={() => setErrored(true)}
+        />
+      ) : (
+        <span className="inline-flex items-center gap-1 text-[11px] font-extrabold tracking-wider text-primary">
+          {code === "??" ? <Plane className="h-3 w-3" /> : code}
+        </span>
+      )}
     </div>
   );
 }
