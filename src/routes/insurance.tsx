@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { SearchTabs } from "@/components/SearchTabs";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchInsurance, bookInsurance } from "@/server/travsify";
@@ -72,13 +72,12 @@ function InsurancePage() {
     <div className="min-h-screen bg-secondary/30">
       <Header />
       <SearchingOverlay match="/insurance" label="Searching for insurance plans…" category="insurance" />
-      <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
-        <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Travel insurance, instant policy.</h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">Quote and bind in one call · Worldwide cover</p>
-        </div>
-        <SearchTabs />
-      </section>
+      <UnifiedSearchBar
+        active="insurance"
+        title="Travel insurance, instant policy."
+        subtitle="Quote and bind in one call · Worldwide cover"
+        initial={query}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {!hasSearched ? (

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { SearchTabs } from "@/components/SearchTabs";
+import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchTransfers, bookTransfer } from "@/server/travsify";
@@ -51,15 +51,12 @@ function PickupsPage() {
     <div className="min-h-screen bg-secondary/30">
       <Header />
       <SearchingOverlay match="/pickups" label="Searching for transfers…" category="pickups" />
-      <section className="bg-gradient-hero pb-12 pt-8 md:pb-16">
-        <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">
-            Land. Step out. Drive away.
-          </h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">Pre-book airport pickups in 100+ cities · Flight tracking included</p>
-        </div>
-        <SearchTabs />
-      </section>
+      <UnifiedSearchBar
+        active="pickups"
+        title="Land. Step out. Drive away."
+        subtitle="Pre-book airport pickups in 100+ cities · Flight tracking included"
+        initial={query}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {!hasSearched ? (
