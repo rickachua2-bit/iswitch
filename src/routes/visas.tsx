@@ -76,16 +76,12 @@ function VisasPage() {
     <div className="min-h-screen bg-secondary/30">
       <Header />
       <SearchingOverlay match="/visas" label="Searching for visas…" sublabel={`${query.nationality} → ${query.destination}`} category="visas" />
-      <section className="bg-gradient-hero pb-10 pt-8 md:pb-14">
-        <div className="mx-auto mb-6 max-w-4xl px-4 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-card/15 text-primary-foreground ring-1 ring-primary-foreground/20">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">Visa requirements, checked live.</h1>
-          <p className="mt-2 text-sm text-primary-foreground/80">Search by passport, destination and travel purpose.</p>
-        </div>
-        <SearchTabs defaultTab="visas" />
-      </section>
+      <UnifiedSearchBar
+        active="visas"
+        title="Visa requirements, checked live."
+        subtitle="Search by passport, destination and travel purpose."
+        initial={query}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {error ? (
