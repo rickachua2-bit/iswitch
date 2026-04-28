@@ -1,5 +1,5 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap,
   MapPin, Calendar, Users, Search, Globe,
@@ -17,9 +17,24 @@ const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = 
   { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
 ];
 
-export function SearchTabs({ defaultTab = "flights" }: { defaultTab?: TabId } = {}) {
-  const [active, setActive] = useState<TabId>(defaultTab);
+function tabFromPath(pathname: string): TabId {
+  if (pathname.startsWith("/stays")) return "stays";
+  if (pathname.startsWith("/visas")) return "visas";
+  if (pathname.startsWith("/insurance")) return "insurance";
+  if (pathname.startsWith("/tours")) return "tours";
+  if (pathname.startsWith("/pickups")) return "pickups";
+  return "flights";
+}
+
+export function SearchTabs({ defaultTab }: { defaultTab?: TabId } = {}) {
+  const location = useLocation();
+  const routeTab = defaultTab ?? tabFromPath(location.pathname);
+  const [active, setActive] = useState<TabId>(routeTab);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setActive(routeTab);
+  }, [routeTab]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
