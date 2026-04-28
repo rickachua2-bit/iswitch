@@ -377,75 +377,76 @@ function FlightsPage() {
         </>
       ) : (
         <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-          {isSearching ? (
-            <SearchingState query={query} />
-          ) : error ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
-            <div className="font-bold text-foreground">Flights are taking a moment</div>
-            <div className="mt-1 text-muted-foreground">{error}</div>
-            <button
-              onClick={() => navigate({ search: (prev: any) => ({ ...prev }) })}
-              className="mt-3 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
-            >
-              Try again
-            </button>
-          </div>
-        ) : offers.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
-            <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-            <FlightFilters
-              offers={offers}
-              currency={currency}
-              stops={stopsFilter}
-              airlines={airlineFilter}
-              baggage={baggageOnly}
-              recommended={recommendedOnly}
-              onChange={(p) => {
-                const patch: Record<string, any> = {};
-                if (p.stops !== undefined) patch.stops = p.stops;
-                if (p.airlines !== undefined)
-                  patch.airlines = p.airlines.length ? p.airlines.join(",") : undefined;
-                if (p.baggage !== undefined) patch.baggage = p.baggage ? "1" : undefined;
-                if (p.recommended !== undefined) patch.recommended = p.recommended ? "1" : undefined;
-                setSearch(patch);
-              }}
-            />
-
-            <div className="space-y-3">
-              <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm">
-                  <span className="font-bold text-foreground">{filtered.length}</span>
-                  <span className="text-muted-foreground"> flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} {"→"} {query.destination?.split(" ")[0] ?? toIata(query.destination)}</span>
-                </div>
-                <div className="flex gap-1 rounded-full bg-secondary p-1">
-                  {(["best", "cheapest", "fastest"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setSearch({ sort: t })}
-                      className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
-                        sort === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {filtered.map((o: any) => (
-                <FlightResultCard key={o.id} offer={o} />
-              ))}
-
-              {filtered.length === 0 && (
-                <div className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                  No flights match the current filters.
-                </div>
-              )}
+          {isSearching && <SearchingState query={query} />}
+          {!isSearching && error && (
+            <div className="rounded-2xl border border-border bg-card p-6 text-sm shadow-card">
+              <div className="font-bold text-foreground">Flights are taking a moment</div>
+              <div className="mt-1 text-muted-foreground">{error}</div>
+              <button
+                onClick={() => navigate({ search: (prev: any) => ({ ...prev }) })}
+                className="mt-3 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+              >
+                Try again
+              </button>
             </div>
-          </div>
+          )}
+          {!isSearching && !error && offers.length === 0 && (
+            <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
+              <Plane className="mx-auto mb-2 h-5 w-5 text-muted-foreground" /> No offers found. Try different dates or airports.
+            </div>
+          )}
+          {!isSearching && !error && offers.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+              <FlightFilters
+                offers={offers}
+                currency={currency}
+                stops={stopsFilter}
+                airlines={airlineFilter}
+                baggage={baggageOnly}
+                recommended={recommendedOnly}
+                onChange={(p) => {
+                  const patch: Record<string, any> = {};
+                  if (p.stops !== undefined) patch.stops = p.stops;
+                  if (p.airlines !== undefined)
+                    patch.airlines = p.airlines.length ? p.airlines.join(",") : undefined;
+                  if (p.baggage !== undefined) patch.baggage = p.baggage ? "1" : undefined;
+                  if (p.recommended !== undefined) patch.recommended = p.recommended ? "1" : undefined;
+                  setSearch(patch);
+                }}
+              />
+
+              <div className="space-y-3">
+                <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm">
+                    <span className="font-bold text-foreground">{filtered.length}</span>
+                    <span className="text-muted-foreground"> flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} {"→"} {query.destination?.split(" ")[0] ?? toIata(query.destination)}</span>
+                  </div>
+                  <div className="flex gap-1 rounded-full bg-secondary p-1">
+                    {(["best", "cheapest", "fastest"] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setSearch({ sort: t })}
+                        className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
+                          sort === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filtered.map((o: any) => (
+                  <FlightResultCard key={o.id} offer={o} />
+                ))}
+
+                {filtered.length === 0 && (
+                  <div className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                    No flights match the current filters.
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </section>
       )}
