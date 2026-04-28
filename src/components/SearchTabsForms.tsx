@@ -62,9 +62,12 @@ export function StayInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
       }}
       className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_1fr_1.1fr_auto]"
     >
-      <Field icon={MapPin} label="Destination">
-        <TextInput value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="City, hotel or area" />
-      </Field>
+      <CityAutocomplete
+        label="Destination"
+        value={destination}
+        onChange={(display) => setDestination(display)}
+        placeholder="City, hotel or area"
+      />
       <Field icon={Calendar} label="Check-in">
         <TextInput type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
       </Field>
