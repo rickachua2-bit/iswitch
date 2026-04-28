@@ -163,7 +163,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
         <div className="border-t border-border bg-background">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/30 px-4 py-2 text-xs font-semibold text-muted-foreground">
             <span className="flex items-center gap-2">
-              <CarrierBadge code={carrier.code} />
+              <CarrierBadge code={carrier.code} name={carrier.name} />
               <span className="text-foreground">{carrier.name}</span>
               <span className="text-muted-foreground">· Full itinerary</span>
             </span>
@@ -203,7 +203,7 @@ function SliceRow({ slice, carrier }: { slice: any; carrier: { name: string; cod
     <div className="grid grid-cols-[auto_1fr] items-center gap-4">
       {/* airline mark */}
       <div className="flex w-24 flex-col items-start gap-1">
-        <CarrierBadge code={carrier.code} />
+        <CarrierBadge code={carrier.code} name={carrier.name} />
         <div className="truncate text-[11px] font-semibold text-muted-foreground">
           {carrier.name}
         </div>
@@ -383,28 +383,33 @@ function Amenity({ icon: Icon, label }: { icon: any; label: string }) {
   );
 }
 
-function CarrierBadge({ code }: { code: string }) {
-  const [errored, setErrored] = useState(false);
-  const valid = code && code !== "??" && code.length >= 2;
-  const src = valid
-    ? `https://daisycon.io/images/airline/?width=120&height=60&color=ffffff&iata=${encodeURIComponent(code)}`
-    : "";
+function CarrierBadge({ code, name }: { code: string; name?: string }) {
+  const [idx, setIdx] = useState(0);
+  const valid = !!code && code !== "??" && /^[A-Z0-9]{2,3}$/.test(code);
+  const sources = valid
+    ? [
+        `https://content.airhex.com/content/logos/airlines_${code}_100_40_r.png`,
+        `https://images.kiwi.com/airlines/64/${code}.png`,
+        `https://pics.avs.io/120/40/${code}.png`,
+      ]
+    : [];
+  const src = sources[idx];
   return (
     <div
-      className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md border border-border bg-card p-1 shadow-sm"
-      title={code}
+      className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md border border-border bg-white p-1 shadow-sm"
+      title={name || code}
     >
-      {valid && !errored ? (
+      {valid && src ? (
         <img
           src={src}
-          alt={`${code} logo`}
+          alt={`${name || code} logo`}
           className="h-full w-full object-contain"
           loading="lazy"
-          onError={() => setErrored(true)}
+          onError={() => setIdx((i) => i + 1)}
         />
       ) : (
         <span className="inline-flex items-center gap-1 text-[11px] font-extrabold tracking-wider text-primary">
-          {code === "??" ? <Plane className="h-3 w-3" /> : code}
+          {valid ? code : <Plane className="h-3 w-3" />}
         </span>
       )}
     </div>
@@ -413,18 +418,110 @@ function CarrierBadge({ code }: { code: string }) {
 
 /* ---------------- helpers ---------------- */
 
+const NAME_TO_IATA: Record<string, string> = {
+  "qatar airways": "QR",
+  "turkish airlines": "TK",
+  "british airways": "BA",
+  "emirates": "EK",
+  "etihad airways": "EY",
+  "etihad": "EY",
+  "lufthansa": "LH",
+  "air france": "AF",
+  "klm": "KL",
+  "klm royal dutch airlines": "KL",
+  "delta": "DL",
+  "delta air lines": "DL",
+  "united airlines": "UA",
+  "united": "UA",
+  "american airlines": "AA",
+  "virgin atlantic": "VS",
+  "ethiopian airlines": "ET",
+  "kenya airways": "KQ",
+  "egyptair": "MS",
+  "egypt air": "MS",
+  "royal air maroc": "AT",
+  "rwandair": "WB",
+  "south african airways": "SA",
+  "saudia": "SV",
+  "saudi arabian airlines": "SV",
+  "fly dubai": "FZ",
+  "flydubai": "FZ",
+  "air peace": "P4",
+  "ibom air": "QI",
+  "arik air": "W3",
+  "asky airlines": "KP",
+  "asky": "KP",
+  "iberia": "IB",
+  "swiss": "LX",
+  "swiss international air lines": "LX",
+  "austrian airlines": "OS",
+  "tap air portugal": "TP",
+  "tap portugal": "TP",
+  "air canada": "AC",
+  "qantas": "QF",
+  "singapore airlines": "SQ",
+  "cathay pacific": "CX",
+  "ana": "NH",
+  "all nippon airways": "NH",
+  "japan airlines": "JL",
+  "korean air": "KE",
+  "china southern": "CZ",
+  "china eastern": "MU",
+  "air china": "CA",
+  "thai airways": "TG",
+  "vietnam airlines": "VN",
+  "malaysia airlines": "MH",
+  "garuda indonesia": "GA",
+  "jetblue": "B6",
+  "alaska airlines": "AS",
+  "southwest airlines": "WN",
+  "ryanair": "FR",
+  "easyjet": "U2",
+  "wizz air": "W6",
+  "vueling": "VY",
+  "norwegian": "DY",
+  "finnair": "AY",
+  "sas": "SK",
+  "scandinavian airlines": "SK",
+  "aegean airlines": "A3",
+  "pegasus": "PC",
+  "pegasus airlines": "PC",
+  "gulf air": "GF",
+  "oman air": "WY",
+  "kuwait airways": "KU",
+  "middle east airlines": "ME",
+  "mea": "ME",
+  "air mauritius": "MK",
+  "air seychelles": "HM",
+};
+
+function nameToIata(name: string): string {
+  return NAME_TO_IATA[name.trim().toLowerCase()] ?? "";
+}
+
 function offerCarrier(o: any): { name: string; code: string } {
-  const ow = o?.owner ?? o?.validating_carrier ?? {};
-  const fromSeg = (o?.slices?.[0]?.segments?.[0]?.marketing_carrier) ?? {};
-  const code =
+  const ow = o?.owner ?? o?.validating_carrier ?? null;
+  const seg0 = o?.slices?.[0]?.segments?.[0] ?? {};
+  const segMc = seg0?.marketing_carrier;
+
+  // marketing_carrier may be a plain IATA string (e.g. "QR") or an object
+  const segCode =
+    (typeof segMc === "string" && /^[A-Z0-9]{2,3}$/.test(segMc.trim()) ? segMc.trim().toUpperCase() : "") ||
+    (typeof segMc === "object" && segMc?.iata_code) || "";
+  const segName = (typeof segMc === "object" && segMc?.name) || "";
+
+  // owner may be IATA code, full name, or object
+  const ownerIsCode = typeof ow === "string" && /^[A-Z0-9]{2,3}$/.test(ow.trim());
+  const ownerCode =
     (typeof ow === "object" && ow?.iata_code) ||
-    fromSeg?.iata_code ||
-    (typeof o?.owner === "string" ? o.owner.slice(0, 2).toUpperCase() : "") ||
-    "??";
-  const name =
+    (ownerIsCode ? ow.trim().toUpperCase() : "") || "";
+  const ownerName =
     (typeof ow === "object" && ow?.name) ||
-    fromSeg?.name ||
-    (typeof o?.owner === "string" ? o.owner : "Airline");
+    (typeof ow === "string" && !ownerIsCode ? ow : "") || "";
+
+  const name = ownerName || segName || (ownerIsCode ? String(ow) : "Airline");
+  const code = segCode || ownerCode || nameToIata(name) || "??";
+
   return { name, code };
 }
 
