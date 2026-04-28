@@ -335,3 +335,48 @@ function VisasPage() {
     </div>
   );
 }
+
+/* ----------------------------- no results dialog ----------------------------- */
+function VisaNoResultsDialog({
+  open,
+  title,
+  message,
+  onClose,
+  onRetry,
+}: {
+  open: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  onRetry?: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <ShieldCheck className="h-6 w-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center">{title}</DialogTitle>
+          <DialogDescription className="text-center">{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="rounded-lg bg-gradient-primary px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+            >
+              Try again
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-foreground transition hover:bg-secondary"
+          >
+            Back to visas
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
