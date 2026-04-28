@@ -15,13 +15,23 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const [highlight, setHighlight] = useState(0);
+  const previousValueRef = useRef(value);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setQuery(value), [value]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        // If user dismissed without picking, restore the prior value
+        setOpen((wasOpen) => {
+          if (wasOpen) {
+            setQuery(previousValueRef.current);
+          }
+          return false;
+        });
+      }
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -31,6 +41,7 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
 
   function pick(a: Airport) {
     const display = `${a.city} (${a.code})`;
+    previousValueRef.current = display;
     onChange(display, a);
     setQuery(display);
     setOpen(false);
@@ -43,9 +54,17 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
           <Icon className="h-3 w-3" /> {label}
         </div>
         <input
+          ref={inputRef}
           value={query}
-          placeholder={placeholder ?? "City or airport code"}
-          onFocus={() => setOpen(true)}
+          placeholder={open && !query && previousValueRef.current ? previousValueRef.current : (placeholder ?? "City or airport code")}
+          onFocus={(e) => {
+            previousValueRef.current = query;
+            setQuery("");
+            setHighlight(0);
+            setOpen(true);
+            // ensure cursor at start in cleared field
+            requestAnimationFrame(() => e.target?.select?.());
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);
@@ -56,7 +75,7 @@ export function AirportAutocomplete({ label, value, onChange, placeholder, icon:
             if (e.key === "ArrowDown") { e.preventDefault(); setHighlight((h) => Math.min(h + 1, results.length - 1)); }
             else if (e.key === "ArrowUp") { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
             else if (e.key === "Enter" && results[highlight]) { e.preventDefault(); pick(results[highlight]); }
-            else if (e.key === "Escape") setOpen(false);
+            else if (e.key === "Escape") { setQuery(previousValueRef.current); setOpen(false); inputRef.current?.blur(); }
           }}
           className="w-full bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
           autoComplete="off"
