@@ -91,7 +91,7 @@ function TransferBookingPage() {
       { icon: Briefcase, label: `${vehicle.bags ?? 2} bags` },
     ],
     priceLabel: "Total fare",
-    priceValue: `${currency} ${price.toFixed(2)}`,
+    priceValue: formatPrice(price, currency),
     priceFootnote: "Fixed price · all tolls & fees included",
     backTo: "/pickups",
   };
