@@ -23,6 +23,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
+import { useSelectOffer } from "@/lib/use-select-offer";
+import { ErrorToast } from "@/components/booking/ErrorToast";
 import { useState } from "react";
 import { z } from "zod";
 
