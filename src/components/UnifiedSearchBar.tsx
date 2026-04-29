@@ -92,7 +92,7 @@ export function UnifiedSearchBar({
           {active === "visas" && (
             <VisaInlineForm
               initial={initial}
-              onSearch={(q) => navigate({ to: "/visas", search: q as never })}
+              onSearch={(q) => navigate({ to: "/visas", search: { ...q, submitted: "1" } as never })}
             />
           )}
           {active === "insurance" && (
