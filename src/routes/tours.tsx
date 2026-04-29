@@ -42,9 +42,16 @@ function ToursPage() {
   const navigate = useNavigate();
   const hasSearched = !!query.date;
 
-  function goToBooking(t: any) {
-    const id = t.id ?? t.tour_id;
-    try { sessionStorage.setItem(`tour:${id}`, JSON.stringify(t)); } catch {}
+  async function goToBooking(t: any) {
+    const id = t.id ?? t.tour_id ?? t.external_id;
+    const { persistSelectedOffer } = await import("@/lib/select-offer");
+    await persistSelectedOffer({
+      vertical: "tours",
+      sessionPrefix: "tour",
+      cachePrefix: "tour",
+      id: String(id),
+      payload: { ...t, destination: query.destination, date: query.date, guests: query.guests },
+    });
     navigate({
       to: "/tours/book",
       search: {
