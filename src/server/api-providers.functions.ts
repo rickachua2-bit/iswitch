@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAuth } from "@/integrations/supabase/auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getProviderKey, getGlobalMode, isKeyConfigured, invalidateModeCache } from "./provider-keys.server";
 
 const VERTICALS = ["flights", "stays", "visas", "insurance", "tours", "pickups"] as const;
 const KINDS = ["api", "crawl"] as const;
