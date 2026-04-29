@@ -1,10 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { searchHotels, bookHotel } from "@/server/travsify";
+import { searchHotels } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, Loader2, MapPin, ThumbsUp, Heart, Tag, Search,
@@ -116,12 +115,26 @@ const PROMO_TILES = [
 
 function StaysPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
-  const [selected, setSelected] = useState<any | null>(null);
   const formatPrice = usePriceFormat();
   const navigate = useNavigate();
   const hasSearched = !!(query.checkIn && query.checkOut);
 
-
+  function goToBooking(h: any) {
+    const id = h.offer_id ?? h.id;
+    try {
+      sessionStorage.setItem(`hotel:${id}`, JSON.stringify(h));
+    } catch {}
+    navigate({
+      to: "/stays/book",
+      search: {
+        destination: query.destination,
+        offer_id: String(id),
+        checkIn: query.checkIn,
+        checkOut: query.checkOut,
+        guests: query.guests,
+      },
+    });
+  }
 
   return (
     <div className="min-h-screen bg-secondary/40">
@@ -142,7 +155,7 @@ function StaysPage() {
           error={error}
           query={query}
           formatPrice={formatPrice}
-          onSelect={setSelected}
+          onSelect={goToBooking}
         />
       )}
 
@@ -214,30 +227,6 @@ function StaysPage() {
         </>
       )}
 
-      {selected && (
-        <BookingDialog
-          open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
-          title={`Book & pay: ${selected.name}`}
-          summary={`${formatPrice(Number(selected.price), selected.currency ?? "USD")} · ${query.checkIn} → ${query.checkOut} · payment required to confirm`}
-          fields={[
-            { name: "firstName", label: "First name", required: true },
-            { name: "lastName", label: "Last name", required: true },
-            { name: "email", label: "Email", type: "email", required: true },
-            { name: "phone", label: "Phone (with country code)", type: "tel", required: true, placeholder: "+1234567890" },
-          ]}
-          onSubmit={async (v) => {
-            const res = await bookHotel({
-              data: {
-                offer_id: selected.offer_id ?? selected.id,
-                holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
-                guests: [{ firstName: v.firstName, lastName: v.lastName }],
-              },
-            });
-            return { reference: res?.data?.reference, status: res?.data?.status };
-          }}
-        />
-      )}
       <Footer />
     </div>
   );
