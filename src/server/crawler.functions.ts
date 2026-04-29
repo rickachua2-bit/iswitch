@@ -34,7 +34,8 @@ export const seedAllInventory = createServerFn({ method: "POST" })
       await assertAdmin((context as any).userId);
       const results = await runAllCrawls((context as any).userId);
       const total = results.reduce((s, r) => s + (r.items_upserted ?? 0), 0);
-      return { ok: true as const, total, results };
+      const failed = results.find((r) => r.status === "failed");
+      return { ok: !failed as boolean, total, results, error: failed?.error };
     } catch (e: any) {
       console.error("seedAllInventory failed:", e);
       return { ok: false as const, total: 0, results: [], error: e?.message ?? "Seeding failed" };
