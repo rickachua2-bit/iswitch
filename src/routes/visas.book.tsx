@@ -159,11 +159,11 @@ function VisaBookingPage() {
             <div className="text-xs text-muted-foreground">Fee summary</div>
             <div className="mt-1 text-base font-extrabold text-foreground">{visa.name}</div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <Row label="Government fee" value={`${currency} ${fee.toFixed(2)}`} />
-              <Row label="iSwitch service fee" value={`${currency} ${service.toFixed(2)}`} />
+              <Row label="Government fee" value={formatPrice(fee, currency)} />
+              <Row label="iSwitch service fee" value={formatPrice(service, currency)} />
               <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-primary">{currency} {total.toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
               </div>
             </div>
             <div className="mt-3 rounded-lg bg-secondary/60 p-2 text-xs text-muted-foreground">
