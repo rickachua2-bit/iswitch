@@ -96,31 +96,36 @@ function PickupsPage() {
               {vehicles.length} vehicles · {query.pickup} → {query.drop}
             </h2>
             <div className="space-y-3">
-              {vehicles.map((v: any) => (
-                <div key={v.id} className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-5 shadow-card md:grid-cols-[auto_1fr_auto] md:items-center">
-                  <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-secondary">
-                    <Car className="h-8 w-8 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-bold">{v.name ?? v.type ?? "Vehicle"}</div>
-                    <div className="text-sm text-muted-foreground">{v.description ?? v.desc ?? ""}</div>
-                    <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {v.passengers ?? v.pax ?? 3} passengers</span>
-                      <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" /> {v.bags ?? 2} bags</span>
-                      <span className="flex items-center gap-1"><Snowflake className="h-3 w-3" /> A/C</span>
+              {vehicles.map((v: any) => {
+                const id = String(v.id ?? v.vehicle_id ?? v.external_id);
+                const loading = isSelecting(id);
+                return (
+                  <div key={v.id} className="grid grid-cols-1 gap-4 rounded-2xl border border-border bg-card p-5 shadow-card md:grid-cols-[auto_1fr_auto] md:items-center">
+                    <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-secondary">
+                      <Car className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-bold">{v.name ?? v.type ?? "Vehicle"}</div>
+                      <div className="text-sm text-muted-foreground">{v.description ?? v.desc ?? ""}</div>
+                      <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {v.passengers ?? v.pax ?? 3} passengers</span>
+                        <span className="flex items-center gap-1"><Briefcase className="h-3 w-3" /> {v.bags ?? 2} bags</span>
+                        <span className="flex items-center gap-1"><Snowflake className="h-3 w-3" /> A/C</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-2xl font-extrabold text-primary">{v.currency ?? "USD"} {v.price}</div>
+                      <button
+                        onClick={() => goToBooking(v)}
+                        disabled={loading || (selecting && !loading)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold text-accent-foreground transition disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {loading ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…</>) : "Review & book"}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-2xl font-extrabold text-primary">{v.currency ?? "USD"} {v.price}</div>
-                    <button
-                      onClick={() => goToBooking(v)}
-                      className="rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold text-accent-foreground"
-                    >
-                      Book now
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
