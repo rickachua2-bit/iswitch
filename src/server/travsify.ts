@@ -468,6 +468,11 @@ export const searchHotels = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("stays")) === "travsify") {
+      const t = await travsifySearch("/hotels/search", data);
+      if (!t.ok) return fail(t.error, { hotels: [] });
+      return ok({ hotels: t.data?.hotels ?? t.data?.data?.hotels ?? [] });
+    }
     const res = await searchLiteHotels({
       cityName: data.city,
       countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
