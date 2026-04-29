@@ -279,30 +279,30 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Lead passenger details">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Lead passenger details" icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Mobile (used by driver)" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
+          <Field label="Mobile (used by driver)" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
           </Field>
         </div>
       </BookingSectionCard>
-      <BookingSectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically.">
+      <BookingSectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically." icon={Plane}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="Flight number">
-            <input value={v.flight} onChange={(e) => set("flight", e.target.value)} className={inputCls} placeholder="e.g. EK783" />
+          <Field label="Flight number" icon={Hash}>
+            <input value={v.flight} onChange={(e) => set("flight", e.target.value)} placeholder="e.g. EK783" />
           </Field>
-          <Field label="Driver instructions">
-            <input value={v.notes} onChange={(e) => set("notes", e.target.value)} className={inputCls} placeholder="Child seat, large luggage…" />
+          <Field label="Driver instructions" icon={MessageSquare}>
+            <input value={v.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Child seat, large luggage…" />
           </Field>
         </div>
       </BookingSectionCard>
