@@ -60,7 +60,7 @@ function adultsFromGuests(s: string) {
   return m ? Number(m[1]) : 2;
 }
 
-export const Route = createFileRoute("/stays")({
+export const Route = createFileRoute("/stays/")({
   head: () => ({
     meta: [
       { title: "Hotels & Homes — See the world for less | iSwitch" },

@@ -63,7 +63,7 @@ function parseSegments(s: string | undefined): Segment[] {
   return [];
 }
 
-export const Route = createFileRoute("/flights")({
+export const Route = createFileRoute("/flights/")({
   head: () => ({
     meta: [
       { title: "Cheap Flights — Compare 500+ airlines | iSwitch" },
