@@ -34,6 +34,7 @@ const NAV: { to: string; label: string; icon: typeof Users; group: "Overview" | 
   { to: "/admin/markups", label: "Markups & Settings", icon: Percent, group: "System" },
   { to: "/admin/currencies", label: "Currencies", icon: DollarSign, group: "System" },
   { to: "/admin/api-providers", label: "API Providers", icon: Plug, group: "System" },
+  { to: "/admin/payment-providers", label: "Payment Providers", icon: CreditCard, group: "System" },
   { to: "/admin/crawl-jobs", label: "Crawl History", icon: History, group: "System" },
 ];
 
