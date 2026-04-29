@@ -77,6 +77,8 @@ function PickupsPage() {
         initial={query}
       />
 
+      <ErrorToast message={selectError} onDismiss={clearError} />
+
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {!hasSearched ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
