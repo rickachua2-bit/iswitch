@@ -38,6 +38,7 @@ const NAV: { to: string; label: string; icon: typeof Users; group: "Overview" | 
   { to: "/admin/api-providers", label: "API Providers", icon: Plug, group: "System" },
   { to: "/admin/payment-providers", label: "Payment Providers", icon: CreditCard, group: "System" },
   { to: "/admin/crawl-jobs", label: "Crawl History", icon: History, group: "System" },
+  { to: "/admin/settings", label: "Settings", icon: SettingsIcon, group: "System" },
 ];
 
 export function AdminLayout({ children }: { children?: ReactNode }) {
