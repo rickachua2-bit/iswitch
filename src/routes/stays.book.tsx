@@ -10,7 +10,7 @@ import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, MapPin, Hotel as HotelIcon, BedDouble, Wifi, Coffee, Waves, Dumbbell,
   Utensils, ParkingCircle, Sparkles, ShieldCheck, Calendar as CalendarIcon, Users,
-  CheckCircle2, Tag,
+  CheckCircle2, Tag, User, Mail, Phone, MessageSquare,
 } from "lucide-react";
 
 const searchSchema = z.object({
