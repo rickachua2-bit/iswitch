@@ -78,14 +78,20 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   const [search, setSearch] = useState("");
   const [filterVertical, setFilterVertical] = useState<"all" | Vertical>("all");
   const [editing, setEditing] = useState<Partial<Provider> | null>(null);
+  const [globalMode, setGlobalMode] = useState<"test" | "live">("live");
+  const [keyStatus, setKeyStatus] = useState<Record<string, { live: boolean; test: boolean }>>({});
 
   async function refresh() {
-    const [a, b] = await Promise.all([listProviders(), getApiProviderRouting()]);
+    const [a, b, c] = await Promise.all([listProviders(), getApiProviderRouting(), getProviderMode()]);
     if (a.ok) setProviders(a.providers as Provider[]);
     if (b?.routing) {
       setRouting(b.routing as any);
       setRoutingLabels(b.providers ?? {});
       setTravsifyConfigured(!!b.travsifyConfigured);
+    }
+    if (c?.ok) {
+      setGlobalMode(c.global);
+      setKeyStatus(c.keys ?? {});
     }
     setLoading(false);
   }
