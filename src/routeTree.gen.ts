@@ -23,12 +23,17 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as VisasBookRouteImport } from './routes/visas.book'
 import { Route as ToursBookRouteImport } from './routes/tours.book'
 import { Route as StaysBookRouteImport } from './routes/stays.book'
 import { Route as PickupsBookRouteImport } from './routes/pickups.book'
 import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
+import { Route as DashboardWalletRouteImport } from './routes/dashboard.wallet'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
+import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 
 const VisasRoute = VisasRouteImport.update({
@@ -101,6 +106,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const VisasBookRoute = VisasBookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -131,6 +141,26 @@ const FlightsBookRoute = FlightsBookRouteImport.update({
   path: '/book',
   getParentRoute: () => FlightsRoute,
 } as any)
+const DashboardWalletRoute = DashboardWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBookRoute = DashboardBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AgentsApplyRoute = AgentsApplyRouteImport.update({
   id: '/agents/apply',
   path: '/agents/apply',
@@ -141,7 +171,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRouteWithChildren
@@ -153,18 +183,22 @@ export interface FileRoutesByFullPath {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
+  '/dashboard/book': typeof DashboardBookRoute
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
-  '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRouteWithChildren
@@ -176,19 +210,24 @@ export interface FileRoutesByTo {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
+  '/dashboard/book': typeof DashboardBookRoute
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/insurance': typeof InsuranceRouteWithChildren
@@ -200,12 +239,17 @@ export interface FileRoutesById {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
+  '/dashboard/book': typeof DashboardBookRoute
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -225,18 +269,22 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/dashboard/book'
+    | '/dashboard/bookings'
+    | '/dashboard/profile'
+    | '/dashboard/wallet'
     | '/flights/book'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/consultations'
-    | '/dashboard'
     | '/flights'
     | '/forgot-password'
     | '/insurance'
@@ -248,12 +296,17 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/dashboard/book'
+    | '/dashboard/bookings'
+    | '/dashboard/profile'
+    | '/dashboard/wallet'
     | '/flights/book'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -271,19 +324,24 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/agents/apply'
+    | '/dashboard/book'
+    | '/dashboard/bookings'
+    | '/dashboard/profile'
+    | '/dashboard/wallet'
     | '/flights/book'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   ConsultationsRoute: typeof ConsultationsRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   FlightsRoute: typeof FlightsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InsuranceRoute: typeof InsuranceRouteWithChildren
@@ -397,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/visas/book': {
       id: '/visas/book'
       path: '/book'
@@ -439,6 +504,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlightsBookRouteImport
       parentRoute: typeof FlightsRoute
     }
+    '/dashboard/wallet': {
+      id: '/dashboard/wallet'
+      path: '/wallet'
+      fullPath: '/dashboard/wallet'
+      preLoaderRoute: typeof DashboardWalletRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/bookings': {
+      id: '/dashboard/bookings'
+      path: '/bookings'
+      fullPath: '/dashboard/bookings'
+      preLoaderRoute: typeof DashboardBookingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/book': {
+      id: '/dashboard/book'
+      path: '/book'
+      fullPath: '/dashboard/book'
+      preLoaderRoute: typeof DashboardBookRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/agents/apply': {
       id: '/agents/apply'
       path: '/agents/apply'
@@ -448,6 +541,26 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardBookRoute: typeof DashboardBookRoute
+  DashboardBookingsRoute: typeof DashboardBookingsRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardWalletRoute: typeof DashboardWalletRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBookRoute: DashboardBookRoute,
+  DashboardBookingsRoute: DashboardBookingsRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardWalletRoute: DashboardWalletRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 interface FlightsRouteChildren {
   FlightsBookRoute: typeof FlightsBookRoute
@@ -517,7 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ConsultationsRoute: ConsultationsRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   FlightsRoute: FlightsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   InsuranceRoute: InsuranceRouteWithChildren,
