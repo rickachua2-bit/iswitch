@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const VERTICALS = ["flights", "stays", "visas", "insurance", "tours", "pickups"] as const;
-const KINDS = ["api", "crawl", "manual"] as const;
+const KINDS = ["api", "crawl"] as const;
 const Choice = z.enum(["default", "travsify"]);
 const RoutingSchema = z.object(
   Object.fromEntries(VERTICALS.map((v) => [v, Choice])) as Record<(typeof VERTICALS)[number], typeof Choice>,
