@@ -328,6 +328,8 @@ function useFlightSearch(search: any): SearchState & { query: any } {
 /* ----------------------------- page ----------------------------- */
 
 function FlightsPage() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
