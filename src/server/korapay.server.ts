@@ -1,4 +1,5 @@
 // Korapay API helpers - server-only
+import { createHmac, timingSafeEqual } from "node:crypto";
 const KORAPAY_BASE = "https://api.korapay.com/merchant/api/v1";
 
 export type KorapayChargeInit = {
