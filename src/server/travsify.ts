@@ -18,7 +18,57 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
+const TRAVSIFY_BASE = "https://api.travsify.com";
 const REQ_TIMEOUT_MS = 25_000;
+
+type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+
+/**
+ * Reads admin-controlled per-vertical provider routing from system_settings.
+ * Returns "travsify" only when the admin enabled it AND the API key is set.
+ * Otherwise falls back to "default" (Duffel / LiteAPI / crawled inventory).
+ */
+async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "default"> {
+  try {
+    if (!process.env.TRAVSIFY_API_KEY) return "default";
+    const { data } = await supabaseAdmin
+      .from("system_settings")
+      .select("value")
+      .eq("key", "provider_routing")
+      .maybeSingle();
+    const choice = (data?.value as Record<string, string> | null)?.[vertical];
+    return choice === "travsify" ? "travsify" : "default";
+  } catch {
+    return "default";
+  }
+}
+
+function travsifyHeaders() {
+  const key = process.env.TRAVSIFY_API_KEY;
+  if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
+  return {
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  } as Record<string, string>;
+}
+
+/** Generic Travsify search proxy. The shape is loose because Travsify mirrors
+ *  most vertical schemas; we only need a JSON pass-through to keep the UI
+ *  contract stable while admins evaluate the provider. */
+async function travsifySearch(path: string, body: unknown) {
+  try {
+    const { status, text } = await timedFetch("travsify", `${TRAVSIFY_BASE}${path}`, {
+      method: "POST",
+      headers: travsifyHeaders(),
+      body: JSON.stringify(body),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), data: null as any };
+    return { ok: true as const, data: JSON.parse(text) };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), data: null as any };
+  }
+}
 
 /* ------------------------------ HELPERS ---------------------------- */
 
@@ -339,6 +389,12 @@ async function runDuffelSearch(input: z.infer<typeof FlightSearchInput>) {
 export const startFlightSearch = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => FlightSearchInput.parse(d))
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("flights")) === "travsify") {
+      const t = await travsifySearch("/flights/search", data);
+      if (!t.ok) return { search_id: null, data: { offers: [] }, error: t.error };
+      const offers = t.data?.offers ?? t.data?.data?.offers ?? [];
+      return { search_id: null, data: { offers }, error: null };
+    }
     const r = await runDuffelSearch(data);
     if (r.error) return { search_id: null, data: { offers: [] }, error: r.error };
     return { search_id: null, data: { offers: r.offers }, error: null };
@@ -412,6 +468,11 @@ export const searchHotels = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("stays")) === "travsify") {
+      const t = await travsifySearch("/hotels/search", data);
+      if (!t.ok) return fail(t.error, { hotels: [] });
+      return ok({ hotels: t.data?.hotels ?? t.data?.data?.hotels ?? [] });
+    }
     const res = await searchLiteHotels({
       cityName: data.city,
       countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
@@ -475,6 +536,11 @@ export const searchTours = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("tours")) === "travsify") {
+      const t = await travsifySearch("/tours/search", data);
+      if (!t.ok) return fail(t.error, { tours: [] });
+      return ok({ tours: t.data?.tours ?? t.data?.data?.tours ?? [] });
+    }
     const r = await fetchInventory("tours", { destination: data.destination });
     if (r.error) return fail(r.error, { tours: [] });
     return ok({ tours: r.items });
@@ -526,6 +592,11 @@ export const searchVisas = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("visas")) === "travsify") {
+      const t = await travsifySearch("/visas/search", data);
+      if (!t.ok) return fail(t.error, { visas: [] });
+      return ok({ visas: t.data?.visas ?? t.data?.data?.visas ?? [] });
+    }
     const r = await fetchInventory("visas", { destination: data.destination, origin: data.nationality });
     if (r.error) return fail(r.error, { visas: [] });
     return ok({ visas: r.items });
@@ -584,6 +655,11 @@ export const searchInsurance = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("insurance")) === "travsify") {
+      const t = await travsifySearch("/insurance/search", data);
+      if (!t.ok) return fail(t.error, { plans: [] });
+      return ok({ plans: t.data?.plans ?? t.data?.data?.plans ?? [] });
+    }
     const r = await fetchInventory("insurance", { destination: data.destination });
     if (r.error) return fail(r.error, { plans: [] });
     return ok({ plans: r.items });
@@ -641,6 +717,11 @@ export const searchTransfers = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("pickups")) === "travsify") {
+      const t = await travsifySearch("/transfers/search", data);
+      if (!t.ok) return fail(t.error, { vehicles: [] });
+      return ok({ vehicles: t.data?.vehicles ?? t.data?.data?.vehicles ?? [] });
+    }
     const r = await fetchInventory("pickups", { origin: data.pickup, destination: data.drop });
     if (r.error) return fail(r.error, { vehicles: [] });
     return ok({ vehicles: r.items });
