@@ -48,7 +48,7 @@ export const searchFlights = createServerFn({ method: "POST" })
 
       const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offer_requests?return_offers=true`, {
         method: "POST",
-        headers: dHeaders(),
+        headers: await dHeaders(),
         body: JSON.stringify({ data: { slices, passengers, cabin_class: data.cabin } }),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text), offers: [] };
