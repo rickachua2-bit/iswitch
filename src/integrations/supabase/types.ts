@@ -68,6 +68,78 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings_unified: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          error: string | null
+          external_reference: string | null
+          id: string
+          inventory_item_id: string | null
+          payload: Json
+          provider_id: string | null
+          status: Database["public"]["Enums"]["unified_booking_status"]
+          updated_at: string
+          user_id: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          error?: string | null
+          external_reference?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          payload?: Json
+          provider_id?: string | null
+          status?: Database["public"]["Enums"]["unified_booking_status"]
+          updated_at?: string
+          user_id?: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          error?: string | null
+          external_reference?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          payload?: Json
+          provider_id?: string | null
+          status?: Database["public"]["Enums"]["unified_booking_status"]
+          updated_at?: string
+          user_id?: string | null
+          vertical?: Database["public"]["Enums"]["vertical"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_unified_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_unified_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultation_bookings: {
         Row: {
           amount_cents: number
@@ -250,6 +322,56 @@ export type Database = {
           },
         ]
       }
+      crawl_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          items_deactivated: number
+          items_seen: number
+          items_upserted: number
+          provider_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["crawl_status"]
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          items_deactivated?: number
+          items_seen?: number
+          items_upserted?: number
+          provider_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["crawl_status"]
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          items_deactivated?: number
+          items_seen?: number
+          items_upserted?: number
+          provider_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["crawl_status"]
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_jobs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           code: string
@@ -283,6 +405,86 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          attributes: Json
+          created_at: string
+          currency: string
+          description: string | null
+          destination: string | null
+          duration: string | null
+          external_id: string | null
+          id: string
+          images: Json
+          is_active: boolean
+          last_seen_at: string
+          origin: string | null
+          price: number | null
+          provider_id: string
+          raw: Json | null
+          source_url: string | null
+          subtitle: string | null
+          title: string
+          updated_at: string
+          validity: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination?: string | null
+          duration?: string | null
+          external_id?: string | null
+          id?: string
+          images?: Json
+          is_active?: boolean
+          last_seen_at?: string
+          origin?: string | null
+          price?: number | null
+          provider_id: string
+          raw?: Json | null
+          source_url?: string | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          validity?: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          currency?: string
+          description?: string | null
+          destination?: string | null
+          duration?: string | null
+          external_id?: string | null
+          id?: string
+          images?: Json
+          is_active?: boolean
+          last_seen_at?: string
+          origin?: string | null
+          price?: number | null
+          provider_id?: string
+          raw?: Json | null
+          source_url?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          validity?: string | null
+          vertical?: Database["public"]["Enums"]["vertical"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
@@ -313,6 +515,98 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      provider_health_events: {
+        Row: {
+          created_at: string
+          id: number
+          latency_ms: number | null
+          message: string | null
+          ok: boolean
+          provider_id: string
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          latency_ms?: number | null
+          message?: string | null
+          ok: boolean
+          provider_id: string
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          latency_ms?: number | null
+          message?: string | null
+          ok?: boolean
+          provider_id?: string
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_health_events_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          base_url: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          kind: Database["public"]["Enums"]["provider_kind"]
+          last_error: string | null
+          last_error_at: string | null
+          last_ok_at: string | null
+          name: string
+          notes: string | null
+          slug: string
+          total_calls: number
+          total_errors: number
+          updated_at: string
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Insert: {
+          base_url?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind: Database["public"]["Enums"]["provider_kind"]
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          name: string
+          notes?: string | null
+          slug: string
+          total_calls?: number
+          total_errors?: number
+          updated_at?: string
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Update: {
+          base_url?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["provider_kind"]
+          last_error?: string | null
+          last_error_at?: string | null
+          last_ok_at?: string | null
+          name?: string
+          notes?: string | null
+          slug?: string
+          total_calls?: number
+          total_errors?: number
+          updated_at?: string
+          vertical?: Database["public"]["Enums"]["vertical"]
         }
         Relationships: []
       }
@@ -380,6 +674,21 @@ export type Database = {
       app_role: "customer" | "agent" | "admin"
       application_status: "pending" | "approved" | "rejected"
       booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      crawl_status: "queued" | "running" | "succeeded" | "failed"
+      provider_kind: "api" | "crawl"
+      unified_booking_status:
+        | "pending"
+        | "confirmed"
+        | "failed"
+        | "cancelled"
+        | "refunded"
+      vertical:
+        | "flights"
+        | "stays"
+        | "visas"
+        | "insurance"
+        | "tours"
+        | "pickups"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -512,6 +821,16 @@ export const Constants = {
       app_role: ["customer", "agent", "admin"],
       application_status: ["pending", "approved", "rejected"],
       booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      crawl_status: ["queued", "running", "succeeded", "failed"],
+      provider_kind: ["api", "crawl"],
+      unified_booking_status: [
+        "pending",
+        "confirmed",
+        "failed",
+        "cancelled",
+        "refunded",
+      ],
+      vertical: ["flights", "stays", "visas", "insurance", "tours", "pickups"],
     },
   },
 } as const
