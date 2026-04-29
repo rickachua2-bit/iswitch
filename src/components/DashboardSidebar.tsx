@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Search, ListChecks, Wallet, User, ShieldCheck, GraduationCap, Settings, LogOut,
+  LayoutDashboard, Search, ListChecks, Wallet, User, ShieldCheck, GraduationCap, Settings, LogOut, Headphones,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -90,6 +90,16 @@ export function DashboardSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => window.dispatchEvent(new CustomEvent("iswitch:open-support"))}
+              tooltip="Support chat"
+              className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground hover:from-primary-glow hover:to-primary hover:text-primary-foreground"
+            >
+              <Headphones className="h-4 w-4" />
+              <span className="font-extrabold">Support chat</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={() => void signOut()} tooltip="Sign out">
               <LogOut className="h-4 w-4" />
