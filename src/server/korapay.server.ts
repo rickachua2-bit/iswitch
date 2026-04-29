@@ -76,10 +76,12 @@ export async function verifyKorapayCharge(reference: string) {
 export function verifyKorapaySignature(rawBody: string, signature: string | null) {
   const secret = process.env.KORAPAY_WEBHOOK_SECRET || process.env.KORAPAY_SECRET_KEY;
   if (!secret || !signature) return false;
-  const { createHmac, timingSafeEqual } = require("crypto") as typeof import("crypto");
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   try {
-    return timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
   } catch {
     return false;
   }
