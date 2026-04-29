@@ -592,11 +592,13 @@ function CheckRow({
 }
 
 function HotelResultCard({
-  hotel: h, formatPrice, onSelect,
+  hotel: h, formatPrice, onSelect, loading, disabled,
 }: {
   hotel: any;
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
+  loading?: boolean;
+  disabled?: boolean;
 }) {
   const score = Number(h.review_score ?? h.score ?? 0);
   const original = h.original_price ? Number(h.original_price) : null;
