@@ -15,11 +15,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  searchFlights as duffelSearchFlights,
-  getFlightOffer as duffelGetOffer,
-} from "./duffel.functions";
-import { searchHotels as liteSearchHotels } from "./liteapi.functions";
+import { friendlyError, timedFetch } from "./_shared.server";
+
+const DUFFEL_BASE = "https://api.duffel.com";
+const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
 
 /* ------------------------------ HELPERS ---------------------------- */
 
@@ -28,6 +27,93 @@ function ok(data: any) {
 }
 function fail(error: string, fallback: any = {}) {
   return { data: fallback, error };
+}
+
+function duffelHeaders() {
+  const key = process.env.DUFFEL_API_KEY;
+  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+  return {
+    Authorization: `Bearer ${key}`,
+    "Duffel-Version": "v2",
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  } as Record<string, string>;
+}
+
+function liteApiHeaders() {
+  const key = process.env.LITEAPI_KEY;
+  if (!key) throw new Error("LITEAPI_KEY is not configured");
+  return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
+}
+
+function iata(s: string): string {
+  const m = s.match(/\(([A-Z]{3})\)/);
+  return (m ? m[1] : s).toUpperCase().trim();
+}
+
+async function searchDuffelOffers(input: {
+  origin: string;
+  destination: string;
+  departure_date: string;
+  return_date?: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  cabin?: "economy" | "premium_economy" | "business" | "first";
+}) {
+  try {
+    const slices = [{ origin: iata(input.origin), destination: iata(input.destination), departure_date: input.departure_date }];
+    if (input.return_date) slices.push({ origin: iata(input.destination), destination: iata(input.origin), departure_date: input.return_date });
+    const passengers: any[] = [];
+    for (let i = 0; i < input.adults; i++) passengers.push({ type: "adult" });
+    for (let i = 0; i < (input.children ?? 0); i++) passengers.push({ type: "child", age: 8 });
+    for (let i = 0; i < (input.infants ?? 0); i++) passengers.push({ type: "infant_without_seat" });
+
+    const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offer_requests?return_offers=true`, {
+      method: "POST",
+      headers: duffelHeaders(),
+      body: JSON.stringify({ data: { slices, passengers, cabin_class: input.cabin ?? "economy" } }),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), offers: [] };
+    const json = JSON.parse(text);
+    const offers = (json?.data?.offers ?? []).slice(0, 50).map((o: any) => ({
+      id: o.id,
+      total_amount: o.total_amount,
+      total_currency: o.total_currency,
+      owner: o.owner?.name,
+      owner_logo: o.owner?.logo_symbol_url,
+      slices: (o.slices ?? []).map((s: any) => ({
+        origin: s.origin?.iata_code,
+        destination: s.destination?.iata_code,
+        duration: s.duration,
+        segments: (s.segments ?? []).map((seg: any) => ({
+          marketing_carrier: seg.marketing_carrier?.name,
+          marketing_carrier_iata: seg.marketing_carrier?.iata_code,
+          flight_number: seg.marketing_carrier_flight_number,
+          departing_at: seg.departing_at,
+          arriving_at: seg.arriving_at,
+          origin: seg.origin?.iata_code,
+          destination: seg.destination?.iata_code,
+        })),
+      })),
+    }));
+    return { ok: true as const, offers };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), offers: [] };
+  }
+}
+
+async function getDuffelOffer(offer_id: string) {
+  try {
+    const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offers/${offer_id}?return_available_services=true`, {
+      method: "GET",
+      headers: duffelHeaders(),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
+    return { ok: true as const, offer: JSON.parse(text)?.data };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)) };
+  }
 }
 
 async function fetchInventory(
