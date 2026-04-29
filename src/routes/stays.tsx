@@ -74,6 +74,7 @@ export const Route = createFileRoute("/stays")({
     try {
       const res = await searchHotels({
         data: {
+          destination: deps.destination,
           country_code: guessCC(deps.destination),
           checkin: deps.checkIn,
           checkout: deps.checkOut,
