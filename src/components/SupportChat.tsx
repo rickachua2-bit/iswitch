@@ -22,6 +22,12 @@ export function SupportChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("iswitch:open-support", handler);
+    return () => window.removeEventListener("iswitch:open-support", handler);
+  }, []);
+
   async function send() {
     const text = input.trim();
     if (!text || sending) return;
