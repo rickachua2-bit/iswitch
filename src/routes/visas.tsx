@@ -320,7 +320,7 @@ function VisasPage() {
           </div>
         )}
       </section>
-      </>
+      </div>
       )}
 
       {/* How it works — Sherpa-style trust strip */}
