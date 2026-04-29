@@ -23,6 +23,11 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VisasBookRouteImport } from './routes/visas.book'
+import { Route as ToursBookRouteImport } from './routes/tours.book'
+import { Route as StaysBookRouteImport } from './routes/stays.book'
+import { Route as PickupsBookRouteImport } from './routes/pickups.book'
+import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 
@@ -96,6 +101,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VisasBookRoute = VisasBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => VisasRoute,
+} as any)
+const ToursBookRoute = ToursBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => ToursRoute,
+} as any)
+const StaysBookRoute = StaysBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => StaysRoute,
+} as any)
+const PickupsBookRoute = PickupsBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => PickupsRoute,
+} as any)
+const InsuranceBookRoute = InsuranceBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => InsuranceRoute,
+} as any)
 const FlightsBookRoute = FlightsBookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -114,16 +144,21 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRoute
+  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
-  '/pickups': typeof PickupsRoute
+  '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/stays': typeof StaysRoute
-  '/tours': typeof ToursRoute
-  '/visas': typeof VisasRoute
+  '/stays': typeof StaysRouteWithChildren
+  '/tours': typeof ToursRouteWithChildren
+  '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
   '/flights/book': typeof FlightsBookRoute
+  '/insurance/book': typeof InsuranceBookRoute
+  '/pickups/book': typeof PickupsBookRoute
+  '/stays/book': typeof StaysBookRoute
+  '/tours/book': typeof ToursBookRoute
+  '/visas/book': typeof VisasBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,16 +167,21 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRoute
+  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
-  '/pickups': typeof PickupsRoute
+  '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/stays': typeof StaysRoute
-  '/tours': typeof ToursRoute
-  '/visas': typeof VisasRoute
+  '/stays': typeof StaysRouteWithChildren
+  '/tours': typeof ToursRouteWithChildren
+  '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
   '/flights/book': typeof FlightsBookRoute
+  '/insurance/book': typeof InsuranceBookRoute
+  '/pickups/book': typeof PickupsBookRoute
+  '/stays/book': typeof StaysBookRoute
+  '/tours/book': typeof ToursBookRoute
+  '/visas/book': typeof VisasBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,16 +191,21 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRoute
+  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
-  '/pickups': typeof PickupsRoute
+  '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/stays': typeof StaysRoute
-  '/tours': typeof ToursRoute
-  '/visas': typeof VisasRoute
+  '/stays': typeof StaysRouteWithChildren
+  '/tours': typeof ToursRouteWithChildren
+  '/visas': typeof VisasRouteWithChildren
   '/agents/apply': typeof AgentsApplyRoute
   '/flights/book': typeof FlightsBookRoute
+  '/insurance/book': typeof InsuranceBookRoute
+  '/pickups/book': typeof PickupsBookRoute
+  '/stays/book': typeof StaysBookRoute
+  '/tours/book': typeof ToursBookRoute
+  '/visas/book': typeof VisasBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +226,11 @@ export interface FileRouteTypes {
     | '/visas'
     | '/agents/apply'
     | '/flights/book'
+    | '/insurance/book'
+    | '/pickups/book'
+    | '/stays/book'
+    | '/tours/book'
+    | '/visas/book'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +249,11 @@ export interface FileRouteTypes {
     | '/visas'
     | '/agents/apply'
     | '/flights/book'
+    | '/insurance/book'
+    | '/pickups/book'
+    | '/stays/book'
+    | '/tours/book'
+    | '/visas/book'
   id:
     | '__root__'
     | '/'
@@ -217,6 +272,11 @@ export interface FileRouteTypes {
     | '/visas'
     | '/agents/apply'
     | '/flights/book'
+    | '/insurance/book'
+    | '/pickups/book'
+    | '/stays/book'
+    | '/tours/book'
+    | '/visas/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,14 +286,14 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   FlightsRoute: typeof FlightsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  InsuranceRoute: typeof InsuranceRoute
+  InsuranceRoute: typeof InsuranceRouteWithChildren
   LoginRoute: typeof LoginRoute
-  PickupsRoute: typeof PickupsRoute
+  PickupsRoute: typeof PickupsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
-  StaysRoute: typeof StaysRoute
-  ToursRoute: typeof ToursRoute
-  VisasRoute: typeof VisasRoute
+  StaysRoute: typeof StaysRouteWithChildren
+  ToursRoute: typeof ToursRouteWithChildren
+  VisasRoute: typeof VisasRouteWithChildren
   AgentsApplyRoute: typeof AgentsApplyRoute
 }
 
@@ -337,6 +397,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/visas/book': {
+      id: '/visas/book'
+      path: '/book'
+      fullPath: '/visas/book'
+      preLoaderRoute: typeof VisasBookRouteImport
+      parentRoute: typeof VisasRoute
+    }
+    '/tours/book': {
+      id: '/tours/book'
+      path: '/book'
+      fullPath: '/tours/book'
+      preLoaderRoute: typeof ToursBookRouteImport
+      parentRoute: typeof ToursRoute
+    }
+    '/stays/book': {
+      id: '/stays/book'
+      path: '/book'
+      fullPath: '/stays/book'
+      preLoaderRoute: typeof StaysBookRouteImport
+      parentRoute: typeof StaysRoute
+    }
+    '/pickups/book': {
+      id: '/pickups/book'
+      path: '/book'
+      fullPath: '/pickups/book'
+      preLoaderRoute: typeof PickupsBookRouteImport
+      parentRoute: typeof PickupsRoute
+    }
+    '/insurance/book': {
+      id: '/insurance/book'
+      path: '/book'
+      fullPath: '/insurance/book'
+      preLoaderRoute: typeof InsuranceBookRouteImport
+      parentRoute: typeof InsuranceRoute
+    }
     '/flights/book': {
       id: '/flights/book'
       path: '/book'
@@ -365,6 +460,59 @@ const FlightsRouteChildren: FlightsRouteChildren = {
 const FlightsRouteWithChildren =
   FlightsRoute._addFileChildren(FlightsRouteChildren)
 
+interface InsuranceRouteChildren {
+  InsuranceBookRoute: typeof InsuranceBookRoute
+}
+
+const InsuranceRouteChildren: InsuranceRouteChildren = {
+  InsuranceBookRoute: InsuranceBookRoute,
+}
+
+const InsuranceRouteWithChildren = InsuranceRoute._addFileChildren(
+  InsuranceRouteChildren,
+)
+
+interface PickupsRouteChildren {
+  PickupsBookRoute: typeof PickupsBookRoute
+}
+
+const PickupsRouteChildren: PickupsRouteChildren = {
+  PickupsBookRoute: PickupsBookRoute,
+}
+
+const PickupsRouteWithChildren =
+  PickupsRoute._addFileChildren(PickupsRouteChildren)
+
+interface StaysRouteChildren {
+  StaysBookRoute: typeof StaysBookRoute
+}
+
+const StaysRouteChildren: StaysRouteChildren = {
+  StaysBookRoute: StaysBookRoute,
+}
+
+const StaysRouteWithChildren = StaysRoute._addFileChildren(StaysRouteChildren)
+
+interface ToursRouteChildren {
+  ToursBookRoute: typeof ToursBookRoute
+}
+
+const ToursRouteChildren: ToursRouteChildren = {
+  ToursBookRoute: ToursBookRoute,
+}
+
+const ToursRouteWithChildren = ToursRoute._addFileChildren(ToursRouteChildren)
+
+interface VisasRouteChildren {
+  VisasBookRoute: typeof VisasBookRoute
+}
+
+const VisasRouteChildren: VisasRouteChildren = {
+  VisasBookRoute: VisasBookRoute,
+}
+
+const VisasRouteWithChildren = VisasRoute._addFileChildren(VisasRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
@@ -372,14 +520,14 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   FlightsRoute: FlightsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  InsuranceRoute: InsuranceRoute,
+  InsuranceRoute: InsuranceRouteWithChildren,
   LoginRoute: LoginRoute,
-  PickupsRoute: PickupsRoute,
+  PickupsRoute: PickupsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
-  StaysRoute: StaysRoute,
-  ToursRoute: ToursRoute,
-  VisasRoute: VisasRoute,
+  StaysRoute: StaysRouteWithChildren,
+  ToursRoute: ToursRouteWithChildren,
+  VisasRoute: VisasRouteWithChildren,
   AgentsApplyRoute: AgentsApplyRoute,
 }
 export const routeTree = rootRouteImport
