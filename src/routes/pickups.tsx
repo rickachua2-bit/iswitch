@@ -44,28 +44,25 @@ export const Route = createFileRoute("/pickups")({
 
 function PickupsPage() {
   const { vehicles, query, error } = Route.useLoaderData() as any;
-  const navigate = useNavigate();
   const hasSearched = !!query.date;
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(v: any) {
-    const id = v.id ?? v.vehicle_id ?? v.external_id;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(v: any) {
+    const id = String(v.id ?? v.vehicle_id ?? v.external_id);
+    void select({
       vertical: "pickups",
       sessionPrefix: "vehicle",
       cachePrefix: "vehicle",
-      id: String(id),
+      id,
       payload: { ...v, pickup: query.pickup, drop: query.drop, date: query.date, time: query.time },
-    });
-    navigate({
       to: "/pickups/book",
       search: {
-        vehicle_id: String(id),
+        vehicle_id: id,
         pickup: query.pickup,
         drop: query.drop,
         date: query.date,
         time: query.time,
-      } as never,
+      },
     });
   }
 
