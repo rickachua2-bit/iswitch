@@ -1,0 +1,18 @@
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS avatar_url text,
+  ADD COLUMN IF NOT EXISTS bio text,
+  ADD COLUMN IF NOT EXISTS date_of_birth date,
+  ADD COLUMN IF NOT EXISTS gender text,
+  ADD COLUMN IF NOT EXISTS nationality text,
+  ADD COLUMN IF NOT EXISTS country text,
+  ADD COLUMN IF NOT EXISTS city text,
+  ADD COLUMN IF NOT EXISTS address text,
+  ADD COLUMN IF NOT EXISTS postal_code text,
+  ADD COLUMN IF NOT EXISTS passport_number text,
+  ADD COLUMN IF NOT EXISTS passport_expiry date,
+  ADD COLUMN IF NOT EXISTS preferred_currency text DEFAULT 'NGN',
+  ADD COLUMN IF NOT EXISTS preferred_language text DEFAULT 'en',
+  ADD COLUMN IF NOT EXISTS marketing_emails boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS sms_notifications boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS emergency_contact_name text,
+  ADD COLUMN IF NOT EXISTS emergency_contact_phone text;

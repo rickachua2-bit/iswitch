@@ -488,31 +488,82 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          address: string | null
           agent_status: Database["public"]["Enums"]["agent_status"]
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          date_of_birth: string | null
           display_name: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          gender: string | null
           id: string
+          marketing_emails: boolean | null
+          nationality: string | null
+          passport_expiry: string | null
+          passport_number: string | null
           phone: string | null
+          postal_code: string | null
+          preferred_currency: string | null
+          preferred_language: string | null
+          sms_notifications: boolean | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          address?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender?: string | null
           id?: string
+          marketing_emails?: boolean | null
+          nationality?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           phone?: string | null
+          postal_code?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          sms_notifications?: boolean | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          address?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           display_name?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender?: string | null
           id?: string
+          marketing_emails?: boolean | null
+          nationality?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
           phone?: string | null
+          postal_code?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          sms_notifications?: boolean | null
           updated_at?: string
           user_id?: string
         }
