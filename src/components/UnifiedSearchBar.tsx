@@ -51,8 +51,8 @@ export function UnifiedSearchBar({
       )}
 
       <div className="mx-auto w-full max-w-6xl px-4">
-        {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide md:gap-1.5">
+        {/* Tabs — 3 cols × 2 rows on mobile, single 6-col row on md+ */}
+        <div className="grid grid-cols-3 gap-1 md:flex md:gap-1.5">
           {TABS.map((t) => {
             const Icon = t.icon;
             const isActive = active === t.id;
@@ -60,14 +60,14 @@ export function UnifiedSearchBar({
               <Link
                 key={t.id}
                 to={t.route}
-                className={`flex min-w-fit items-center justify-center gap-2 rounded-t-xl px-4 py-3 text-xs font-bold transition md:px-5 md:text-sm ${
+                className={`flex items-center justify-center gap-1.5 rounded-t-xl px-2 py-3 text-[11px] font-bold transition md:min-w-fit md:gap-2 md:px-5 md:text-sm ${
                   isActive
                     ? "bg-card text-primary shadow-card"
                     : "bg-white/15 text-primary-foreground hover:bg-white/25"
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
-                <span className="whitespace-nowrap">{t.label}</span>
+                <span className="truncate md:whitespace-nowrap">{t.label}</span>
               </Link>
             );
           })}
