@@ -15,10 +15,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { friendlyError, timedFetch } from "./_shared.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
+const REQ_TIMEOUT_MS = 25_000;
 
 /* ------------------------------ HELPERS ---------------------------- */
 
@@ -27,6 +27,31 @@ function ok(data: any) {
 }
 function fail(error: string, fallback: any = {}) {
   return { data: fallback, error };
+}
+
+function friendlyError(status: number | null, raw: string): string {
+  if (status === 522 || status === 524 || status === 504 || /timeout|timed out|aborted/i.test(raw)) {
+    return "Live inventory is taking longer than usual to respond. Please try again in a moment.";
+  }
+  if (status === 502 || status === 503 || (status && status >= 500)) {
+    return "Live inventory is temporarily unavailable. Please try again in a minute.";
+  }
+  if (status === 401 || status === 403) return "Live inventory is temporarily unavailable. Please try again shortly.";
+  if (status === 429) return "Too many searches in a short time. Please wait a few seconds and try again.";
+  if (status === 400 || status === 422) return "Some of your search details were not accepted. Please review and try again.";
+  return "We couldn't load results right now. Please try again.";
+}
+
+async function timedFetch(_providerSlug: string, url: string, init: RequestInit): Promise<{ status: number; text: string; ms: number }> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQ_TIMEOUT_MS);
+  const t0 = Date.now();
+  try {
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    return { status: res.status, text: await res.text(), ms: Date.now() - t0 };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function duffelHeaders() {
