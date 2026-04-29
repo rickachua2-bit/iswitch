@@ -136,7 +136,11 @@ function HotelBookingPage() {
 
   const images = pickAllImages(hotel);
   const cover = images[0];
-  const nights = nightsBetween(checkIn, checkOut);
+  // Fall back to values stored inside the cached hotel payload when URL params are missing
+  const effCheckIn = checkIn || hotel.checkIn || "";
+  const effCheckOut = checkOut || hotel.checkOut || "";
+  const effGuests = guests || hotel.guests || "2 Guests, 1 Room";
+  const nights = nightsBetween(effCheckIn, effCheckOut);
   const pricePerNight = Number(hotel.price ?? 0);
   const subtotal = pricePerNight * nights;
   const taxes = Math.round(subtotal * 0.1 * 100) / 100;
