@@ -487,6 +487,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: any
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/korapay': {
+      id: '/api/public/webhooks/korapay'
+      path: '/api/public/webhooks/korapay'
+      fullPath: '/api/public/webhooks/korapay'
+      preLoaderRoute: any
+      parentRoute: typeof rootRouteImport
+    }
     '/visas': {
       id: '/visas'
       path: '/visas'
