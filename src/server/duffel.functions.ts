@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { friendlyError, timedFetch } from "./_shared.server";
+import { getProviderKey } from "./provider-keys.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 
-function dHeaders() {
-  const key = process.env.DUFFEL_API_KEY;
-  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+async function dHeaders() {
+  const key = await getProviderKey("duffel");
+  if (!key) throw new Error("Duffel key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Duffel-Version": "v2",
