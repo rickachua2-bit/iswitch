@@ -86,6 +86,7 @@ function RootComponent() {
     <AuthProvider>
       <CurrencyProvider>
         <Outlet />
+        <MobileBottomNav />
       </CurrencyProvider>
     </AuthProvider>
   );
