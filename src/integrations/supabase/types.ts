@@ -685,6 +685,7 @@ export type Database = {
           last_error: string | null
           last_error_at: string | null
           last_ok_at: string | null
+          mode: Database["public"]["Enums"]["provider_mode"]
           name: string
           notes: string | null
           slug: string
@@ -702,6 +703,7 @@ export type Database = {
           last_error?: string | null
           last_error_at?: string | null
           last_ok_at?: string | null
+          mode?: Database["public"]["Enums"]["provider_mode"]
           name: string
           notes?: string | null
           slug: string
@@ -719,6 +721,7 @@ export type Database = {
           last_error?: string | null
           last_error_at?: string | null
           last_ok_at?: string | null
+          mode?: Database["public"]["Enums"]["provider_mode"]
           name?: string
           notes?: string | null
           slug?: string
@@ -902,6 +905,7 @@ export type Database = {
         | "refunded"
         | "cancelled"
       provider_kind: "api" | "crawl"
+      provider_mode: "test" | "live"
       unified_booking_status:
         | "pending"
         | "confirmed"
@@ -1072,6 +1076,7 @@ export const Constants = {
         "cancelled",
       ],
       provider_kind: ["api", "crawl"],
+      provider_mode: ["test", "live"],
       unified_booking_status: [
         "pending",
         "confirmed",
