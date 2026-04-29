@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { friendlyError, timedFetch } from "./_shared.server";
+import { getProviderKey } from "./provider-keys.server";
 
 const BASE = "https://api.liteapi.travel/v3.0";
 
-function lHeaders() {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) throw new Error("LITEAPI_KEY is not configured");
+async function lHeaders() {
+  const key = await getProviderKey("liteapi");
+  if (!key) throw new Error("LiteAPI key not configured for current mode");
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
