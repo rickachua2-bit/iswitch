@@ -369,6 +369,8 @@ function ProviderFormModal({ initial, onClose, onSaved }: {
 
 // ===================== DETAIL VIEW (provider's inventory) =====================
 function ProviderDetail({ providerId, onBack }: { providerId: string; onBack: () => void }) {
+  const listProviderInventory = useServerFn(listProviderInventoryFn);
+  const deleteInventoryItem = useServerFn(deleteInventoryItemFn);
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
