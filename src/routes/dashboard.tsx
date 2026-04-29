@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { SupportChat } from "@/components/SupportChat";
+import { DashboardFooter } from "@/components/DashboardFooter";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dashboard")({
@@ -54,6 +55,7 @@ function DashboardLayout() {
           <main className="flex-1 px-4 py-6 md:px-8 md:py-10">
             <Outlet />
           </main>
+          <DashboardFooter />
         </SidebarInset>
 
         <SupportChat />
