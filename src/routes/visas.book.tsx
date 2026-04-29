@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookVisa } from "@/server/travsify";
@@ -129,7 +129,7 @@ function VisaBookingPage() {
             </div>
           </div>
 
-          <SectionCard title="What you'll need to provide" subtitle="Have these ready before you submit. Our concierge reviews everything.">
+          <BookingSectionCard title="What you'll need to provide" subtitle="Have these ready before you submit. Our concierge reviews everything.">
             <ul className="space-y-2 text-sm">
               {requirements.map((r, i) => (
                 <li key={i} className="flex items-start gap-2">
@@ -138,15 +138,15 @@ function VisaBookingPage() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="How it works">
+          <BookingSectionCard title="How it works">
             <ol className="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
               <Step n={1} title="Submit details" body="Fill in applicant info and pay the fee." />
               <Step n={2} title="Document review" body="Our concierge checks your file and submits." />
               <Step n={3} title="Receive visa" body="We email your e-visa or appointment slip." />
             </ol>
-          </SectionCard>
+          </BookingSectionCard>
 
           <ApplicationForm visa={visa} />
         </div>
@@ -262,7 +262,7 @@ function ApplicationForm({ visa }: { visa: any }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <SectionCard title="Applicant details" subtitle="Enter exactly as on your passport.">
+      <BookingSectionCard title="Applicant details" subtitle="Enter exactly as on your passport.">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="First name" required>
             <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
@@ -283,7 +283,7 @@ function ApplicationForm({ visa }: { visa: any }) {
             <input required type="date" value={v.dob} onChange={(e) => set("dob", e.target.value)} className={inputCls} />
           </Field>
         </div>
-      </SectionCard>
+      </BookingSectionCard>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
       <ConfirmButton submitting={submitting} label="Pay & submit application" />
     </form>

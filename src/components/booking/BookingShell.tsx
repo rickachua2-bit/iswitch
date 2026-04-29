@@ -257,7 +257,7 @@ export function Stepper({
  * Section Card
  * ============================================================ */
 
-export function SectionCard({
+export function BookingSectionCard({
   title,
   subtitle,
   icon: Icon,

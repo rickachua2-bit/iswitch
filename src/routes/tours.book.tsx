@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTour } from "@/server/travsify";
@@ -160,7 +160,7 @@ function TourBookingPage() {
             </div>
           </div>
 
-          <SectionCard title="What's included">
+          <BookingSectionCard title="What's included">
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {includes.map((it, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
@@ -175,23 +175,23 @@ function TourBookingPage() {
                 </div>
               ))}
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="Meeting point & logistics">
+          <BookingSectionCard title="Meeting point & logistics">
             <p className="text-sm text-muted-foreground">
               {tour.meeting_point ?? "Hotel pickup is included from most central districts. After booking, we'll confirm the exact pickup window and address by email."}
             </p>
             <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <CalendarIcon className="h-3.5 w-3.5" /> Selected date: <span className="font-bold text-foreground">{date || "—"}</span>
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="Cancellation policy">
+          <BookingSectionCard title="Cancellation policy">
             <ul className="space-y-1 text-sm text-foreground">
               <li className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-emerald-600" /> Free cancellation up to 24 hours before the experience</li>
               <li className="flex items-start gap-2"><X className="mt-0.5 h-4 w-4 flex-none text-destructive" /> Less than 24 hours: non-refundable</li>
             </ul>
-          </SectionCard>
+          </BookingSectionCard>
 
           <ParticipantsForm tour={tour} pax={pax} />
         </div>
@@ -284,7 +284,7 @@ function ParticipantsForm({ tour }: { tour: any; pax: number }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <SectionCard title="Lead traveller details">
+      <BookingSectionCard title="Lead traveller details">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="First name" required>
             <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
@@ -299,10 +299,10 @@ function ParticipantsForm({ tour }: { tour: any; pax: number }) {
             <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
           </Field>
         </div>
-      </SectionCard>
-      <SectionCard title="Pickup location" subtitle="Hotel name and address — leave blank if you'll meet at the start point.">
+      </BookingSectionCard>
+      <BookingSectionCard title="Pickup location" subtitle="Hotel name and address — leave blank if you'll meet at the start point.">
         <input value={v.pickup} onChange={(e) => set("pickup", e.target.value)} className={inputCls} placeholder="e.g. Atlantis The Palm, Dubai" />
-      </SectionCard>
+      </BookingSectionCard>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
       <ConfirmButton submitting={submitting} label="Pay & confirm experience" />
     </form>

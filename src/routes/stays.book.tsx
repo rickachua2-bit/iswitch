@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookHotel } from "@/server/travsify";
@@ -213,7 +213,7 @@ function HotelBookingPage() {
           </div>
 
           {/* Stay details */}
-          <SectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${effGuests}`}>
+          <BookingSectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${effGuests}`}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <Stat icon={CalendarIcon} label="Check-in" value={effCheckIn || "—"} sub="From 3:00 PM" />
               <Stat icon={CalendarIcon} label="Check-out" value={effCheckOut || "—"} sub="Until 12:00 PM" />
@@ -230,10 +230,10 @@ function HotelBookingPage() {
                 <span className="flex items-center gap-1 text-primary"><ShieldCheck className="h-3 w-3" /> Free cancellation until 48h before</span>
               </div>
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
           {/* Amenities */}
-          <SectionCard title="What this property offers">
+          <BookingSectionCard title="What this property offers">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {AMENITIES.map((a) => (
                 <div key={a.label} className="flex items-center gap-2 text-sm text-foreground">
@@ -241,10 +241,10 @@ function HotelBookingPage() {
                 </div>
               ))}
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
           {/* Policies */}
-          <SectionCard title="House rules & policies">
+          <BookingSectionCard title="House rules & policies">
             <ul className="space-y-2 text-sm text-foreground">
               <Policy>Check-in from 3:00 PM · Check-out by 12:00 PM</Policy>
               <Policy>Free cancellation up to 48 hours before arrival</Policy>
@@ -252,7 +252,7 @@ function HotelBookingPage() {
               <Policy>Children of all ages are welcome · Cribs on request</Policy>
               <Policy>No smoking inside rooms · Pets not allowed</Policy>
             </ul>
-          </SectionCard>
+          </BookingSectionCard>
 
           {/* Form */}
           <BookingForm hotel={{ ...hotel, checkIn: effCheckIn, checkOut: effCheckOut, guests: effGuests }} navigate={navigate} />
@@ -390,7 +390,7 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <SectionCard title="Lead guest details" subtitle="Enter the primary guest's information for the reservation.">
+      <BookingSectionCard title="Lead guest details" subtitle="Enter the primary guest's information for the reservation.">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="First name" required>
             <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} placeholder="Jane" />
@@ -405,15 +405,15 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
             <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+2348012345678" />
           </Field>
         </div>
-      </SectionCard>
-      <SectionCard title="Special requests" subtitle="Optional — the property will do their best to accommodate.">
+      </BookingSectionCard>
+      <BookingSectionCard title="Special requests" subtitle="Optional — the property will do their best to accommodate.">
         <textarea
           value={v.requests}
           onChange={(e) => set("requests", e.target.value)}
           className={`${inputCls} min-h-[88px]`}
           placeholder="Late check-in, high floor, twin beds…"
         />
-      </SectionCard>
+      </BookingSectionCard>
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>
       )}

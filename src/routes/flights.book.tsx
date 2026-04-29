@@ -11,7 +11,7 @@ import { bookFlight } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { FareAndTransitRules } from "@/components/flights/FareAndTransitRules";
 import {
-  BookingShell, SectionCard, Field, ConfirmButton, type BookingHeroProps,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 
 const bookSchema = z.object({
@@ -254,7 +254,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
 
       <FareAndTransitRules offer={offer} fare={fare} />
 
-      <SectionCard
+      <BookingSectionCard
         title="Passenger details"
         subtitle="Enter the lead traveller's information exactly as on their passport."
       >
@@ -317,9 +317,9 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
             />
           </Field>
         </div>
-      </SectionCard>
+      </BookingSectionCard>
 
-      <SectionCard
+      <BookingSectionCard
         title="Contact information"
         subtitle="We'll send your e-ticket and any flight updates here."
       >
@@ -344,9 +344,9 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
             />
           </Field>
         </div>
-      </SectionCard>
+      </BookingSectionCard>
 
-      <SectionCard
+      <BookingSectionCard
         title="Add-ons"
         subtitle="Optional protections — you can also add these after checkout."
       >
@@ -362,7 +362,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
             description="Add a 23 kg bag for a discounted rate at checkout"
           />
         </div>
-      </SectionCard>
+      </BookingSectionCard>
 
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
