@@ -199,7 +199,7 @@ function VisasPage() {
           </p>
         </section>
       ) : (
-      <>
+      <div>
       {/* Result summary banner — Sherpa-style */}
       <section className="mx-auto max-w-6xl px-4 pt-8 md:px-6">
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm md:p-6">
@@ -320,7 +320,7 @@ function VisasPage() {
           </div>
         )}
       </section>
-      </>
+      </div>
       )}
 
       {/* How it works — Sherpa-style trust strip */}
