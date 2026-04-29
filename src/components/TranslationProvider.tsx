@@ -217,7 +217,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
           for (const batch of chunk(missArr, 40)) {
             try {
               const res = await translateBatch({
-                data: { texts: batch, target: lang, source: "en" },
+                data: { texts: batch, target: lang, source: "en" } as any,
               });
               const translations = res?.translations ?? batch;
               batch.forEach((src, i) => {
