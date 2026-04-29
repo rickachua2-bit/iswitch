@@ -18,7 +18,57 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
+const TRAVSIFY_BASE = "https://api.travsify.com";
 const REQ_TIMEOUT_MS = 25_000;
+
+type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+
+/**
+ * Reads admin-controlled per-vertical provider routing from system_settings.
+ * Returns "travsify" only when the admin enabled it AND the API key is set.
+ * Otherwise falls back to "default" (Duffel / LiteAPI / crawled inventory).
+ */
+async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "default"> {
+  try {
+    if (!process.env.TRAVSIFY_API_KEY) return "default";
+    const { data } = await supabaseAdmin
+      .from("system_settings")
+      .select("value")
+      .eq("key", "provider_routing")
+      .maybeSingle();
+    const choice = (data?.value as Record<string, string> | null)?.[vertical];
+    return choice === "travsify" ? "travsify" : "default";
+  } catch {
+    return "default";
+  }
+}
+
+function travsifyHeaders() {
+  const key = process.env.TRAVSIFY_API_KEY;
+  if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
+  return {
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  } as Record<string, string>;
+}
+
+/** Generic Travsify search proxy. The shape is loose because Travsify mirrors
+ *  most vertical schemas; we only need a JSON pass-through to keep the UI
+ *  contract stable while admins evaluate the provider. */
+async function travsifySearch(path: string, body: unknown) {
+  try {
+    const { status, text } = await timedFetch("travsify", `${TRAVSIFY_BASE}${path}`, {
+      method: "POST",
+      headers: travsifyHeaders(),
+      body: JSON.stringify(body),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), data: null as any };
+    return { ok: true as const, data: JSON.parse(text) };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), data: null as any };
+  }
+}
 
 /* ------------------------------ HELPERS ---------------------------- */
 
