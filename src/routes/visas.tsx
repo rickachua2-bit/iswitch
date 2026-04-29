@@ -285,7 +285,7 @@ function VisasPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setSelected(v)}
+                      onClick={() => goToBooking(v)}
                       className="rounded-lg bg-gradient-accent px-4 py-2.5 text-xs font-bold text-accent-foreground shadow-sm transition hover:opacity-90"
                     >
                       Apply now
