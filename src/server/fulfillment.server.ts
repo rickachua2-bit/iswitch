@@ -38,8 +38,8 @@ async function fulfilFlight(bookingId: string, payload: any) {
 }
 
 async function fulfilHotel(bookingId: string, payload: any) {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) return { ok: false, error: "LITEAPI_KEY missing" };
+  const key = await getProviderKey("liteapi");
+  if (!key) return { ok: false, error: "LiteAPI key missing for current mode" };
 
   const rateId = payload?.lite_rate_id ?? payload?.rate_id;
   const guests = payload?.guests ?? [];
