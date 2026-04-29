@@ -115,24 +115,13 @@ function WalletPage() {
 
   async function handleFund(amount: number, currency: string) {
     if (!userId || amount <= 0) return;
-    const newBal = balanceFor(currency) + amount;
-    const { error: upErr } = await supabase
-      .from("wallet_balances")
-      .upsert({ user_id: userId, currency, balance: newBal }, { onConflict: "user_id,currency" });
-    if (upErr) return toast.error(upErr.message);
-
-    const { error: txErr } = await supabase.from("wallet_transactions").insert({
-      user_id: userId,
-      tx_type: "fund",
-      currency,
-      amount,
-      description: `Wallet top-up`,
-    });
-    if (txErr) return toast.error(txErr.message);
-
-    toast.success(`Funded ${fmt(amount, currency, currencyMap.get(currency)?.symbol)}`);
+    // No mock crediting. Real payment provider integration is required to
+    // confirm funds before they are added to the wallet balance.
+    toast.info(
+      `Top-up of ${fmt(amount, currency, currencyMap.get(currency)?.symbol)} requires payment. ` +
+      `Your wallet will be credited once payment is confirmed.`
+    );
     setShowFund(false);
-    await refresh(userId);
   }
 
   async function handleSwap(fromCode: string, toCode: string, fromAmount: number) {
@@ -455,15 +444,15 @@ function FundModal({
           </div>
         </div>
 
-        <div className="rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground">
-          <Shield className="mr-1 inline h-3 w-3" /> Demo top-up — payment provider integration coming soon. Funds appear instantly in your balance for testing.
+        <div className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+          <Shield className="mr-1 inline h-3 w-3" /> Payment provider integration is being finalised. Your wallet will only be credited after a real payment is confirmed — no funds are added automatically.
         </div>
 
         <button
           onClick={() => onConfirm(parseFloat(amount) || 0, currency)}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-glow px-5 py-3 font-extrabold text-primary-foreground shadow-glow transition hover:opacity-95"
         >
-          <Check className="h-4 w-4" /> Confirm top-up
+          <Check className="h-4 w-4" /> Continue to payment
         </button>
       </div>
     </Modal>
