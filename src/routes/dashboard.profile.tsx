@@ -112,10 +112,11 @@ function ProfilePage() {
   async function save() {
     if (!user) return;
     setSaving(true);
-    const payload: Record<string, unknown> = { ...form };
-    // Convert empty date strings to null to satisfy Postgres
-    if (!payload.date_of_birth) payload.date_of_birth = null;
-    if (!payload.passport_expiry) payload.passport_expiry = null;
+    const payload = {
+      ...form,
+      date_of_birth: form.date_of_birth || null,
+      passport_expiry: form.passport_expiry || null,
+    };
     const { error } = await supabase.from("profiles").update(payload).eq("user_id", user.id);
     setSaving(false);
     if (error) toast.error("Failed to save", { description: error.message });
