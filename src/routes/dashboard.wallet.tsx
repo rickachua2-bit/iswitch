@@ -115,24 +115,13 @@ function WalletPage() {
 
   async function handleFund(amount: number, currency: string) {
     if (!userId || amount <= 0) return;
-    const newBal = balanceFor(currency) + amount;
-    const { error: upErr } = await supabase
-      .from("wallet_balances")
-      .upsert({ user_id: userId, currency, balance: newBal }, { onConflict: "user_id,currency" });
-    if (upErr) return toast.error(upErr.message);
-
-    const { error: txErr } = await supabase.from("wallet_transactions").insert({
-      user_id: userId,
-      tx_type: "fund",
-      currency,
-      amount,
-      description: `Wallet top-up`,
-    });
-    if (txErr) return toast.error(txErr.message);
-
-    toast.success(`Funded ${fmt(amount, currency, currencyMap.get(currency)?.symbol)}`);
+    // No mock crediting. Real payment provider integration is required to
+    // confirm funds before they are added to the wallet balance.
+    toast.info(
+      `Top-up of ${fmt(amount, currency, currencyMap.get(currency)?.symbol)} requires payment. ` +
+      `Your wallet will be credited once payment is confirmed.`
+    );
     setShowFund(false);
-    await refresh(userId);
   }
 
   async function handleSwap(fromCode: string, toCode: string, fromAmount: number) {
