@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useChildMatches } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { FlightForm } from "@/components/FlightForm";
@@ -328,6 +328,8 @@ function useFlightSearch(search: any): SearchState & { query: any } {
 /* ----------------------------- page ----------------------------- */
 
 function FlightsPage() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
