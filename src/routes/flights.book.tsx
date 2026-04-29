@@ -202,7 +202,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
         customer_phone: pax.phone_number,
         payload: {
           duffel_offer_id: offer.id,
-          fare_id,
+          fare_id: fare?.id ?? null,
           passengers: [pax],
           slices: offer?.slices ?? [],
         },
