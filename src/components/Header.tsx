@@ -68,7 +68,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         {/* Logo + nav */}
         <div className="flex min-w-0 items-center gap-6">
-          <Link to="/" className="flex items-center" aria-label="iSwitch home">
+          <Link to="/" className="flex items-center" aria-label="iSwitch home" data-no-translate>
             <img
               src={iswitchLogo}
               alt="iSwitch"
