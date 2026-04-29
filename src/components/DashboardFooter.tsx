@@ -30,10 +30,10 @@ export function DashboardFooter() {
           <div className="space-y-2">
             <h4 className="text-xs font-extrabold uppercase tracking-[0.16em] text-primary">Company</h4>
             <ul className="space-y-1.5 text-sm">
-              <li><Link to="/about" className="text-muted-foreground hover:text-primary">About us</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-primary">Contact</Link></li>
+              <li><a href="/about" className="text-muted-foreground hover:text-primary">About us</a></li>
+              <li><a href="/contact" className="text-muted-foreground hover:text-primary">Contact</a></li>
               <li><Link to="/agents/apply" className="text-muted-foreground hover:text-primary">Become an agent</Link></li>
-              <li><Link to="/blog" className="text-muted-foreground hover:text-primary">Blog</Link></li>
+              <li><a href="/blog" className="text-muted-foreground hover:text-primary">Blog</a></li>
             </ul>
           </div>
 
@@ -46,9 +46,9 @@ export function DashboardFooter() {
               <Headphones className="h-3.5 w-3.5" /> Live chat 24/7
             </button>
             <ul className="space-y-1.5 pt-1 text-sm">
-              <li><Link to="/help" className="text-muted-foreground hover:text-primary">Help center</Link></li>
-              <li><Link to="/terms" className="text-muted-foreground hover:text-primary">Terms of service</Link></li>
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-primary">Privacy policy</Link></li>
+              <li><a href="/help" className="text-muted-foreground hover:text-primary">Help center</a></li>
+              <li><a href="/terms" className="text-muted-foreground hover:text-primary">Terms of service</a></li>
+              <li><a href="/privacy" className="text-muted-foreground hover:text-primary">Privacy policy</a></li>
             </ul>
           </div>
         </div>
