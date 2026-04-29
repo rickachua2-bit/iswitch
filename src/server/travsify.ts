@@ -292,17 +292,15 @@ async function runDuffelSearch(input: z.infer<typeof FlightSearchInput>) {
   if (!origin || !destination || !departure_date) {
     return { offers: [] as any[], error: "Please complete origin, destination and date." };
   }
-  const res: any = await duffelSearchFlights({
-    data: {
-      origin,
-      destination,
-      departure_date,
-      return_date: input.return_date,
-      adults: input.adults,
-      children: input.children ?? 0,
-      infants: input.infants ?? 0,
-      cabin: normalizeCabin(input.cabin),
-    },
+  const res = await searchDuffelOffers({
+    origin,
+    destination,
+    departure_date,
+    return_date: input.return_date,
+    adults: input.adults,
+    children: input.children ?? 0,
+    infants: input.infants ?? 0,
+    cabin: normalizeCabin(input.cabin),
   });
   if (!res?.ok) return { offers: [], error: res?.error || "Flights unavailable." };
   return { offers: res.offers ?? [], error: null as string | null };
@@ -349,7 +347,7 @@ export const bookFlight = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     // Re-fetch the offer to lock price + capture as a lead. Manual fulfillment.
-    const offerRes: any = await duffelGetOffer({ data: { offer_id: data.offer_id } });
+    const offerRes = await getDuffelOffer(data.offer_id);
     const offer = offerRes?.offer;
     const lead = data.passengers[0] || {};
     const amount = Number(offer?.total_amount ?? 0);
@@ -389,18 +387,14 @@ export const searchHotels = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
-    const res: any = await liteSearchHotels({
-      data: {
-        cityName: data.city,
-        countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
-        checkin: data.checkin,
-        checkout: data.checkout,
-        adults: Math.max(1, Number(data.adults) || 1),
-        children: [],
-        rooms: Math.max(1, Number(data.rooms) || 1),
-        currency: data.currency || "USD",
-        guestNationality: "US",
-      },
+    const res = await searchLiteHotels({
+      cityName: data.city,
+      countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
+      checkin: data.checkin,
+      checkout: data.checkout,
+      adults: Math.max(1, Number(data.adults) || 1),
+      rooms: Math.max(1, Number(data.rooms) || 1),
+      currency: data.currency || "USD",
     });
     if (!res?.ok) return fail(res?.error || "Hotels unavailable.", { hotels: [] });
     return ok({ hotels: res.hotels ?? [] });
