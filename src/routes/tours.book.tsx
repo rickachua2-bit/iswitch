@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTour } from "@/server/travsify";
 import {
@@ -107,8 +108,24 @@ function TourBookingPage() {
     "Meals not specified in itinerary",
   ];
 
+  const hero: BookingHeroProps = {
+    vertical: "tours",
+    eyebrow: "Step 2 of 3",
+    title: tour.title,
+    subtitle: destination ? `Experience in ${destination}` : undefined,
+    meta: [
+      { icon: CalendarIcon, label: date || "Date TBD" },
+      { icon: Users, label: `${pax} guest${pax > 1 ? "s" : ""}` },
+      { icon: Clock, label: tour.duration ?? "Approx. 4 hours" },
+    ],
+    priceLabel: "Total",
+    priceValue: `${currency} ${total.toFixed(2)}`,
+    priceFootnote: `${currency} ${price.toFixed(2)} × ${pax} guest${pax > 1 ? "s" : ""}`,
+    backTo: "/tours",
+  };
+
   return (
-    <BookingShell backTo="/tours">
+    <BookingShell backTo="/tours" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">

@@ -340,4 +340,133 @@
     background-size: 200% 100%;
     animation: admin-shimmer 6s linear infinite;
   }
+
+  /* ===== Booking Pages (flights/stays/tours/visas/insurance/pickups) ===== */
+  .booking-shell {
+    background:
+      radial-gradient(1100px 480px at 50% -120px, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent 70%),
+      radial-gradient(900px 420px at 100% -80px, color-mix(in oklab, var(--color-accent) 18%, transparent), transparent 65%),
+      var(--color-background);
+  }
+  .booking-hero {
+    position: relative;
+    overflow: hidden;
+    color: white;
+    background:
+      radial-gradient(820px 240px at 0% 0%, color-mix(in oklab, var(--color-accent) 22%, transparent), transparent 60%),
+      radial-gradient(720px 280px at 100% 100%, color-mix(in oklab, var(--color-primary-glow) 38%, transparent), transparent 60%),
+      var(--gradient-hero);
+    box-shadow: var(--shadow-elevated);
+    border-bottom: 1px solid color-mix(in oklab, white 12%, transparent);
+  }
+  .booking-hero::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    height: 220px;
+    width: 220px;
+    border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in oklab, var(--color-accent) 55%, transparent), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+  }
+  .booking-hero::before {
+    content: "";
+    position: absolute;
+    left: -80px;
+    bottom: -100px;
+    height: 260px;
+    width: 260px;
+    border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in oklab, var(--color-primary-glow) 45%, transparent), transparent 70%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+  .booking-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--color-accent) 95%, transparent),
+      color-mix(in oklab, var(--color-accent-glow) 80%, transparent));
+    color: var(--color-accent-foreground);
+    font-size: 0.7rem;
+    font-weight: 800;
+    box-shadow:
+      0 8px 22px -8px color-mix(in oklab, var(--color-accent) 60%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
+  }
+  .booking-hero-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: white;
+    text-shadow: 0 2px 12px color-mix(in oklab, black 25%, transparent);
+  }
+  .booking-hero-price {
+    text-align: right;
+    padding: 0.85rem 1.1rem;
+    border-radius: 1rem;
+    background: linear-gradient(180deg,
+      color-mix(in oklab, white 10%, transparent),
+      color-mix(in oklab, white 4%, transparent));
+    border: 1px solid color-mix(in oklab, white 18%, transparent);
+    backdrop-filter: blur(8px);
+    min-width: 200px;
+  }
+  .booking-card {
+    position: relative;
+    background: var(--gradient-card);
+    border: 1px solid color-mix(in oklab, var(--color-primary) 8%, var(--color-border));
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+  .booking-card-rule {
+    display: inline-block;
+    width: 3px;
+    flex: none;
+    align-self: stretch;
+    border-radius: 999px;
+    background: linear-gradient(180deg,
+      var(--color-accent),
+      color-mix(in oklab, var(--color-primary-glow) 70%, transparent));
+    box-shadow: 0 0 12px color-mix(in oklab, var(--color-accent) 40%, transparent);
+  }
+  .booking-confirm-btn {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--color-primary-foreground);
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow:
+      0 12px 28px -10px color-mix(in oklab, var(--color-primary) 65%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 25%, transparent);
+    transition: transform 120ms, box-shadow 150ms, filter 150ms;
+  }
+  .booking-confirm-btn:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow:
+      0 16px 36px -10px color-mix(in oklab, var(--color-primary) 75%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent);
+  }
+  .booking-confirm-btn:active:not(:disabled) { transform: translateY(1px); }
+  .booking-confirm-btn:disabled { opacity: 0.78; cursor: wait; }
+  .booking-total {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+  }
 }

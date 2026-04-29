@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookHotel } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, MapPin, Hotel as HotelIcon, BedDouble, Wifi, Coffee, Waves, Dumbbell,
   Utensils, ParkingCircle, Sparkles, ShieldCheck, Calendar as CalendarIcon, Users,
-  CheckCircle2, Tag, Heart,
+  CheckCircle2, Tag,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -148,8 +149,24 @@ function HotelBookingPage() {
   const currency = hotel.currency ?? "USD";
   const score = Number(hotel.review_score ?? hotel.score ?? 8.6);
 
+  const hero: BookingHeroProps = {
+    vertical: "stays",
+    eyebrow: "Step 2 of 3",
+    title: hotel.name,
+    subtitle: hotel.address ?? hotel.location ?? "City center",
+    meta: [
+      { icon: CalendarIcon, label: `${effCheckIn || "—"} → ${effCheckOut || "—"}` },
+      { icon: Users, label: effGuests },
+      { icon: BedDouble, label: `${nights} night${nights > 1 ? "s" : ""}` },
+    ],
+    priceLabel: `Total for ${nights} night${nights > 1 ? "s" : ""}`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `${formatPrice(pricePerNight, currency)} / night incl. taxes`,
+    backTo: "/stays",
+  };
+
   return (
-    <BookingShell backTo="/stays">
+    <BookingShell backTo="/stays" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           {/* Header card with gallery */}

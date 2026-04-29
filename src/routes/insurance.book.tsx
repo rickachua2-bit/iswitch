@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookInsurance } from "@/server/travsify";
 import {
-  ShieldCheck, CheckCircle2, Heart, Briefcase, Plane, Stethoscope, Wallet, X,
+  ShieldCheck, CheckCircle2, Heart, Briefcase, Plane, Stethoscope, Wallet, X, Calendar as CalendarIcon, Globe2, Users,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -93,8 +94,24 @@ function InsuranceBookingPage() {
     "Losses due to alcohol or drug use",
   ];
 
+  const hero: BookingHeroProps = {
+    vertical: "insurance",
+    eyebrow: plan.tier ?? "Travel insurance",
+    title: plan.name,
+    subtitle: `${destination || "Worldwide"} cover`,
+    meta: [
+      { icon: CalendarIcon, label: `${start || "—"} → ${end || "—"}` },
+      { icon: Users, label: `${travelers} traveller${Number(travelers) > 1 ? "s" : ""}` },
+      { icon: Globe2, label: destination || "Worldwide" },
+    ],
+    priceLabel: "Total premium",
+    priceValue: `${currency} ${total.toFixed(2)}`,
+    priceFootnote: `${currency} ${price.toFixed(2)} per traveller`,
+    backTo: "/insurance",
+  };
+
   return (
-    <BookingShell backTo="/insurance">
+    <BookingShell backTo="/insurance" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">

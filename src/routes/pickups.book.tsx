@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTransfer } from "@/server/travsify";
 import {
-  Car, Users, Briefcase, Snowflake, MapPin, Clock, ShieldCheck, CheckCircle2, Plane, Phone,
+  Car, Users, Briefcase, Snowflake, MapPin, Clock, ShieldCheck, CheckCircle2, Plane, Phone, Calendar as CalendarIcon,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -76,8 +77,24 @@ function TransferBookingPage() {
   const price = Number(vehicle.price ?? 0);
   const currency = vehicle.currency ?? "USD";
 
+  const hero: BookingHeroProps = {
+    vertical: "pickups",
+    eyebrow: "Private transfer",
+    title: `${pickup || "Pickup"} → ${drop || "Drop-off"}`,
+    subtitle: vehicle.name ?? vehicle.type ?? "Door-to-door transfer",
+    meta: [
+      { icon: CalendarIcon, label: `${date || "Date TBD"} · ${time || "12:00"}` },
+      { icon: Users, label: `${vehicle.passengers ?? vehicle.pax ?? 3} passengers` },
+      { icon: Briefcase, label: `${vehicle.bags ?? 2} bags` },
+    ],
+    priceLabel: "Total fare",
+    priceValue: `${currency} ${price.toFixed(2)}`,
+    priceFootnote: "Fixed price · all tolls & fees included",
+    backTo: "/pickups",
+  };
+
   return (
-    <BookingShell backTo="/pickups">
+    <BookingShell backTo="/pickups" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">

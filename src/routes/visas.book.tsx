@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookVisa } from "@/server/travsify";
 import {
@@ -87,8 +88,24 @@ function VisaBookingPage() {
       "Travel insurance covering the trip",
     ];
 
+  const hero: BookingHeroProps = {
+    vertical: "visas",
+    eyebrow: visa.type ?? "Visa",
+    title: visa.name,
+    subtitle: `${nationality || "—"} → ${destination || "—"}`,
+    meta: [
+      { icon: Clock, label: visa.processing_time ?? visa.processing ?? "5–15 days" },
+      { icon: FileCheck2, label: visa.validity ?? "90 days validity" },
+      { icon: Briefcase, label: visa.stay ?? visa.duration ?? "Up to 30 days" },
+    ],
+    priceLabel: "Total fee",
+    priceValue: `${currency} ${total.toFixed(2)}`,
+    priceFootnote: `Govt ${currency} ${fee.toFixed(2)} + service ${currency} ${service.toFixed(2)}`,
+    backTo: "/visas",
+  };
+
   return (
-    <BookingShell backTo="/visas">
+    <BookingShell backTo="/visas" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
