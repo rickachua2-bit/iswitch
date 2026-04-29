@@ -320,6 +320,8 @@ function VisasPage() {
           </div>
         )}
       </section>
+      </>
+      )}
 
       {/* How it works — Sherpa-style trust strip */}
       <section className="mx-auto max-w-6xl px-4 pb-12 md:px-6">
