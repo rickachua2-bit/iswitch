@@ -126,7 +126,13 @@ function StaysPage() {
     } catch {}
     navigate({
       to: "/stays/book",
-      search: { offer_id: String(id), checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests },
+      search: {
+        destination: query.destination,
+        offer_id: String(id),
+        checkIn: query.checkIn,
+        checkOut: query.checkOut,
+        guests: query.guests,
+      },
     });
   }
 
