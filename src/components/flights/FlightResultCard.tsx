@@ -61,14 +61,26 @@ export function FlightResultCard({ offer }: { offer: any }) {
   // Standard / Flex pair from the price so the experience matches even with sample data.
   const fares = buildFares(offer, price, cur);
 
-  function selectFare(fareId: string) {
+  async function selectFare(fareId: string) {
+    const selectedFare = fares.find((f: any) => f.id === fareId);
     try {
       sessionStorage.setItem(`offer:${offer.id}`, JSON.stringify(offer));
       sessionStorage.setItem(
         `fare:${offer.id}:${fareId}`,
-        JSON.stringify(fares.find((f: any) => f.id === fareId)),
+        JSON.stringify(selectedFare),
       );
-    } catch { /* ignore */ }
+    } catch { /* ignore quota errors */ }
+    // Persist server-side so the booking page works after refresh / redirect.
+    try {
+      const { saveOffer } = await import("@/server/offer-cache.functions");
+      await saveOffer({
+        data: {
+          id: `flight:${offer.id}`,
+          vertical: "flights",
+          payload: { offer, fares: { [fareId]: selectedFare } },
+        },
+      });
+    } catch { /* non-blocking */ }
     navigate({
       to: "/flights/book",
       search: { offer_id: offer.id, fare_id: fareId } as never,
