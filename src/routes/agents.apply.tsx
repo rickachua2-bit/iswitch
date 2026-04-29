@@ -217,20 +217,75 @@ function SignupStep(props: {
   loading: boolean; error: string | null; onSubmit: (e: FormEvent) => void;
 }) {
   return (
-    <form onSubmit={props.onSubmit} className="space-y-3">
-      <div className="mb-2">
-        <h2 className="font-display text-xl font-extrabold">Step 1 of 2 — Create your agent account</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Already have an iSwitch account?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link> first, then come back here to submit KYB.
-        </p>
+    <form onSubmit={props.onSubmit} className="space-y-5">
+      {/* B2B perks banner */}
+      <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 p-3">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-md">
+          <Briefcase className="h-4 w-4" />
+        </span>
+        <div className="text-xs">
+          <div className="font-extrabold text-foreground">Step 1 of 2 — Agent account</div>
+          <div className="text-muted-foreground">
+            Already have an iSwitch account?{" "}
+            <Link to="/login" className="font-bold text-primary hover:underline">Sign in</Link> first.
+          </div>
+        </div>
       </div>
-      <Field label="Your full name"><input required value={props.displayName} onChange={(e) => props.setDisplayName(e.target.value)} className="input" /></Field>
-      <Field label="Phone"><input value={props.phone} onChange={(e) => props.setPhone(e.target.value)} className="input" /></Field>
-      <Field label="Email"><input required type="email" value={props.email} onChange={(e) => props.setEmail(e.target.value)} className="input" /></Field>
-      <Field label="Password"><input required type="password" minLength={8} value={props.password} onChange={(e) => props.setPassword(e.target.value)} className="input" /></Field>
-      {props.error && <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{props.error}</div>}
-      <button type="submit" disabled={props.loading} className="flex w-full items-center justify-center gap-2 rounded-md bg-gradient-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-60">
+
+      <AuthField
+        label="Your full name"
+        icon={User}
+        required
+        value={props.displayName}
+        onChange={(e) => props.setDisplayName(e.target.value)}
+        placeholder="Your legal name"
+        hint="Account owner — this is who we'll communicate with."
+      />
+      <AuthField
+        label="Phone"
+        icon={Phone}
+        type="tel"
+        value={props.phone}
+        onChange={(e) => props.setPhone(e.target.value)}
+        placeholder="+234 801 234 5678"
+        hint="Direct line for urgent ops escalations."
+      />
+      <AuthField
+        label="Work email"
+        icon={Mail}
+        required
+        type="email"
+        value={props.email}
+        onChange={(e) => props.setEmail(e.target.value)}
+        placeholder="you@youragency.com"
+        hint="Use your business domain for faster KYB approval."
+        valid={props.email.length > 0 && /.+@.+\..+/.test(props.email) ? true : undefined}
+      />
+      <div className="space-y-2">
+        <AuthField
+          label="Password"
+          icon={Lock}
+          required
+          type="password"
+          minLength={8}
+          value={props.password}
+          onChange={(e) => props.setPassword(e.target.value)}
+          placeholder="At least 8 characters"
+        />
+        <PasswordStrength value={props.password} />
+      </div>
+
+      {props.error && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+          {props.error}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={props.loading}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary via-primary-glow to-accent px-4 py-3 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-glow transition hover:scale-[1.01] disabled:opacity-60"
+      >
         {props.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
         Continue to KYB
       </button>
@@ -249,34 +304,100 @@ function KybStep(props: {
   loading: boolean; error: string | null; onSubmit: (e: FormEvent) => void;
 }) {
   return (
-    <form onSubmit={props.onSubmit} className="space-y-3">
-      <div className="mb-2">
-        <h2 className="font-display text-xl font-extrabold">Step 2 of 2 — Business verification (KYB)</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Admin reviews applications within 1–3 business days.</p>
+    <form onSubmit={props.onSubmit} className="space-y-5">
+      <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+          <ShieldCheck className="h-4 w-4" />
+        </span>
+        <div className="text-xs">
+          <div className="font-extrabold text-foreground">Step 2 of 2 — Business verification</div>
+          <div className="text-muted-foreground">Reviews are completed within 1–3 business days.</div>
+        </div>
       </div>
 
-      <Field label="Business name"><input required value={props.businessName} onChange={(e) => props.setBusinessName(e.target.value)} className="input" /></Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Registration #"><input required value={props.registrationNumber} onChange={(e) => props.setRegistrationNumber(e.target.value)} className="input" /></Field>
-        <Field label="Country"><input required value={props.country} onChange={(e) => props.setCountry(e.target.value)} className="input" /></Field>
+      <AuthField
+        label="Business name"
+        icon={Building2}
+        required
+        value={props.businessName}
+        onChange={(e) => props.setBusinessName(e.target.value)}
+        placeholder="Your registered company name"
+        hint="Must match the name on your CAC / business license."
+      />
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <AuthField
+          label="Registration #"
+          icon={Hash}
+          required
+          value={props.registrationNumber}
+          onChange={(e) => props.setRegistrationNumber(e.target.value)}
+          placeholder="RC123456 / EIN..."
+          hint="Government registration number."
+        />
+        <AuthField
+          label="Country"
+          icon={MapPin}
+          required
+          value={props.country}
+          onChange={(e) => props.setCountry(e.target.value)}
+          placeholder="Country of registration"
+        />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Contact phone"><input required value={props.contactPhone} onChange={(e) => props.setContactPhone(e.target.value)} className="input" /></Field>
-        <Field label="Business type">
-          <select value={props.businessType} onChange={(e) => props.setBusinessType(e.target.value)} className="input">
-            {["Travel Agency", "Tour Operator", "Corporate Travel", "Education Consultant", "Immigration Consultant", "Other"].map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </Field>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <AuthField
+          label="Contact phone"
+          icon={Phone}
+          required
+          type="tel"
+          value={props.contactPhone}
+          onChange={(e) => props.setContactPhone(e.target.value)}
+          placeholder="+234 801 234 5678"
+        />
+        <label className="block">
+          <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+            <Layers className="h-3 w-3 text-primary" />
+            Business type
+          </span>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md bg-gradient-to-br from-primary/15 to-accent/15 text-primary ring-1 ring-primary/15">
+              <Layers className="h-4 w-4" />
+            </span>
+            <select
+              value={props.businessType}
+              onChange={(e) => props.setBusinessType(e.target.value)}
+              className="w-full rounded-xl border-2 border-border bg-background py-3 pl-12 pr-3 text-sm font-semibold text-foreground transition focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15"
+            >
+              {["Travel Agency", "Tour Operator", "Corporate Travel", "Education Consultant", "Immigration Consultant", "Other"].map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+        </label>
       </div>
-      <Field label="Website (optional)"><input type="url" placeholder="https://..." value={props.website} onChange={(e) => props.setWebsite(e.target.value)} className="input" /></Field>
+
+      <AuthField
+        label="Website (optional)"
+        icon={Globe}
+        type="url"
+        value={props.website}
+        onChange={(e) => props.setWebsite(e.target.value)}
+        placeholder="https://youragency.com"
+        hint="Helps us verify faster."
+      />
 
       <div>
-        <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">Business documents</span>
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-background px-4 py-6 text-center text-xs text-muted-foreground hover:border-primary hover:bg-secondary">
-          <Upload className="h-5 w-5" />
-          <span><b>Upload</b> CAC certificate, business license, etc. (PDF / JPG / PNG)</span>
+        <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+          <FileCheck2 className="h-3 w-3 text-primary" />
+          Business documents
+        </span>
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 px-4 py-7 text-center text-xs text-muted-foreground transition hover:border-primary hover:bg-primary/10">
+          <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-glow text-primary-foreground shadow-md">
+            <Upload className="h-5 w-5" />
+          </span>
+          <span><b className="text-foreground">Click to upload</b> CAC certificate, business license, ID</span>
+          <span className="text-[10px] text-muted-foreground">PDF, JPG or PNG · multiple files allowed</span>
           <input
             type="file"
             multiple
@@ -288,8 +409,8 @@ function KybStep(props: {
         {props.files.length > 0 && (
           <ul className="mt-2 space-y-1 text-xs">
             {props.files.map((f) => (
-              <li key={f.name} className="flex items-center justify-between rounded-md bg-secondary/60 px-2 py-1">
-                <span className="truncate"><FileCheck2 className="mr-1 inline h-3 w-3 text-success" />{f.name}</span>
+              <li key={f.name} className="flex items-center justify-between rounded-md bg-secondary/60 px-2 py-1.5">
+                <span className="truncate"><FileCheck2 className="mr-1 inline h-3 w-3 text-emerald-600" />{f.name}</span>
                 <button
                   type="button"
                   onClick={() => props.setFiles(props.files.filter((x) => x !== f))}
@@ -304,9 +425,17 @@ function KybStep(props: {
         )}
       </div>
 
-      {props.error && <div className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{props.error}</div>}
+      {props.error && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+          {props.error}
+        </div>
+      )}
 
-      <button type="submit" disabled={props.loading} className="flex w-full items-center justify-center gap-2 rounded-md bg-gradient-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-60">
+      <button
+        type="submit"
+        disabled={props.loading}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary via-primary-glow to-accent px-4 py-3 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-glow transition hover:scale-[1.01] disabled:opacity-60"
+      >
         {props.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck2 className="h-4 w-4" />}
         Submit application
       </button>
