@@ -122,8 +122,8 @@ function TourBookingPage() {
       { icon: Clock, label: tour.duration ?? "Approx. 4 hours" },
     ],
     priceLabel: "Total",
-    priceValue: `${currency} ${total.toFixed(2)}`,
-    priceFootnote: `${currency} ${price.toFixed(2)} × ${pax} guest${pax > 1 ? "s" : ""}`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `${formatPrice(price, currency)} × ${pax} guest${pax > 1 ? "s" : ""}`,
     backTo: "/tours",
   };
 
