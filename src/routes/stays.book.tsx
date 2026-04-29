@@ -87,13 +87,38 @@ function HotelBookingPage() {
   const formatPrice = usePriceFormat();
 
   const [hotel, setHotel] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`hotel:${offer_id}`);
-      if (o) setHotel(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      try {
+        const o = sessionStorage.getItem(`hotel:${offer_id}`);
+        if (o) {
+          if (!cancelled) { setHotel(JSON.parse(o)); setLoading(false); }
+          return;
+        }
+      } catch {}
+      try {
+        const { getOffer } = await import("@/server/offer-cache.functions");
+        const res = await getOffer({ data: { id: `hotel:${offer_id}` } });
+        if (!cancelled && res.ok) setHotel(res.payload);
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [offer_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/stays">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <HotelIcon className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected hotel…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!hotel) {
     return (
