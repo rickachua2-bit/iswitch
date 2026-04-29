@@ -291,7 +291,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
 function DropdownPanel({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   void onClose;
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-border bg-card shadow-elevated">
+    <div className="absolute right-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-1.5rem))] rounded-lg border border-border bg-card shadow-elevated">
       {children}
     </div>
   );
