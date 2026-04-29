@@ -115,6 +115,9 @@ async function firecrawlScrape(url: string, prompt: string): Promise<any[]> {
   });
   if (!res.ok) {
     const t = await res.text();
+    if (res.status === 402 || /insufficient credits/i.test(t)) {
+      throw new Error("Firecrawl has insufficient credits. Top up the Firecrawl account for the configured API key, then run Seed all again.");
+    }
     throw new Error(`firecrawl ${res.status}: ${t.slice(0, 300)}`);
   }
   const json = await res.json();
@@ -224,8 +227,15 @@ export async function runAllCrawls(triggeredBy?: string) {
     try {
       const r = await runCrawl(src.slug, triggeredBy);
       results.push({ vertical: v, slug: src.slug, ...r });
+      if (r.error && /insufficient credits/i.test(r.error)) {
+        break;
+      }
     } catch (e: any) {
-      results.push({ vertical: v, slug: src.slug, items_upserted: 0, status: "failed", error: String(e?.message ?? e).slice(0, 300) });
+      const error = String(e?.message ?? e).slice(0, 300);
+      results.push({ vertical: v, slug: src.slug, items_upserted: 0, status: "failed", error });
+      if (/insufficient credits/i.test(error)) {
+        break;
+      }
     }
   }
   return results;
