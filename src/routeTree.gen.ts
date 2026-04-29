@@ -40,6 +40,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminPaymentProvidersRouteImport } from './routes/admin.payment-providers'
 import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
 import { Route as AdminMarkupsRouteImport } from './routes/admin.markups'
@@ -206,6 +207,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPaymentProvidersRoute = AdminPaymentProvidersRouteImport.update({
   id: '/payment-providers',
   path: '/payment-providers',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/payment-providers': typeof AdminPaymentProvidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/payment-providers': typeof AdminPaymentProvidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/payment-providers': typeof AdminPaymentProvidersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/payment-providers'
+    | '/admin/settings'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/payment-providers'
+    | '/admin/settings'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/payment-providers'
+    | '/admin/settings'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -755,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/payment-providers': {
       id: '/admin/payment-providers'
       path: '/payment-providers'
@@ -838,6 +857,7 @@ interface AdminRouteChildren {
   AdminMarkupsRoute: typeof AdminMarkupsRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
   AdminPaymentProvidersRoute: typeof AdminPaymentProvidersRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWalletsRoute: typeof AdminWalletsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -853,6 +873,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMarkupsRoute: AdminMarkupsRoute,
   AdminOperationsRoute: AdminOperationsRoute,
   AdminPaymentProvidersRoute: AdminPaymentProvidersRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWalletsRoute: AdminWalletsRoute,
   AdminIndexRoute: AdminIndexRoute,
