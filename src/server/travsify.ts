@@ -15,11 +15,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  searchFlights as duffelSearchFlights,
-  getFlightOffer as duffelGetOffer,
-} from "./duffel.functions";
-import { searchHotels as liteSearchHotels } from "./liteapi.functions";
+import { friendlyError, timedFetch } from "./_shared.server";
+
+const DUFFEL_BASE = "https://api.duffel.com";
+const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
 
 /* ------------------------------ HELPERS ---------------------------- */
 
@@ -28,6 +27,142 @@ function ok(data: any) {
 }
 function fail(error: string, fallback: any = {}) {
   return { data: fallback, error };
+}
+
+function duffelHeaders() {
+  const key = process.env.DUFFEL_API_KEY;
+  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+  return {
+    Authorization: `Bearer ${key}`,
+    "Duffel-Version": "v2",
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  } as Record<string, string>;
+}
+
+function liteApiHeaders() {
+  const key = process.env.LITEAPI_KEY;
+  if (!key) throw new Error("LITEAPI_KEY is not configured");
+  return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
+}
+
+function iata(s: string): string {
+  const m = s.match(/\(([A-Z]{3})\)/);
+  return (m ? m[1] : s).toUpperCase().trim();
+}
+
+async function searchDuffelOffers(input: {
+  origin: string;
+  destination: string;
+  departure_date: string;
+  return_date?: string;
+  adults: number;
+  children?: number;
+  infants?: number;
+  cabin?: "economy" | "premium_economy" | "business" | "first";
+}) {
+  try {
+    const slices = [{ origin: iata(input.origin), destination: iata(input.destination), departure_date: input.departure_date }];
+    if (input.return_date) slices.push({ origin: iata(input.destination), destination: iata(input.origin), departure_date: input.return_date });
+    const passengers: any[] = [];
+    for (let i = 0; i < input.adults; i++) passengers.push({ type: "adult" });
+    for (let i = 0; i < (input.children ?? 0); i++) passengers.push({ type: "child", age: 8 });
+    for (let i = 0; i < (input.infants ?? 0); i++) passengers.push({ type: "infant_without_seat" });
+
+    const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offer_requests?return_offers=true`, {
+      method: "POST",
+      headers: duffelHeaders(),
+      body: JSON.stringify({ data: { slices, passengers, cabin_class: input.cabin ?? "economy" } }),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), offers: [] };
+    const json = JSON.parse(text);
+    const offers = (json?.data?.offers ?? []).slice(0, 50).map((o: any) => ({
+      id: o.id,
+      total_amount: o.total_amount,
+      total_currency: o.total_currency,
+      owner: o.owner?.name,
+      owner_logo: o.owner?.logo_symbol_url,
+      slices: (o.slices ?? []).map((s: any) => ({
+        origin: s.origin?.iata_code,
+        destination: s.destination?.iata_code,
+        duration: s.duration,
+        segments: (s.segments ?? []).map((seg: any) => ({
+          marketing_carrier: seg.marketing_carrier?.name,
+          marketing_carrier_iata: seg.marketing_carrier?.iata_code,
+          flight_number: seg.marketing_carrier_flight_number,
+          departing_at: seg.departing_at,
+          arriving_at: seg.arriving_at,
+          origin: seg.origin?.iata_code,
+          destination: seg.destination?.iata_code,
+        })),
+      })),
+    }));
+    return { ok: true as const, offers };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), offers: [] };
+  }
+}
+
+async function getDuffelOffer(offer_id: string) {
+  try {
+    const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offers/${offer_id}?return_available_services=true`, {
+      method: "GET",
+      headers: duffelHeaders(),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
+    return { ok: true as const, offer: JSON.parse(text)?.data };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)) };
+  }
+}
+
+async function searchLiteHotels(input: {
+  cityName?: string;
+  countryCode?: string;
+  checkin: string;
+  checkout: string;
+  adults: number;
+  rooms: number;
+  currency: string;
+}) {
+  try {
+    const occupancies = Array.from({ length: input.rooms }, () => ({ adults: input.adults, children: [] as number[] }));
+    const ratesBody: any = {
+      checkin: input.checkin,
+      checkout: input.checkout,
+      currency: input.currency,
+      guestNationality: "US",
+      occupancies,
+    };
+    if (input.cityName) ratesBody.cityName = input.cityName;
+    else if (input.countryCode) ratesBody.countryCode = input.countryCode;
+
+    const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/hotels/rates`, {
+      method: "POST",
+      headers: liteApiHeaders(),
+      body: JSON.stringify(ratesBody),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), hotels: [] };
+    const json = JSON.parse(text);
+    const hotels = (json?.data ?? []).slice(0, 50).map((h: any) => {
+      const firstRoom = h.roomTypes?.[0];
+      const firstRate = firstRoom?.rates?.[0];
+      const total = firstRate?.retailRate?.total?.[0];
+      return {
+        id: h.hotelId,
+        offer_id: firstRoom?.offerId ?? firstRate?.rateId ?? h.hotelId,
+        price: total?.amount,
+        currency: total?.currency ?? input.currency,
+        board: firstRate?.boardName,
+        refundable: firstRate?.cancellationPolicies?.refundableTag === "RFN",
+        room_name: firstRoom?.roomTypes?.[0]?.name ?? firstRate?.name,
+        raw: h,
+      };
+    });
+    return { ok: true as const, hotels };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), hotels: [] };
+  }
 }
 
 async function fetchInventory(
@@ -157,17 +292,15 @@ async function runDuffelSearch(input: z.infer<typeof FlightSearchInput>) {
   if (!origin || !destination || !departure_date) {
     return { offers: [] as any[], error: "Please complete origin, destination and date." };
   }
-  const res: any = await duffelSearchFlights({
-    data: {
-      origin,
-      destination,
-      departure_date,
-      return_date: input.return_date,
-      adults: input.adults,
-      children: input.children ?? 0,
-      infants: input.infants ?? 0,
-      cabin: normalizeCabin(input.cabin),
-    },
+  const res = await searchDuffelOffers({
+    origin,
+    destination,
+    departure_date,
+    return_date: input.return_date,
+    adults: input.adults,
+    children: input.children ?? 0,
+    infants: input.infants ?? 0,
+    cabin: normalizeCabin(input.cabin),
   });
   if (!res?.ok) return { offers: [], error: res?.error || "Flights unavailable." };
   return { offers: res.offers ?? [], error: null as string | null };
@@ -214,7 +347,7 @@ export const bookFlight = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     // Re-fetch the offer to lock price + capture as a lead. Manual fulfillment.
-    const offerRes: any = await duffelGetOffer({ data: { offer_id: data.offer_id } });
+    const offerRes = await getDuffelOffer(data.offer_id);
     const offer = offerRes?.offer;
     const lead = data.passengers[0] || {};
     const amount = Number(offer?.total_amount ?? 0);
@@ -254,18 +387,14 @@ export const searchHotels = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
-    const res: any = await liteSearchHotels({
-      data: {
-        cityName: data.city,
-        countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
-        checkin: data.checkin,
-        checkout: data.checkout,
-        adults: Math.max(1, Number(data.adults) || 1),
-        children: [],
-        rooms: Math.max(1, Number(data.rooms) || 1),
-        currency: data.currency || "USD",
-        guestNationality: "US",
-      },
+    const res = await searchLiteHotels({
+      cityName: data.city,
+      countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
+      checkin: data.checkin,
+      checkout: data.checkout,
+      adults: Math.max(1, Number(data.adults) || 1),
+      rooms: Math.max(1, Number(data.rooms) || 1),
+      currency: data.currency || "USD",
     });
     if (!res?.ok) return fail(res?.error || "Hotels unavailable.", { hotels: [] });
     return ok({ hotels: res.hotels ?? [] });
