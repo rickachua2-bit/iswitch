@@ -161,8 +161,12 @@ function StaysPage() {
           query={query}
           formatPrice={formatPrice}
           onSelect={goToBooking}
+          isSelecting={isSelecting}
+          selecting={selecting}
         />
       )}
+
+      <ErrorToast message={selectError} onDismiss={clearError} />
 
       {/* Discovery — only show when no active search */}
       {!hasSearched && (
