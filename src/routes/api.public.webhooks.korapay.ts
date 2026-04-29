@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/public/webhooks/korapay")({
         const body = await request.text();
         const signature = request.headers.get("x-korapay-signature");
 
-        if (!verifyKorapaySignature(body, signature)) {
+        if (!(await verifyKorapaySignature(body, signature))) {
           return new Response("Invalid signature", { status: 401 });
         }
 
