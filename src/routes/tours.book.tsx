@@ -207,10 +207,10 @@ function TourBookingPage() {
               <div className="mt-1 text-base font-extrabold text-foreground">{tour.title}</div>
               <div className="mt-1 text-xs text-muted-foreground">{date} · {pax} guest{pax > 1 ? "s" : ""}</div>
               <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-                <Row label={`${currency} ${price.toFixed(2)} × ${pax}`} value={`${currency} ${total.toFixed(2)}`} />
+                <Row label={`${formatPrice(price, currency)} × ${pax}`} value={formatPrice(total, currency)} />
                 <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                   <span className="font-bold text-foreground">Total</span>
-                  <span className="text-xl font-extrabold text-primary">{currency} {total.toFixed(2)}</span>
+                  <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
                 </div>
               </div>
             </div>
