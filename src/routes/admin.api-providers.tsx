@@ -63,6 +63,9 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   const testProvider = useServerFn(testProviderFn);
   const triggerCrawl = useServerFn(triggerCrawlFn);
   const createProvider = useServerFn(createProviderFn);
+  const getProviderMode = useServerFn(getProviderModeFn);
+  const setGlobalProviderMode = useServerFn(setGlobalProviderModeFn);
+  const setProviderModeOverride = useServerFn(setProviderModeOverrideFn);
 
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<Provider[]>([]);
