@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
   ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
-  getApiProviderRouting, updateApiProviderRouting,
-  listProviders, createProvider, updateProvider, deleteProvider,
-  listProviderInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem,
-  testProvider,
+  getApiProviderRouting as getApiProviderRoutingFn, updateApiProviderRouting as updateApiProviderRoutingFn,
+  listProviders as listProvidersFn, createProvider as createProviderFn, updateProvider as updateProviderFn, deleteProvider as deleteProviderFn,
+  listProviderInventory as listProviderInventoryFn, createInventoryItem as createInventoryItemFn, updateInventoryItem as updateInventoryItemFn, deleteInventoryItem as deleteInventoryItemFn,
+  testProvider as testProviderFn,
 } from "@/server/api-providers.functions";
-import { triggerCrawl } from "@/server/crawler.functions";
+import { triggerCrawl as triggerCrawlFn } from "@/server/crawler.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/api-providers")({
