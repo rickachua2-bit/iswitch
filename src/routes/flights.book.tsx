@@ -117,20 +117,18 @@ function BookingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/30">
-        <Header />
+      <BookingShell backTo="/flights">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
           <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Loading your selected flight…</p>
         </div>
-      </div>
+      </BookingShell>
     );
   }
 
   if (!offer) {
     return (
-      <div className="min-h-screen bg-secondary/30">
-        <Header />
+      <BookingShell backTo="/flights">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
           <Plane className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
           <h1 className="text-xl font-bold text-foreground">Booking session expired</h1>
@@ -144,65 +142,48 @@ function BookingPage() {
             <ArrowLeft className="h-4 w-4" /> Back to flights
           </Link>
         </div>
-        <Footer />
-      </div>
+      </BookingShell>
     );
   }
 
+  // Derive hero summary from offer
+  const slices: any[] = offer?.slices ?? offer?.itineraries ?? [];
+  const firstSlice = slices[0];
+  const segs = firstSlice?.segments ?? [];
+  const firstSeg = segs[0];
+  const lastSeg = segs[segs.length - 1];
+  const oCode = firstSeg?.origin?.iata_code ?? firstSlice?.origin?.iata_code ?? firstSlice?.origin ?? "—";
+  const dCode = lastSeg?.destination?.iata_code ?? firstSlice?.destination?.iata_code ?? firstSlice?.destination ?? "—";
+  const carrier = firstSeg?.marketing_carrier?.name ?? firstSeg?.marketing_carrier?.iata_code ?? offer?.owner?.name ?? "Airline";
+  const totalAmount = Number(fare?.total_amount ?? offer?.total_amount ?? offer?.price ?? 0);
+  const currency = fare?.total_currency ?? offer?.total_currency ?? offer?.currency ?? "USD";
+  const sym = currencySymbol(currency);
+  const heroDate = fmtDate(firstSeg?.departing_at);
+  const tripType = slices.length > 1 ? "Round-trip" : "One-way";
+
+  const hero: BookingHeroProps = {
+    vertical: "flights",
+    eyebrow: tripType,
+    title: `${oCode} → ${dCode}`,
+    subtitle: carrier,
+    meta: [
+      heroDate ? { icon: CalendarIcon, label: heroDate } : null,
+      { icon: Users, label: "1 adult" },
+      fare?.name ? { icon: Briefcase, label: `${fare.name} fare` } : null,
+    ].filter(Boolean) as BookingHeroProps["meta"],
+    priceLabel: "Total fare",
+    priceValue: `${sym}${totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+    priceFootnote: "All taxes & airline fees included",
+    backTo: "/flights",
+  };
+
   return (
-    <div className="min-h-screen bg-secondary/30">
-      <Header />
-
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 text-sm">
-          <Link
-            to="/flights"
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back to results
-          </Link>
-          <Stepper step={2} />
-        </div>
-      </div>
-
+    <BookingShell backTo="/flights" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_360px]">
         <BookingForm offer={offer} fare={fare} navigate={navigate} />
         <PriceSummary offer={offer} fare={fare} />
       </main>
-
-      <Footer />
-    </div>
-  );
-}
-
-/* ------------ stepper ------------ */
-
-function Stepper({ step }: { step: number }) {
-  const steps = ["Choose flight", "Passenger info", "Payment"];
-  return (
-    <div className="ml-auto hidden items-center gap-2 text-xs font-semibold text-muted-foreground md:flex">
-      {steps.map((s, i) => {
-        const active = i + 1 === step;
-        const done = i + 1 < step;
-        return (
-          <div key={s} className="flex items-center gap-2">
-            <span
-              className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                done
-                  ? "bg-emerald-500 text-white"
-                  : active
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {done ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
-            </span>
-            <span className={active ? "text-foreground" : ""}>{s}</span>
-            {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-border" />}
-          </div>
-        );
-      })}
-    </div>
+    </BookingShell>
   );
 }
 
