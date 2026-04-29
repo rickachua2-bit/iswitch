@@ -105,9 +105,10 @@ async function timedFetch(_providerSlug: string, url: string, init: RequestInit)
   }
 }
 
-function duffelHeaders() {
-  const key = process.env.DUFFEL_API_KEY;
-  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+async function duffelHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("duffel");
+  if (!key) throw new Error("Duffel key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Duffel-Version": "v2",
@@ -116,9 +117,10 @@ function duffelHeaders() {
   } as Record<string, string>;
 }
 
-function liteApiHeaders() {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) throw new Error("LITEAPI_KEY is not configured");
+async function liteApiHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("liteapi");
+  if (!key) throw new Error("LiteAPI key not configured for current mode");
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
