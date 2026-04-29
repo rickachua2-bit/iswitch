@@ -1,4 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSelectOffer } from "@/lib/use-select-offer";
+import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
