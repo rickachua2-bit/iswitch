@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
   ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
-  getApiProviderRouting, updateApiProviderRouting,
-  listProviders, createProvider, updateProvider, deleteProvider,
-  listProviderInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem,
-  testProvider,
+  getApiProviderRouting as getApiProviderRoutingFn, updateApiProviderRouting as updateApiProviderRoutingFn,
+  listProviders as listProvidersFn, createProvider as createProviderFn, updateProvider as updateProviderFn, deleteProvider as deleteProviderFn,
+  listProviderInventory as listProviderInventoryFn, createInventoryItem as createInventoryItemFn, updateInventoryItem as updateInventoryItemFn, deleteInventoryItem as deleteInventoryItemFn,
+  testProvider as testProviderFn,
 } from "@/server/api-providers.functions";
-import { triggerCrawl } from "@/server/crawler.functions";
+import { triggerCrawl as triggerCrawlFn } from "@/server/crawler.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/api-providers")({
@@ -51,6 +52,15 @@ function ApiProvidersPage() {
 
 // ===================== LIST VIEW =====================
 function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
+  const listProviders = useServerFn(listProvidersFn);
+  const getApiProviderRouting = useServerFn(getApiProviderRoutingFn);
+  const updateApiProviderRouting = useServerFn(updateApiProviderRoutingFn);
+  const updateProvider = useServerFn(updateProviderFn);
+  const deleteProvider = useServerFn(deleteProviderFn);
+  const testProvider = useServerFn(testProviderFn);
+  const triggerCrawl = useServerFn(triggerCrawlFn);
+  const createProvider = useServerFn(createProviderFn);
+
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [routing, setRouting] = useState<Record<Vertical, "default" | "travsify">>({
@@ -66,9 +76,11 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   async function refresh() {
     const [a, b] = await Promise.all([listProviders(), getApiProviderRouting()]);
     if (a.ok) setProviders(a.providers as Provider[]);
-    setRouting(b.routing as any);
-    setRoutingLabels(b.providers);
-    setTravsifyConfigured(b.travsifyConfigured);
+    if (b?.routing) {
+      setRouting(b.routing as any);
+      setRoutingLabels(b.providers ?? {});
+      setTravsifyConfigured(!!b.travsifyConfigured);
+    }
     setLoading(false);
   }
   useEffect(() => { void refresh(); }, []);
@@ -295,6 +307,8 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "wa
 function ProviderFormModal({ initial, onClose, onSaved }: {
   initial: Partial<Provider>; onClose: () => void; onSaved: () => void;
 }) {
+  const updateProvider = useServerFn(updateProviderFn);
+  const createProvider = useServerFn(createProviderFn);
   const isEdit = !!initial.id;
   const [form, setForm] = useState({
     slug: initial.slug ?? "",
@@ -355,6 +369,8 @@ function ProviderFormModal({ initial, onClose, onSaved }: {
 
 // ===================== DETAIL VIEW (provider's inventory) =====================
 function ProviderDetail({ providerId, onBack }: { providerId: string; onBack: () => void }) {
+  const listProviderInventory = useServerFn(listProviderInventoryFn);
+  const deleteInventoryItem = useServerFn(deleteInventoryItemFn);
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -512,6 +528,8 @@ function InventoryFormModal({ providerId, defaultVertical, initial, onClose, onS
   providerId: string; defaultVertical: Vertical;
   initial: Partial<InventoryItem>; onClose: () => void; onSaved: () => void;
 }) {
+  const updateInventoryItem = useServerFn(updateInventoryItemFn);
+  const createInventoryItem = useServerFn(createInventoryItemFn);
   const isEdit = !!initial.id;
   const [form, setForm] = useState({
     title: initial.title ?? "",
