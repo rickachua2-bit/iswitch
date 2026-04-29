@@ -86,10 +86,11 @@ export async function fulfilBooking(bookingId: string) {
 
   let result: { ok: boolean; error?: string; confirmation?: any; externalRef?: string };
 
+  const payload = (booking.payload ?? {}) as Record<string, any>;
   if (booking.vertical === "flights") {
-    result = await fulfilFlight(bookingId, { ...booking.payload, amount: booking.amount, currency: booking.currency });
+    result = await fulfilFlight(bookingId, { ...payload, amount: booking.amount, currency: booking.currency });
   } else if (booking.vertical === "stays") {
-    result = await fulfilHotel(bookingId, { ...booking.payload, amount: booking.amount, currency: booking.currency });
+    result = await fulfilHotel(bookingId, { ...payload, amount: booking.amount, currency: booking.currency });
   } else {
     // visas, insurance, tours, pickups - manual fulfillment
     await supabaseAdmin.from("bookings_unified").update({
