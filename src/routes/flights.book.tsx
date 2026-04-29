@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import {
   ArrowLeft, Plane, ShieldCheck, CreditCard, Lock,
   Briefcase, Luggage, Loader2, Clock, Calendar as CalendarIcon, Users,
+  User, Mail, Phone, Globe2, IdCard, VenetianMask, BadgeCheck,
 } from "lucide-react";
 import { bookFlight } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
