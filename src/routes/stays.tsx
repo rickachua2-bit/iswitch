@@ -166,6 +166,7 @@ function StaysPage() {
           hotels={hotels}
           error={error}
           query={query}
+          nights={nights}
           formatPrice={formatPrice}
           onSelect={goToBooking}
           isSelecting={isSelecting}
@@ -327,11 +328,12 @@ function scoreLabel(s: number) {
 }
 
 function ResultsBoard({
-  hotels, error, query, formatPrice, onSelect, isSelecting, selecting,
+  hotels, error, query, nights, formatPrice, onSelect, isSelecting, selecting,
 }: {
   hotels: any[];
   error: string | null;
   query: { destination: string; checkIn: string; checkOut: string; guests: string };
+  nights: number;
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
   isSelecting: (id: string) => boolean;
@@ -545,6 +547,7 @@ function ResultsBoard({
                   <HotelResultCard
                     key={h.id}
                     hotel={h}
+                    nights={nights}
                     formatPrice={formatPrice}
                     onSelect={onSelect}
                     loading={isSelecting(id)}
@@ -599,9 +602,10 @@ function CheckRow({
 }
 
 function HotelResultCard({
-  hotel: h, formatPrice, onSelect, loading, disabled,
+  hotel: h, nights, formatPrice, onSelect, loading, disabled,
 }: {
   hotel: any;
+  nights: number;
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
   loading?: boolean;
@@ -609,9 +613,11 @@ function HotelResultCard({
 }) {
   const score = Number(h.review_score ?? h.score ?? 0);
   const original = h.original_price ? Number(h.original_price) : null;
-  const price = Number(h.price ?? 0);
-  const discount = original && original > price ? Math.round(((original - price) / original) * 100) : 0;
+  const nightly = Number(h.price ?? 0);
+  const stayTotal = nights > 0 ? nightly * nights : 0;
+  const discount = original && original > nightly ? Math.round(((original - nightly) / original) * 100) : 0;
   const img = pickHotelImage(h);
+  const currency = h.currency ?? "USD";
 
   return (
     <article className="group grid grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:shadow-elevated md:grid-cols-[280px_1fr]">
@@ -644,7 +650,7 @@ function HotelResultCard({
       </div>
 
       {/* Body */}
-      <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-[1fr_180px]">
+      <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-[1fr_200px]">
         {/* Left: name, location, room */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1 text-[11px] text-accent-foreground">
@@ -698,17 +704,27 @@ function HotelResultCard({
             </div>
           )}
 
-          {/* Price */}
+          {/* Price — daily rate first, then total for stay */}
           <div className="w-full text-right">
-            {original && original > price && (
+            {original && original > nightly && (
               <div className="text-[11px] text-muted-foreground line-through">
-                {formatPrice(original, h.currency ?? "USD")}
+                {formatPrice(original, currency)} / night
               </div>
             )}
-            <div className="text-xl font-extrabold text-primary md:text-2xl">
-              {formatPrice(price, h.currency ?? "USD")}
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Daily rate
             </div>
-            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes</div>
+            <div className="text-xl font-extrabold text-primary md:text-2xl">
+              {formatPrice(nightly, currency)}
+              <span className="ml-1 text-[11px] font-semibold text-muted-foreground">/ night</span>
+            </div>
+            {nights > 0 && (
+              <div className="mt-1 rounded-md bg-secondary/70 px-2 py-1 text-[11px] text-foreground">
+                <span className="font-semibold">For {nights} night{nights > 1 ? "s" : ""}:</span>{" "}
+                <span className="font-extrabold text-primary">{formatPrice(stayTotal, currency)}</span>
+                <div className="text-[10px] text-muted-foreground">Excl. taxes & fees</div>
+              </div>
+            )}
             <button
               onClick={() => onSelect(h)}
               disabled={loading || disabled}
@@ -716,7 +732,7 @@ function HotelResultCard({
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading rooms…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening rooms…
                 </>
               ) : (
                 <>View rooms & book</>
