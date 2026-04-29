@@ -158,7 +158,7 @@ function AgentApplyPage() {
           phone={phone} setPhone={setPhone}
           loading={loading} error={error} onSubmit={handleSignup}
         />
-        <style>{`.input{width:100%;border-radius:.5rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.625rem .75rem;font-size:.875rem;transition:border-color 120ms,box-shadow 120ms}.input:focus{outline:none;border-color:hsl(var(--primary));box-shadow:0 0 0 3px color-mix(in oklab,hsl(var(--primary)) 18%,transparent)}`}</style>
+        
       </AuthSplitLayout>
     );
   }
