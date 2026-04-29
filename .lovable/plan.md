@@ -1,67 +1,61 @@
-# Auto-translate the entire site on language switch
+Plan to fix the endless “Loading rooms…” / booking CTA loops permanently
 
-Today the language selector only swaps a tiny set of i18n keys (nav, CTAs). Page bodies stay in English. The fix: translate every visible text node on the current page automatically whenever the user picks a non‑English language.
+1. Make booking CTA navigation fail-safe across all verticals
+- Update the shared offer-selection hook so buttons never stay stuck forever.
+- Add a timeout around the backend offer-cache save step.
+- If the user’s selected offer is already saved in browser session storage, navigate to the booking page even if the backend cache is slow or unavailable.
+- Reset the loading state after navigation failures or timeouts and show a clear toast message instead of leaving the button spinning.
+- This will apply to hotels, insurance, tours, pickups, and visas because they already use the shared hook.
 
-## Approach: runtime DOM auto‑translation via Lovable AI
+2. Move flight booking selection to the same shared flow
+- Refactor `FlightResultCard` to use `useSelectOffer` instead of its own custom `sessionStorage + saveOffer + navigate` logic.
+- Preserve the selected fare in the cached payload so `/flights/book` can still recover the offer and fare.
+- Add per-fare loading state and disable sibling fare buttons while one fare is opening.
+- Add the same timeout/fallback behavior used by the rest of the verticals.
 
-Build a `TranslationProvider` that walks the rendered DOM and replaces visible English text with the target language. It uses **Lovable AI** (`google/gemini-2.5-flash-lite`, free, no API key required) as the translation engine and aggressively caches results so each phrase is only translated once.
+3. Improve booking-page recovery so refreshes and slow cache writes are handled
+- Update `/stays/book` and `/flights/book` to use the shared recovery helper instead of one-off cache reads.
+- Keep session storage as the fastest source and backend cache as the durable fallback.
+- Avoid sending users back to search unless the offer truly cannot be recovered.
 
-Why this approach:
-- Works on every page automatically — no per‑component refactor needed.
-- No paid translation API or user‑supplied key.
-- Survives navigation, dynamic content, and search results.
-- Leaves English untouched (no work, no cost) and respects RTL languages.
+4. Fix hotel pricing clarity: daily rate plus stay total
+- Treat hotel result prices as nightly prices in the UI.
+- Compute number of nights from check-in and check-out dates.
+- On hotel cards, show:
+  - “Per night” price prominently.
+  - A clear line such as: “6 nights total: $X before taxes/fees” when dates are available.
+- On the booking page, make the summary explicit:
+  - “Nightly rate: $X”
+  - “6 nights: $X × 6 = $Y”
+  - “Taxes & fees”
+  - “Total for 6 nights”
+- Rename wording from ambiguous “total” to “total for stay” wherever needed.
 
-```text
-[Language selector] -> i18n.changeLanguage(xx)
-        |
-        v
-[TranslationProvider] -> collect text nodes on page
-        |                 (skip <script>, <style>, <code>, inputs, [data-no-translate])
-        v
-  cached?  --yes--> apply instantly
-        |
-        no
-        v
-[edge function: translate-batch]  -> Lovable AI Gateway (gemini-2.5-flash-lite)
-        |
-        v
-   cache + apply -> MutationObserver re-runs on new DOM
-```
+5. Make hotel backend/data normalization safer
+- Normalize LiteAPI hotel rate data so the app stores both:
+  - `nightly_price`
+  - `total_stay_price` when available from the provider
+- If the provider only returns a total stay price, derive nightly price by dividing by the number of nights.
+- If the provider returns nightly price, derive total stay price by multiplying by nights.
+- Keep existing `price` compatible for old UI paths, but prefer explicit `nightly_price` and `total_stay_price` in new display logic.
 
-## What we will build
+6. Add guardrails against future infinite loaders
+- Ensure every booking CTA has a maximum waiting time.
+- Ensure no button remains disabled after an exception, timeout, or cache failure.
+- Keep the current error toast pattern for all verticals so users see what happened and can retry.
 
-### 1. Backend: batched translation endpoint
-- New server function `src/server/translate.functions.ts` exposing `translateBatch({ texts: string[], target: string, source?: "en" })`.
-- Calls Lovable AI Gateway with a structured prompt that returns a JSON array (one translation per input, same order). Includes simple chunking (≤50 strings per call) and a server-side LRU cache keyed by `target|sha1(text)` to avoid re-billing repeats.
-- Returns `{ translations: string[] }`.
+Technical files expected to change
+- `src/lib/use-select-offer.ts`
+- `src/lib/select-offer.ts`
+- `src/components/flights/FlightResultCard.tsx`
+- `src/routes/flights.tsx` if any props/imports need to be passed through
+- `src/routes/flights.book.tsx`
+- `src/routes/stays.tsx`
+- `src/routes/stays.book.tsx`
+- `src/server/travsify.ts`
 
-### 2. Frontend: TranslationProvider
-- New `src/components/TranslationProvider.tsx` mounted inside `__root.tsx` around `<Outlet />`.
-- On mount and on `i18next` `languageChanged`:
-  - If language is `en` → restore originals (we keep an `originalText` map per text node) and stop.
-  - Otherwise: walk the DOM, collect untranslated text nodes (and key attributes: `placeholder`, `aria-label`, `title`, `alt`, `value` on submit buttons), de‑dupe, look up in `localStorage` cache (`iswitch.tr.<lang>`), batch the misses to `translateBatch`, then write results back into the DOM.
-- A `MutationObserver` re-runs the same pass for nodes added later (route changes, search results, modals).
-- Skips: `<script>`, `<style>`, `<noscript>`, `<code>`, `<pre>`, elements with `[data-no-translate]` or `[translate="no"]`, inputs the user is typing in, numbers/currency/dates, and strings shorter than 2 chars.
-- Sets `<html lang>` and `dir="rtl"` for Arabic/Urdu/Persian.
-
-### 3. Wire-up
-- `src/routes/__root.tsx`: wrap children in `<TranslationProvider>`.
-- `src/i18n/index.ts`: no change needed — provider listens to its `languageChanged` event.
-- Mark a few elements that must never be translated (brand name "iSwitch", code snippets, prices) with `data-no-translate` where relevant (Header logo, price strings).
-
-### 4. UX polish
-- Tiny "Translating…" indicator pinned to the header while a batch is in flight (re-uses existing toast component).
-- First-load behavior: if the stored language ≠ `en`, run the translation pass right after hydration so the user lands on a translated page.
-- Errors fall back silently to the original English text; we log to console only.
-
-## Files to create / edit
-- create `src/server/translate.functions.ts`
-- create `src/components/TranslationProvider.tsx`
-- edit `src/routes/__root.tsx` (wrap Outlet)
-- edit `src/components/Header.tsx` (add `data-no-translate` to logo + price chips; show translating indicator)
-
-## Limits & notes (for transparency)
-- Translation runs client-side after render, so non‑English visitors see ~100–500 ms of English on first paint of each new page before strings swap in. The cache makes repeat visits instant.
-- We translate visible text only — not values inside `<input>` the user is editing, and not data sent to the backend (search still uses English/structured params).
-- Brand names and prices are excluded by design.
+Expected result
+- Clicking “View rooms & book” opens the hotel booking page instead of looping on “Loading rooms…”.
+- Flight fare booking uses the same reliable path and does not hang.
+- Other verticals also inherit the permanent timeout/fallback fix.
+- Hotel users see the nightly rate and the total cost for their exact number of nights, making the price understandable before payment.
