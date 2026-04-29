@@ -528,6 +528,8 @@ function InventoryFormModal({ providerId, defaultVertical, initial, onClose, onS
   providerId: string; defaultVertical: Vertical;
   initial: Partial<InventoryItem>; onClose: () => void; onSaved: () => void;
 }) {
+  const updateInventoryItem = useServerFn(updateInventoryItemFn);
+  const createInventoryItem = useServerFn(createInventoryItemFn);
   const isEdit = !!initial.id;
   const [form, setForm] = useState({
     title: initial.title ?? "",
