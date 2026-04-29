@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchInsurance, bookInsurance } from "@/server/travsify";
+import { searchInsurance } from "@/server/travsify";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -65,8 +63,23 @@ export const Route = createFileRoute("/insurance")({
 
 function InsurancePage() {
   const { plans, query, error } = Route.useLoaderData() as any;
-  const [selected, setSelected] = useState<any | null>(null);
+  const navigate = useNavigate();
   const hasSearched = !!(query.start && query.end);
+
+  function goToBooking(p: any) {
+    const id = p.id ?? p.plan_id;
+    try { sessionStorage.setItem(`plan:${id}`, JSON.stringify(p)); } catch {}
+    navigate({
+      to: "/insurance/book",
+      search: {
+        plan_id: String(id),
+        destination: query.destination,
+        start: query.start,
+        end: query.end,
+        travelers: String(query.travelers ?? "1"),
+      } as never,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -94,37 +107,13 @@ function InsurancePage() {
                 <div key={p.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
                   <div className="font-display text-lg font-bold">{p.name}</div>
                   <div className="mt-2"><span className="text-3xl font-extrabold text-primary">{p.currency ?? "USD"} {p.price}</span></div>
-                  <button onClick={() => setSelected(p)} className="mt-5 w-full rounded-lg bg-gradient-accent py-2.5 text-sm font-bold text-accent-foreground">Get covered</button>
+                  <button onClick={() => goToBooking(p)} className="mt-5 w-full rounded-lg bg-gradient-accent py-2.5 text-sm font-bold text-accent-foreground">Get covered</button>
                 </div>
               ))}
             </div>
           </>
         )}
       </section>
-
-      {selected && (
-        <BookingDialog
-          open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
-          title={`Buy ${selected.name}`}
-          summary={`${selected.currency ?? "USD"} ${selected.price}`}
-          fields={[
-            { name: "firstName", label: "First name", required: true },
-            { name: "lastName", label: "Last name", required: true },
-            { name: "email", label: "Email", type: "email", required: true },
-            { name: "born_on", label: "Date of birth", type: "date", required: true },
-          ]}
-          onSubmit={async (v) => {
-            const res = await bookInsurance({
-              data: {
-                plan_id: selected.id,
-                holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, born_on: v.born_on },
-              },
-            });
-            return { reference: res?.data?.reference, status: res?.data?.status };
-          }}
-        />
-      )}
       <Footer />
     </div>
   );

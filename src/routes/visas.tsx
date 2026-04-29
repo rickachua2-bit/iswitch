@@ -131,8 +131,16 @@ export const Route = createFileRoute("/visas")({
 function VisasPage() {
   const { visas, query, error } = Route.useLoaderData() as any;
   const navigate = useNavigate();
-  const [selected, setSelected] = useState<any | null>(null);
   const [dismissed, setDismissed] = useState(false);
+
+  function goToBooking(v: any) {
+    const id = v.id ?? v.visa_id;
+    try { sessionStorage.setItem(`visa:${id}`, JSON.stringify(v)); } catch {}
+    navigate({
+      to: "/visas/book",
+      search: { visa_id: String(id), nationality: query.nationality, destination: query.destination } as never,
+    });
+  }
   const searchedRoute = `${query.nationality} → ${query.destination}`;
 
   // Annotate each result with kinds, then sort: e-Visa & visa-free first.
@@ -277,7 +285,7 @@ function VisasPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setSelected(v)}
+                      onClick={() => goToBooking(v)}
                       className="rounded-lg bg-gradient-accent px-4 py-2.5 text-xs font-bold text-accent-foreground shadow-sm transition hover:opacity-90"
                     >
                       Apply now

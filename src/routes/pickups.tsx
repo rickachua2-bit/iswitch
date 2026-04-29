@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchTransfers, bookTransfer } from "@/server/travsify";
+import { searchTransfers } from "@/server/travsify";
 import { Car, Users, Briefcase, Snowflake, Loader2 } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -44,8 +42,23 @@ export const Route = createFileRoute("/pickups")({
 
 function PickupsPage() {
   const { vehicles, query, error } = Route.useLoaderData() as any;
-  const [selected, setSelected] = useState<any | null>(null);
+  const navigate = useNavigate();
   const hasSearched = !!query.date;
+
+  function goToBooking(v: any) {
+    const id = v.id ?? v.vehicle_id;
+    try { sessionStorage.setItem(`vehicle:${id}`, JSON.stringify(v)); } catch {}
+    navigate({
+      to: "/pickups/book",
+      search: {
+        vehicle_id: String(id),
+        pickup: query.pickup,
+        drop: query.drop,
+        date: query.date,
+        time: query.time,
+      } as never,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -92,7 +105,7 @@ function PickupsPage() {
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-2xl font-extrabold text-primary">{v.currency ?? "USD"} {v.price}</div>
                     <button
-                      onClick={() => setSelected(v)}
+                      onClick={() => goToBooking(v)}
                       className="rounded-lg bg-gradient-accent px-4 py-2 text-xs font-bold text-accent-foreground"
                     >
                       Book now
@@ -104,30 +117,6 @@ function PickupsPage() {
           </>
         )}
       </section>
-
-      {selected && (
-        <BookingDialog
-          open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
-          title={`Book ${selected.name ?? selected.type ?? "transfer"}`}
-          summary={`${selected.currency ?? "USD"} ${selected.price} · ${query.date} ${query.time}`}
-          fields={[
-            { name: "firstName", label: "First name", required: true },
-            { name: "lastName", label: "Last name", required: true },
-            { name: "email", label: "Email", type: "email", required: true },
-            { name: "phone", label: "Phone", required: true },
-          ]}
-          onSubmit={async (v) => {
-            const res = await bookTransfer({
-              data: {
-                vehicle_id: selected.id,
-                passenger: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
-              },
-            });
-            return { reference: res?.data?.reference, status: res?.data?.status };
-          }}
-        />
-      )}
       <Footer />
     </div>
   );
