@@ -679,6 +679,75 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          counter_amount: number | null
+          counter_currency: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          exchange_rate: number | null
+          id: string
+          reference: string | null
+          tx_type: Database["public"]["Enums"]["wallet_tx_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          counter_amount?: number | null
+          counter_currency?: string | null
+          created_at?: string
+          currency: string
+          description?: string | null
+          exchange_rate?: number | null
+          id?: string
+          reference?: string | null
+          tx_type: Database["public"]["Enums"]["wallet_tx_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          counter_amount?: number | null
+          counter_currency?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          exchange_rate?: number | null
+          id?: string
+          reference?: string | null
+          tx_type?: Database["public"]["Enums"]["wallet_tx_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -713,6 +782,13 @@ export type Database = {
         | "insurance"
         | "tours"
         | "pickups"
+      wallet_tx_type:
+        | "fund"
+        | "swap_in"
+        | "swap_out"
+        | "spend"
+        | "refund"
+        | "adjustment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -855,6 +931,14 @@ export const Constants = {
         "refunded",
       ],
       vertical: ["flights", "stays", "visas", "insurance", "tours", "pickups"],
+      wallet_tx_type: [
+        "fund",
+        "swap_in",
+        "swap_out",
+        "spend",
+        "refund",
+        "adjustment",
+      ],
     },
   },
 } as const
