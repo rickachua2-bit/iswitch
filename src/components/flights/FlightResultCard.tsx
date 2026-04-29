@@ -63,6 +63,8 @@ export function FlightResultCard({ offer }: { offer: any }) {
 
   async function selectFare(fareId: string) {
     const selectedFare = fares.find((f: any) => f.id === fareId);
+    // sessionStorage is the primary path for same-tab navigation. It must
+    // succeed before we navigate so the booking page can read the offer.
     try {
       sessionStorage.setItem(`offer:${offer.id}`, JSON.stringify(offer));
       sessionStorage.setItem(
@@ -70,17 +72,20 @@ export function FlightResultCard({ offer }: { offer: any }) {
         JSON.stringify(selectedFare),
       );
     } catch { /* ignore quota errors */ }
-    // Persist server-side so the booking page works after refresh / redirect.
-    try {
-      const { saveOffer } = await import("@/server/offer-cache.functions");
-      await saveOffer({
-        data: {
-          id: `flight:${offer.id}`,
-          vertical: "flights",
-          payload: { offer, fares: { [fareId]: selectedFare } },
-        },
-      });
-    } catch { /* non-blocking */ }
+    // Server-side cache as a backup (covers refresh + payment redirect).
+    // Fire-and-forget so navigation is never blocked.
+    void (async () => {
+      try {
+        const { saveOffer } = await import("@/server/offer-cache.functions");
+        await saveOffer({
+          data: {
+            id: `flight:${offer.id}`,
+            vertical: "flights",
+            payload: { offer, fares: { [fareId]: selectedFare } },
+          },
+        });
+      } catch { /* non-blocking */ }
+    })();
     navigate({
       to: "/flights/book",
       search: { offer_id: offer.id, fare_id: fareId } as never,

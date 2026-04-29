@@ -40,6 +40,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminPaymentProvidersRouteImport } from './routes/admin.payment-providers'
 import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
 import { Route as AdminMarkupsRouteImport } from './routes/admin.markups'
 import { Route as AdminCurrenciesRouteImport } from './routes/admin.currencies'
@@ -205,6 +206,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPaymentProvidersRoute = AdminPaymentProvidersRouteImport.update({
+  id: '/payment-providers',
+  path: '/payment-providers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOperationsRoute = AdminOperationsRouteImport.update({
   id: '/operations',
   path: '/operations',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
+  '/admin/payment-providers': typeof AdminPaymentProvidersRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
+  '/admin/payment-providers': typeof AdminPaymentProvidersRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
+  '/admin/payment-providers': typeof AdminPaymentProvidersRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
@@ -402,6 +411,7 @@ export interface FileRouteTypes {
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
+    | '/admin/payment-providers'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
+    | '/admin/payment-providers'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
+    | '/admin/payment-providers'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
@@ -743,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/payment-providers': {
+      id: '/admin/payment-providers'
+      path: '/payment-providers'
+      fullPath: '/admin/payment-providers'
+      preLoaderRoute: typeof AdminPaymentProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/operations': {
       id: '/admin/operations'
       path: '/operations'
@@ -818,6 +837,7 @@ interface AdminRouteChildren {
   AdminCurrenciesRoute: typeof AdminCurrenciesRoute
   AdminMarkupsRoute: typeof AdminMarkupsRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
+  AdminPaymentProvidersRoute: typeof AdminPaymentProvidersRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminWalletsRoute: typeof AdminWalletsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -832,6 +852,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCurrenciesRoute: AdminCurrenciesRoute,
   AdminMarkupsRoute: AdminMarkupsRoute,
   AdminOperationsRoute: AdminOperationsRoute,
+  AdminPaymentProvidersRoute: AdminPaymentProvidersRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminWalletsRoute: AdminWalletsRoute,
   AdminIndexRoute: AdminIndexRoute,
