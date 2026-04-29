@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import { AuthProvider } from "@/hooks/use-auth";
 import { CurrencyProvider } from "@/hooks/use-currency";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import "@/i18n";
 import appCss from "../styles.css?url";
 
@@ -85,6 +86,7 @@ function RootComponent() {
     <AuthProvider>
       <CurrencyProvider>
         <Outlet />
+        <MobileBottomNav />
       </CurrencyProvider>
     </AuthProvider>
   );
