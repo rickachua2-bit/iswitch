@@ -35,24 +35,26 @@ export function OpsDashboard() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <SubTab active={sub === "providers"} onClick={() => setSub("providers")} icon={Plug}>Providers</SubTab>
-        <SubTab active={sub === "inventory"} onClick={() => setSub("inventory")} icon={Database}>Inventory</SubTab>
-        <SubTab active={sub === "crawls"} onClick={() => setSub("crawls")} icon={RefreshCw}>Crawl jobs</SubTab>
-        <SubTab active={sub === "bookings"} onClick={() => setSub("bookings")} icon={Receipt}>Bookings</SubTab>
-        <SubTab active={sub === "health"} onClick={() => setSub("health")} icon={Activity}>Health</SubTab>
-        <SubTab active={sub === "markups"} onClick={() => setSub("markups")} icon={Percent}>Markups</SubTab>
-        <div className="ml-auto flex items-center gap-2">
-          {seedMsg && <span className="text-xs text-muted-foreground">{seedMsg}</span>}
-          <button
-            disabled={seeding}
-            onClick={runSeedAll}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50"
-            title="Crawl up to 50 items per vertical (visas, insurance, tours, pickups)"
-          >
-            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-            Seed all inventory
-          </button>
+      <div className="mb-5 rounded-2xl border border-border bg-gradient-to-r from-primary/5 via-card to-accent/10 p-3 shadow-card">
+        <div className="flex flex-wrap items-center gap-2">
+          <SubTab active={sub === "providers"} onClick={() => setSub("providers")} icon={Plug}>Providers</SubTab>
+          <SubTab active={sub === "inventory"} onClick={() => setSub("inventory")} icon={Database}>Inventory</SubTab>
+          <SubTab active={sub === "crawls"} onClick={() => setSub("crawls")} icon={RefreshCw}>Crawl jobs</SubTab>
+          <SubTab active={sub === "bookings"} onClick={() => setSub("bookings")} icon={Receipt}>Bookings</SubTab>
+          <SubTab active={sub === "health"} onClick={() => setSub("health")} icon={Activity}>Health</SubTab>
+          <SubTab active={sub === "markups"} onClick={() => setSub("markups")} icon={Percent}>Markups</SubTab>
+          <div className="ml-auto flex items-center gap-2">
+            {seedMsg && <span className="text-xs font-medium text-muted-foreground">{seedMsg}</span>}
+            <button
+              disabled={seeding}
+              onClick={runSeedAll}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-3.5 py-2 text-xs font-extrabold text-primary-foreground shadow-md transition hover:opacity-95 disabled:opacity-50"
+              title="Crawl up to 50 items per vertical (visas, insurance, tours, pickups)"
+            >
+              {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              Seed all (50/vertical)
+            </button>
+          </div>
         </div>
       </div>
       {sub === "providers" && <ProvidersPanel />}
@@ -67,7 +69,7 @@ export function OpsDashboard() {
 
 function SubTab({ active, onClick, icon: Icon, children }: { active: boolean; onClick: () => void; icon: any; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-bold transition ${active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>
+    <button onClick={onClick} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-extrabold transition ${active ? "bg-gradient-primary text-primary-foreground shadow-sm" : "border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
       <Icon className="h-3.5 w-3.5" /> {children}
     </button>
   );
