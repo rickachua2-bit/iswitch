@@ -189,52 +189,38 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookFlight({
-        data: { offer_id: offer.id, passengers: [pax as any] },
+      const { startCheckout } = await import("@/lib/checkout");
+      const total = Number(fare?.total_amount ?? offer?.total_amount ?? offer?.price ?? 0);
+      const currency = fare?.total_currency ?? offer?.total_currency ?? offer?.currency ?? "USD";
+      const res = await startCheckout({
+        vertical: "flights",
+        provider_slug: "duffel",
+        amount: total,
+        currency,
+        customer_name: `${pax.given_name} ${pax.family_name}`.trim(),
+        customer_email: pax.email,
+        customer_phone: pax.phone_number,
+        payload: {
+          duffel_offer_id: offer.id,
+          fare_id,
+          passengers: [pax],
+          slices: offer?.slices ?? [],
+        },
       });
-      setDone({
-        reference: res?.data?.reference ?? res?.data?.id,
-        status: res?.data?.status ?? "confirmed",
-      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      window.location.href = res.checkoutUrl;
     } catch (e: any) {
-      setError(e?.message ?? "Booking failed. Please try again.");
+      setError(e?.message ?? "Checkout failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
   if (done) {
-    return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-card p-8 text-center shadow-card">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-          <CheckCircle2 className="h-7 w-7" />
-        </div>
-        <h2 className="mt-4 text-xl font-extrabold text-foreground">Booking confirmed!</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Reference: <span className="font-bold text-foreground">{done.reference ?? "—"}</span>
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Status: <span className="font-bold text-foreground">{done.status}</span>
-        </p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          A confirmation email is on its way to {pax.email}.
-        </p>
-        <div className="mt-5 flex justify-center gap-2">
-          <Link
-            to="/flights"
-            className="rounded-md border border-border bg-card px-4 py-2 text-sm font-bold text-foreground hover:bg-secondary"
-          >
-            Search more flights
-          </Link>
-          <Link
-            to="/dashboard"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary-glow"
-          >
-            View my bookings
-          </Link>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
