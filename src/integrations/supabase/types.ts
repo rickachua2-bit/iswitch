@@ -509,6 +509,30 @@ export type Database = {
           },
         ]
       }
+      offer_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json
+          vertical: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id: string
+          payload: Json
+          vertical: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json
+          vertical?: string
+        }
+        Relationships: []
+      }
       payment_events: {
         Row: {
           booking_id: string | null
