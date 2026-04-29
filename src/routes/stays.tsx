@@ -701,12 +701,19 @@ function HotelResultCard({
             <div className="text-xl font-extrabold text-primary md:text-2xl">
               {formatPrice(price, h.currency ?? "USD")}
             </div>
-            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes · pay now</div>
+            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes</div>
             <button
               onClick={() => onSelect(h)}
-              className="mt-2 w-full rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+              disabled={loading || disabled}
+              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95 disabled:cursor-wait disabled:opacity-70"
             >
-              Book & pay now
+              {loading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading rooms…
+                </>
+              ) : (
+                <>View rooms & book</>
+              )}
             </button>
           </div>
         </div>
