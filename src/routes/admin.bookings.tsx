@@ -57,7 +57,7 @@ function AdminBookings() {
   }, [rows, q, statusFilter, verticalFilter]);
 
   async function changeStatus(b: Booking, status: string) {
-    const { error } = await supabase.from("bookings_unified").update({ status }).eq("id", b.id);
+    const { error } = await supabase.from("bookings_unified").update({ status: status as any }).eq("id", b.id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Booking marked ${status}`);
     void load();

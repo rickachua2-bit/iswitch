@@ -37,6 +37,14 @@ import { Route as DashboardConsultationsRouteImport } from './routes/dashboard.c
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
+import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
+import { Route as AdminMarkupsRouteImport } from './routes/admin.markups'
+import { Route as AdminCurrenciesRouteImport } from './routes/admin.currencies'
+import { Route as AdminConsultationsRouteImport } from './routes/admin.consultations'
+import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
+import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
 
 const VisasRoute = VisasRouteImport.update({
   id: '/visas',
@@ -178,6 +186,46 @@ const AgentsApplyRoute = AgentsApplyRouteImport.update({
   path: '/agents/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWalletsRoute = AdminWalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperationsRoute = AdminOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMarkupsRoute = AdminMarkupsRouteImport.update({
+  id: '/markups',
+  path: '/markups',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCurrenciesRoute = AdminCurrenciesRouteImport.update({
+  id: '/currencies',
+  path: '/currencies',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConsultationsRoute = AdminConsultationsRouteImport.update({
+  id: '/consultations',
+  path: '/consultations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAgentsRoute = AdminAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -194,6 +242,14 @@ export interface FileRoutesByFullPath {
   '/stays': typeof StaysRouteWithChildren
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/currencies': typeof AdminCurrenciesRoute
+  '/admin/markups': typeof AdminMarkupsRoute
+  '/admin/operations': typeof AdminOperationsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -222,6 +278,14 @@ export interface FileRoutesByTo {
   '/stays': typeof StaysRouteWithChildren
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/currencies': typeof AdminCurrenciesRoute
+  '/admin/markups': typeof AdminMarkupsRoute
+  '/admin/operations': typeof AdminOperationsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -253,6 +317,14 @@ export interface FileRoutesById {
   '/stays': typeof StaysRouteWithChildren
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
+  '/admin/agents': typeof AdminAgentsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/currencies': typeof AdminCurrenciesRoute
+  '/admin/markups': typeof AdminMarkupsRoute
+  '/admin/operations': typeof AdminOperationsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -285,6 +357,14 @@ export interface FileRouteTypes {
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/admin/agents'
+    | '/admin/bookings'
+    | '/admin/consultations'
+    | '/admin/currencies'
+    | '/admin/markups'
+    | '/admin/operations'
+    | '/admin/users'
+    | '/admin/wallets'
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -313,6 +393,14 @@ export interface FileRouteTypes {
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/admin/agents'
+    | '/admin/bookings'
+    | '/admin/consultations'
+    | '/admin/currencies'
+    | '/admin/markups'
+    | '/admin/operations'
+    | '/admin/users'
+    | '/admin/wallets'
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -343,6 +431,14 @@ export interface FileRouteTypes {
     | '/stays'
     | '/tours'
     | '/visas'
+    | '/admin/agents'
+    | '/admin/bookings'
+    | '/admin/consultations'
+    | '/admin/currencies'
+    | '/admin/markups'
+    | '/admin/operations'
+    | '/admin/users'
+    | '/admin/wallets'
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -575,14 +671,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/wallets': {
+      id: '/admin/wallets'
+      path: '/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AdminWalletsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/operations': {
+      id: '/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AdminOperationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/markups': {
+      id: '/admin/markups'
+      path: '/markups'
+      fullPath: '/admin/markups'
+      preLoaderRoute: typeof AdminMarkupsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/currencies': {
+      id: '/admin/currencies'
+      path: '/currencies'
+      fullPath: '/admin/currencies'
+      preLoaderRoute: typeof AdminCurrenciesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/consultations': {
+      id: '/admin/consultations'
+      path: '/consultations'
+      fullPath: '/admin/consultations'
+      preLoaderRoute: typeof AdminConsultationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/agents': {
+      id: '/admin/agents'
+      path: '/agents'
+      fullPath: '/admin/agents'
+      preLoaderRoute: typeof AdminAgentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAgentsRoute: typeof AdminAgentsRoute
+  AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminConsultationsRoute: typeof AdminConsultationsRoute
+  AdminCurrenciesRoute: typeof AdminCurrenciesRoute
+  AdminMarkupsRoute: typeof AdminMarkupsRoute
+  AdminOperationsRoute: typeof AdminOperationsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminWalletsRoute: typeof AdminWalletsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAgentsRoute: AdminAgentsRoute,
+  AdminBookingsRoute: AdminBookingsRoute,
+  AdminConsultationsRoute: AdminConsultationsRoute,
+  AdminCurrenciesRoute: AdminCurrenciesRoute,
+  AdminMarkupsRoute: AdminMarkupsRoute,
+  AdminOperationsRoute: AdminOperationsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminWalletsRoute: AdminWalletsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
