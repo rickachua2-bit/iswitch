@@ -14,6 +14,7 @@ import {
 
 const searchSchema = z.object({
   offer_id: z.coerce.string(),
+  destination: z.coerce.string().optional().default(""),
   checkIn: z.coerce.string().optional().default(""),
   checkOut: z.coerce.string().optional().default(""),
   guests: z.coerce.string().optional().default("2 Guests, 1 Room"),
