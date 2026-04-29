@@ -1,4 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSelectOffer } from "@/lib/use-select-offer";
+import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
@@ -117,24 +119,21 @@ const PROMO_TILES = [
 function StaysPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
   const formatPrice = usePriceFormat();
-  const navigate = useNavigate();
   const hasSearched = !!(query.checkIn && query.checkOut);
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(h: any) {
-    const id = h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(h: any) {
+    const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
+    void select({
       vertical: "stays",
       sessionPrefix: "hotel",
       cachePrefix: "hotel",
-      id: String(id),
+      id,
       payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, destination: query.destination },
-    });
-    navigate({
       to: "/stays/book",
       search: {
         destination: query.destination,
-        offer_id: String(id),
+        offer_id: id,
         checkIn: query.checkIn,
         checkOut: query.checkOut,
         guests: query.guests,
@@ -162,8 +161,12 @@ function StaysPage() {
           query={query}
           formatPrice={formatPrice}
           onSelect={goToBooking}
+          isSelecting={isSelecting}
+          selecting={selecting}
         />
       )}
+
+      <ErrorToast message={selectError} onDismiss={clearError} />
 
       {/* Discovery — only show when no active search */}
       {!hasSearched && (
@@ -317,13 +320,15 @@ function scoreLabel(s: number) {
 }
 
 function ResultsBoard({
-  hotels, error, query, formatPrice, onSelect,
+  hotels, error, query, formatPrice, onSelect, isSelecting, selecting,
 }: {
   hotels: any[];
   error: string | null;
   query: { destination: string; checkIn: string; checkOut: string; guests: string };
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
+  isSelecting: (id: string) => boolean;
+  selecting: boolean;
 }) {
   const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("best");
   const [maxPrice, setMaxPrice] = useState(1000);
@@ -527,14 +532,19 @@ function ResultsBoard({
             </div>
           ) : (
             <div className="space-y-4">
-              {filtered.map((h: any) => (
-                <HotelResultCard
-                  key={h.id}
-                  hotel={h}
-                  formatPrice={formatPrice}
-                  onSelect={onSelect}
-                />
-              ))}
+              {filtered.map((h: any) => {
+                const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
+                return (
+                  <HotelResultCard
+                    key={h.id}
+                    hotel={h}
+                    formatPrice={formatPrice}
+                    onSelect={onSelect}
+                    loading={isSelecting(id)}
+                    disabled={selecting && !isSelecting(id)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
@@ -582,11 +592,13 @@ function CheckRow({
 }
 
 function HotelResultCard({
-  hotel: h, formatPrice, onSelect,
+  hotel: h, formatPrice, onSelect, loading, disabled,
 }: {
   hotel: any;
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
+  loading?: boolean;
+  disabled?: boolean;
 }) {
   const score = Number(h.review_score ?? h.score ?? 0);
   const original = h.original_price ? Number(h.original_price) : null;
@@ -689,12 +701,19 @@ function HotelResultCard({
             <div className="text-xl font-extrabold text-primary md:text-2xl">
               {formatPrice(price, h.currency ?? "USD")}
             </div>
-            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes · pay now</div>
+            <div className="text-[10px] text-muted-foreground">Per night · incl. taxes</div>
             <button
               onClick={() => onSelect(h)}
-              className="mt-2 w-full rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95"
+              disabled={loading || disabled}
+              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2.5 text-xs font-extrabold uppercase tracking-wide text-primary-foreground shadow-glow transition hover:opacity-95 disabled:cursor-wait disabled:opacity-70"
             >
-              Book & pay now
+              {loading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading rooms…
+                </>
+              ) : (
+                <>View rooms & book</>
+              )}
             </button>
           </div>
         </div>

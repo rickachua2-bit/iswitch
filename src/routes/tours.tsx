@@ -1,9 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { searchTours } from "@/server/travsify";
+import { useSelectOffer } from "@/lib/use-select-offer";
+import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Loader2, MapPin } from "lucide-react";
 import { z } from "zod";
 
@@ -39,27 +41,24 @@ export const Route = createFileRoute("/tours")({
 
 function ToursPage() {
   const { tours, query, error } = Route.useLoaderData() as any;
-  const navigate = useNavigate();
   const hasSearched = !!query.date;
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(t: any) {
-    const id = t.id ?? t.tour_id ?? t.external_id;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(t: any) {
+    const id = String(t.id ?? t.tour_id ?? t.external_id);
+    void select({
       vertical: "tours",
       sessionPrefix: "tour",
       cachePrefix: "tour",
-      id: String(id),
+      id,
       payload: { ...t, destination: query.destination, date: query.date, guests: query.guests },
-    });
-    navigate({
       to: "/tours/book",
       search: {
-        tour_id: String(id),
+        tour_id: id,
         destination: query.destination,
         date: query.date,
         guests: String(query.guests ?? "2"),
-      } as never,
+      },
     });
   }
 
@@ -74,6 +73,8 @@ function ToursPage() {
         initial={query}
       />
 
+      <ErrorToast message={selectError} onDismiss={clearError} />
+
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {!hasSearched ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Pick a date above to search tours.</div>
@@ -85,16 +86,26 @@ function ToursPage() {
           <>
             <h2 className="mb-4 font-display text-xl font-bold">{tours.length} experiences · {query.destination}</h2>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {tours.map((t: any) => (
-                <div key={t.id} className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow-elevated">
-                  <div className="flex items-center gap-1 text-xs text-primary"><MapPin className="h-3 w-3" /> {query.destination}</div>
-                  <div className="mt-1 font-bold">{t.title}</div>
-                  <div className="mt-4 flex items-end justify-between">
-                    <div className="text-lg font-extrabold text-primary">{t.currency ?? "USD"} {t.price}</div>
-                    <button onClick={() => goToBooking(t)} className="rounded-lg bg-gradient-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">Book</button>
+              {tours.map((t: any) => {
+                const id = String(t.id ?? t.tour_id ?? t.external_id);
+                const loading = isSelecting(id);
+                return (
+                  <div key={t.id} className="overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow-elevated">
+                    <div className="flex items-center gap-1 text-xs text-primary"><MapPin className="h-3 w-3" /> {query.destination}</div>
+                    <div className="mt-1 font-bold">{t.title}</div>
+                    <div className="mt-4 flex items-end justify-between">
+                      <div className="text-lg font-extrabold text-primary">{t.currency ?? "USD"} {t.price}</div>
+                      <button
+                        onClick={() => goToBooking(t)}
+                        disabled={loading || (selecting && !loading)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-accent px-3 py-1.5 text-xs font-bold text-accent-foreground transition disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {loading ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…</>) : "View & book"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
