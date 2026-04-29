@@ -71,17 +71,52 @@ function BookingPage() {
 
   const [offer, setOffer] = useState<any | null>(null);
   const [fare, setFare] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`offer:${offer_id}`);
-      if (o) setOffer(JSON.parse(o));
-      if (fare_id) {
-        const f = sessionStorage.getItem(`fare:${offer_id}:${fare_id}`);
-        if (f) setFare(JSON.parse(f));
-      }
-    } catch { /* ignore */ }
+    let cancelled = false;
+    (async () => {
+      // 1. Try sessionStorage first (fastest, same-tab path)
+      try {
+        const o = sessionStorage.getItem(`offer:${offer_id}`);
+        if (o) {
+          const parsed = JSON.parse(o);
+          if (!cancelled) setOffer(parsed);
+          if (fare_id) {
+            const f = sessionStorage.getItem(`fare:${offer_id}:${fare_id}`);
+            if (f && !cancelled) setFare(JSON.parse(f));
+          }
+          if (!cancelled) setLoading(false);
+          return;
+        }
+      } catch { /* ignore */ }
+
+      // 2. Fall back to server-persisted cache (survives refresh / redirects)
+      try {
+        const { getOffer } = await import("@/server/offer-cache.functions");
+        const res = await getOffer({ data: { id: `flight:${offer_id}` } });
+        if (!cancelled && res.ok) {
+          const p: any = res.payload;
+          setOffer(p?.offer ?? null);
+          if (fare_id && p?.fares?.[fare_id]) setFare(p.fares[fare_id]);
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [offer_id, fare_id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-secondary/30">
+        <Header />
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected flight…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!offer) {
     return (

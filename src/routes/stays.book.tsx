@@ -14,6 +14,7 @@ import {
 
 const searchSchema = z.object({
   offer_id: z.coerce.string(),
+  destination: z.coerce.string().optional().default(""),
   checkIn: z.coerce.string().optional().default(""),
   checkOut: z.coerce.string().optional().default(""),
   guests: z.coerce.string().optional().default("2 Guests, 1 Room"),
@@ -86,13 +87,38 @@ function HotelBookingPage() {
   const formatPrice = usePriceFormat();
 
   const [hotel, setHotel] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`hotel:${offer_id}`);
-      if (o) setHotel(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      try {
+        const o = sessionStorage.getItem(`hotel:${offer_id}`);
+        if (o) {
+          if (!cancelled) { setHotel(JSON.parse(o)); setLoading(false); }
+          return;
+        }
+      } catch {}
+      try {
+        const { getOffer } = await import("@/server/offer-cache.functions");
+        const res = await getOffer({ data: { id: `hotel:${offer_id}` } });
+        if (!cancelled && res.ok) setHotel(res.payload);
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [offer_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/stays">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <HotelIcon className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected hotel…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!hotel) {
     return (
@@ -110,7 +136,11 @@ function HotelBookingPage() {
 
   const images = pickAllImages(hotel);
   const cover = images[0];
-  const nights = nightsBetween(checkIn, checkOut);
+  // Fall back to values stored inside the cached hotel payload when URL params are missing
+  const effCheckIn = checkIn || hotel.checkIn || "";
+  const effCheckOut = checkOut || hotel.checkOut || "";
+  const effGuests = guests || hotel.guests || "2 Guests, 1 Room";
+  const nights = nightsBetween(effCheckIn, effCheckOut);
   const pricePerNight = Number(hotel.price ?? 0);
   const subtotal = pricePerNight * nights;
   const taxes = Math.round(subtotal * 0.1 * 100) / 100;
@@ -166,11 +196,11 @@ function HotelBookingPage() {
           </div>
 
           {/* Stay details */}
-          <SectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${guests}`}>
+          <SectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${effGuests}`}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <Stat icon={CalendarIcon} label="Check-in" value={checkIn || "—"} sub="From 3:00 PM" />
-              <Stat icon={CalendarIcon} label="Check-out" value={checkOut || "—"} sub="Until 12:00 PM" />
-              <Stat icon={Users} label="Guests" value={guests} sub="1 room" />
+              <Stat icon={CalendarIcon} label="Check-in" value={effCheckIn || "—"} sub="From 3:00 PM" />
+              <Stat icon={CalendarIcon} label="Check-out" value={effCheckOut || "—"} sub="Until 12:00 PM" />
+              <Stat icon={Users} label="Guests" value={effGuests} sub="1 room" />
             </div>
             <div className="mt-4 rounded-lg bg-secondary/60 p-3">
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -208,7 +238,7 @@ function HotelBookingPage() {
           </SectionCard>
 
           {/* Form */}
-          <BookingForm hotel={hotel} navigate={navigate} />
+          <BookingForm hotel={{ ...hotel, checkIn: effCheckIn, checkOut: effCheckOut, guests: effGuests }} navigate={navigate} />
         </div>
 
         {/* Right: sticky price summary */}
@@ -219,7 +249,7 @@ function HotelBookingPage() {
               <div className="text-xs text-muted-foreground">Your booking</div>
               <div className="mt-1 text-base font-extrabold text-foreground">{hotel.name}</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {checkIn} → {checkOut}
+                {effCheckIn} → {effCheckOut}
               </div>
               <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
                 <Row label={`${formatPrice(pricePerNight, currency)} × ${nights} night${nights > 1 ? "s" : ""}`} value={formatPrice(subtotal, currency)} />
