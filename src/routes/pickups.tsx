@@ -45,9 +45,16 @@ function PickupsPage() {
   const navigate = useNavigate();
   const hasSearched = !!query.date;
 
-  function goToBooking(v: any) {
-    const id = v.id ?? v.vehicle_id;
-    try { sessionStorage.setItem(`vehicle:${id}`, JSON.stringify(v)); } catch {}
+  async function goToBooking(v: any) {
+    const id = v.id ?? v.vehicle_id ?? v.external_id;
+    const { persistSelectedOffer } = await import("@/lib/select-offer");
+    await persistSelectedOffer({
+      vertical: "pickups",
+      sessionPrefix: "vehicle",
+      cachePrefix: "vehicle",
+      id: String(id),
+      payload: { ...v, pickup: query.pickup, drop: query.drop, date: query.date, time: query.time },
+    });
     navigate({
       to: "/pickups/book",
       search: {
