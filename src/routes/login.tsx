@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Loader2, LogIn, Mail, Lock } from "lucide-react";
+import { Loader2, LogIn, Mail, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthSplitLayout } from "@/components/AuthSplitLayout";
+import { AuthField } from "@/components/AuthField";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -24,6 +25,7 @@ function LoginPage() {
   const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,50 +58,68 @@ function LoginPage() {
           : "Sign in to your iSwitch account."
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-card">
-        <Field label="Email" icon={Mail}>
-          <input
-            required
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="auth-input"
-            placeholder="you@example.com"
-          />
-        </Field>
-        <Field label="Password" icon={Lock}>
-          <input
-            required
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="auth-input"
-            placeholder="••••••••"
-          />
-        </Field>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          label="Email"
+          icon={Mail}
+          required
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          hint="Use the email you signed up with."
+          valid={email.length > 0 && /.+@.+\..+/.test(email) ? true : undefined}
+        />
+
+        <AuthField
+          label="Password"
+          icon={Lock}
+          required
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+        />
+
+        <div className="flex items-center justify-between text-xs">
+          <label className="flex cursor-pointer items-center gap-2 font-semibold text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-border accent-primary"
+            />
+            Keep me signed in
+          </label>
+          <Link to="/forgot-password" className="font-bold text-primary hover:underline">
+            Forgot password?
+          </Link>
+        </div>
 
         {error && (
-          <div className="rounded-md bg-destructive/10 p-2.5 text-xs font-semibold text-destructive">{error}</div>
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+            {error}
+          </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-gradient-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-glow transition hover:opacity-95 disabled:opacity-60"
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary via-primary-glow to-accent px-4 py-3 text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-glow transition hover:scale-[1.01] disabled:opacity-60"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
           Sign in
         </button>
 
-        <div className="flex items-center justify-between pt-1 text-xs">
-          <Link to="/forgot-password" className="font-semibold text-primary hover:underline">
-            Forgot password?
-          </Link>
-          <Link to="/signup" className="font-semibold text-primary hover:underline">
-            Create account
-          </Link>
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3 text-center text-xs text-muted-foreground">
+          <Sparkles className="mr-1 inline h-3 w-3 text-primary" />
+          New here?{" "}
+          <Link to="/signup" className="font-extrabold text-primary hover:underline">
+            Create your free account
+          </Link>{" "}
+          in 60 seconds.
         </div>
       </form>
 
@@ -109,35 +129,6 @@ function LoginPage() {
           Apply as agent
         </Link>
       </div>
-
-      <style>{`
-        .auth-input {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid hsl(var(--input));
-          background: hsl(var(--background));
-          padding: 0.625rem 0.75rem;
-          font-size: 0.875rem;
-          transition: border-color 120ms, box-shadow 120ms;
-        }
-        .auth-input:focus {
-          outline: none;
-          border-color: hsl(var(--primary));
-          box-shadow: 0 0 0 3px color-mix(in oklab, hsl(var(--primary)) 18%, transparent);
-        }
-      `}</style>
     </AuthSplitLayout>
-  );
-}
-
-function Field({ label, icon: Icon, children }: { label: string; icon?: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-        {Icon && <Icon className="h-3 w-3" />}
-        {label}
-      </span>
-      {children}
-    </label>
   );
 }
