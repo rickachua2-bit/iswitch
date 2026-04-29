@@ -31,7 +31,7 @@ function toCC(s: string) {
   return s.trim().slice(0, 2).toUpperCase();
 }
 
-export const Route = createFileRoute("/insurance")({
+export const Route = createFileRoute("/insurance/")({
   head: () => ({
     meta: [
       { title: "Travel Insurance — Cover from $4/day | iSwitch" },

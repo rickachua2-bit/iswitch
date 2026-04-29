@@ -102,7 +102,7 @@ function KindBadge({ kind }: { kind: VisaKind }) {
 
 /* --------------------------------- Route --------------------------------- */
 
-export const Route = createFileRoute("/visas")({
+export const Route = createFileRoute("/visas/")({
   head: () => ({
     meta: [
       { title: "Visa Requirements & e-Visas | iSwitch" },

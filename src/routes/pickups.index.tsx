@@ -16,7 +16,7 @@ const searchSchema = z.object({
   time: z.coerce.string().optional().default(""),
 });
 
-export const Route = createFileRoute("/pickups")({
+export const Route = createFileRoute("/pickups/")({
   head: () => ({
     meta: [
       { title: "Airport Pickups & Car Transfers worldwide | iSwitch" },
