@@ -78,9 +78,17 @@ export type Database = {
           customer_phone: string | null
           error: string | null
           external_reference: string | null
+          fulfillment_status: Database["public"]["Enums"]["fulfillment_status"]
           id: string
           inventory_item_id: string | null
+          paid_at: string | null
           payload: Json
+          payment_intent_id: string | null
+          payment_provider:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          provider_confirmation: Json | null
           provider_id: string | null
           status: Database["public"]["Enums"]["unified_booking_status"]
           updated_at: string
@@ -96,9 +104,17 @@ export type Database = {
           customer_phone?: string | null
           error?: string | null
           external_reference?: string | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
           id?: string
           inventory_item_id?: string | null
+          paid_at?: string | null
           payload?: Json
+          payment_intent_id?: string | null
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          provider_confirmation?: Json | null
           provider_id?: string | null
           status?: Database["public"]["Enums"]["unified_booking_status"]
           updated_at?: string
@@ -114,9 +130,17 @@ export type Database = {
           customer_phone?: string | null
           error?: string | null
           external_reference?: string | null
+          fulfillment_status?: Database["public"]["Enums"]["fulfillment_status"]
           id?: string
           inventory_item_id?: string | null
+          paid_at?: string | null
           payload?: Json
+          payment_intent_id?: string | null
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          provider_confirmation?: Json | null
           provider_id?: string | null
           status?: Database["public"]["Enums"]["unified_booking_status"]
           updated_at?: string
@@ -485,6 +509,50 @@ export type Database = {
           },
         ]
       }
+      payment_events: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          error: string | null
+          event_type: string
+          id: string
+          payload: Json
+          payment_intent_id: string | null
+          processed: boolean
+          provider: Database["public"]["Enums"]["payment_provider"]
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          error?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          payment_intent_id?: string | null
+          processed?: boolean
+          provider: Database["public"]["Enums"]["payment_provider"]
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          error?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          payment_intent_id?: string | null
+          processed?: boolean
+          provider?: Database["public"]["Enums"]["payment_provider"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings_unified"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
@@ -819,6 +887,20 @@ export type Database = {
       application_status: "pending" | "approved" | "rejected"
       booking_status: "pending" | "confirmed" | "cancelled" | "completed"
       crawl_status: "queued" | "running" | "succeeded" | "failed"
+      fulfillment_status:
+        | "pending"
+        | "auto_confirmed"
+        | "manual_pending"
+        | "fulfilled"
+        | "failed"
+      payment_provider: "stripe" | "korapay"
+      payment_status:
+        | "pending"
+        | "processing"
+        | "paid"
+        | "failed"
+        | "refunded"
+        | "cancelled"
       provider_kind: "api" | "crawl"
       unified_booking_status:
         | "pending"
@@ -973,6 +1055,22 @@ export const Constants = {
       application_status: ["pending", "approved", "rejected"],
       booking_status: ["pending", "confirmed", "cancelled", "completed"],
       crawl_status: ["queued", "running", "succeeded", "failed"],
+      fulfillment_status: [
+        "pending",
+        "auto_confirmed",
+        "manual_pending",
+        "fulfilled",
+        "failed",
+      ],
+      payment_provider: ["stripe", "korapay"],
+      payment_status: [
+        "pending",
+        "processing",
+        "paid",
+        "failed",
+        "refunded",
+        "cancelled",
+      ],
       provider_kind: ["api", "crawl"],
       unified_booking_status: [
         "pending",
