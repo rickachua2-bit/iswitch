@@ -27,7 +27,7 @@ export const getApiProviderRouting = createServerFn({ method: "GET" })
     const routing = { ...fallback, ...((data?.value as Record<string, string>) ?? {}) };
     return {
       routing,
-      travsifyConfigured: !!process.env.TRAVSIFY_API_KEY,
+      travsifyConfigured: !!(process.env.TRAVSIFY_API_KEY || process.env.TRAVSIFY_TEST_API_KEY),
       providers: {
         flights: { default: "Duffel", travsify: "Travsify" },
         stays: { default: "LiteAPI", travsify: "Travsify" },
