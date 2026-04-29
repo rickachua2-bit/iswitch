@@ -24,22 +24,21 @@ export const supabaseAuth = createMiddleware({ type: "function" })
       token = null;
     }
     return next({
+      sendContext: token ? { supabaseAccessToken: token } : {},
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   })
-  .server(async ({ next }) => {
+  .server(async ({ next, context }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      throw new Response("Missing Supabase environment variables.", { status: 500 });
+      throw new Error("Missing backend environment variables.");
     }
     const request = getRequest();
     const authHeader = request?.headers?.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new Response("Unauthorized", { status: 401 });
-    }
-    const token = authHeader.replace("Bearer ", "").trim();
-    if (!token) throw new Response("Unauthorized", { status: 401 });
+    const contextToken = typeof (context as any)?.supabaseAccessToken === "string" ? (context as any).supabaseAccessToken : null;
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "").trim() : contextToken;
+    if (!token) throw new Error("Unauthorized: please sign in again.");
 
     const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       global: { headers: { Authorization: `Bearer ${token}` } },
@@ -48,7 +47,7 @@ export const supabaseAuth = createMiddleware({ type: "function" })
 
     const { data, error } = await supabase.auth.getClaims(token);
     if (error || !data?.claims?.sub) {
-      throw new Response("Unauthorized: Invalid token", { status: 401 });
+      throw new Error("Unauthorized: invalid session. Please sign in again.");
     }
 
     return next({
