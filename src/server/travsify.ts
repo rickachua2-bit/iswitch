@@ -1,499 +1,537 @@
-import { createServerFn } from "@tanstack/react-start";
-
-const BASE = process.env.TRAVSIFY_BASE_URL || "https://travsify.com/api/v1";
-
-function getKey() {
-  const key = process.env.TRAVSIFY_API_KEY;
-  if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
-  return key;
-}
-
 /**
- * Translate raw upstream errors into a user-friendly message.
- * We never want to leak provider names, raw status codes or stack
- * traces into the UI.
+ * Compatibility shim.
+ *
+ * The UI was originally wired to a single Travsify backend. We've since moved
+ * to a hybrid stack:
+ *  - Flights -> Duffel (live API)
+ *  - Hotels  -> LiteAPI (live API)
+ *  - Visas / Insurance / Tours / Pickups -> crawled inventory in `inventory_items`
+ *  - All bookings -> lead capture in `bookings_unified` (manual fulfillment)
+ *
+ * To avoid touching ~17 UI files, this module keeps the exact same export
+ * surface and response shapes the UI expects (`{ data: { ... }, error }`),
+ * but internally delegates to the new providers and database.
  */
-function friendlyError(status: number | null, raw: string): string {
-  if (status === 522 || status === 524 || status === 504 || /timeout|timed out|aborted/i.test(raw)) {
-    return "Live inventory is taking longer than usual to respond. Please try again in a moment.";
-  }
-  if (status === 502 || status === 503 || (status && status >= 500)) {
-    return "Live inventory is temporarily unavailable. Please try again in a minute.";
-  }
-  if (status === 401 || status === 403) {
-    return "Live inventory is temporarily unavailable. Please try again shortly.";
-  }
-  if (status === 429) {
-    return "Too many searches in a short time. Please wait a few seconds and try again.";
-  }
-  if (status === 400 || status === 422) {
-    return "Some of your search details were not accepted. Please review and try again.";
-  }
-  return "We couldn't load results right now. Please try again.";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import {
+  searchFlights as duffelSearchFlights,
+  getFlightOffer as duffelGetOffer,
+} from "./duffel.functions";
+import { searchHotels as liteSearchHotels } from "./liteapi.functions";
+
+/* ------------------------------ HELPERS ---------------------------- */
+
+function ok(data: any) {
+  return { data, error: null as string | null };
+}
+function fail(error: string, fallback: any = {}) {
+  return { data: fallback, error };
 }
 
-const REQUEST_TIMEOUT_MS = 25_000;
-
-async function call<T = any>(path: string, body: unknown, method: "POST" | "GET" = "POST"): Promise<T> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
-  const requestId = crypto.randomUUID();
-  let res: Response;
-  try {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${getKey()}`,
-      "X-Request-Id": requestId,
-    };
-    if (method === "POST") {
-      headers["Content-Type"] = "application/json";
-      headers["Idempotency-Key"] = requestId;
-    }
-    res = await fetch(`${BASE}${path}`, {
-      method,
-      headers,
-      body: method === "POST" ? JSON.stringify(body) : undefined,
-      signal: ctrl.signal,
-    });
-  } catch (err: any) {
-    clearTimeout(timer);
-    const aborted = err?.name === "AbortError";
-    const msg = aborted ? "timeout" : err?.message || "network error";
-    const e = new Error(msg) as any;
-    e.status = aborted ? 524 : null;
-    e.requestId = requestId;
-    throw e;
-  }
-  clearTimeout(timer);
-  const upstreamReqId = res.headers.get("x-request-id") || res.headers.get("cf-ray") || requestId;
-  const text = await res.text();
-  let json: any = null;
-  try {
-    json = text ? JSON.parse(text) : null;
-  } catch {
-    /* keep raw */
-  }
-  if (!res.ok) {
-    const detail =
-      json?.error?.message ||
-      json?.message ||
-      (Array.isArray(json?.error?.details)
-        ? json.error.details.map((d: any) => d?.message).filter(Boolean).join("; ")
-        : null) ||
-      text ||
-      `HTTP ${res.status}`;
-    const e = new Error(detail) as any;
-    e.status = res.status;
-    e.requestId = upstreamReqId;
-    throw e;
-  }
-  return json as T;
+async function fetchInventory(
+  vertical: "visas" | "insurance" | "tours" | "pickups",
+  opts: { destination?: string; origin?: string; limit?: number } = {},
+) {
+  let q = supabaseAdmin
+    .from("inventory_items")
+    .select(
+      "id, title, subtitle, description, origin, destination, price, currency, duration, validity, images, source_url, attributes, external_id, provider_id",
+    )
+    .eq("vertical", vertical)
+    .eq("is_active", true)
+    .order("price", { ascending: true, nullsFirst: false })
+    .limit(opts.limit ?? 50);
+  if (opts.destination) q = q.ilike("destination", `%${opts.destination}%`);
+  if (opts.origin) q = q.ilike("origin", `%${opts.origin}%`);
+  const { data, error } = await q;
+  if (error) return { items: [] as any[], error: "Inventory unavailable. Please try again shortly." };
+  return { items: data ?? [], error: null as string | null };
 }
 
-/** Normalize per-vertical response keys into the unified shape the UI consumes. */
-function normalizeData(d: any) {
-  d = d ?? {};
-  if (!d.offers && Array.isArray(d.flights)) d.offers = d.flights;
-  if (!d.offers && Array.isArray(d.results)) d.offers = d.results;
-  if (!d.hotels && Array.isArray(d.properties)) d.hotels = d.properties;
-  if (!d.tours && Array.isArray(d.experiences)) d.tours = d.experiences;
-  if (!d.tours && Array.isArray(d.activities)) d.tours = d.activities;
-  if (!d.visas && Array.isArray(d.options)) d.visas = d.options;
-  if (!d.plans && Array.isArray(d.policies)) d.plans = d.policies;
-  if (!d.vehicles && Array.isArray(d.transfers)) d.vehicles = d.transfers;
-  if (!d.vehicles && Array.isArray(d.cars)) d.vehicles = d.cars;
-  return d;
-}
-
-async function searchCall(path: string, body: unknown): Promise<any> {
-  // One retry for transient upstream issues (522/524/timeout/5xx).
-  let lastErr: any = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res: any = await call(path, body);
-      const d = normalizeData(res?.data ?? {});
-      const warn = res?.warning;
-      // Per spec: warning.fallback === true => upstream flaky, treat as
-      // "try again shortly" UX message but still return any partial data.
-      let warningMsg: string | null = null;
-      if (warn?.fallback === true) {
-        warningMsg = "Live inventory for this search is temporarily unavailable. Please try again shortly.";
-      } else if (warn?.code === "search_unavailable") {
-        warningMsg = "Live inventory for this route is temporarily unavailable. Please try again shortly.";
-      } else if (warn?.message) {
-        warningMsg = warn.message;
-      }
-      return { ...res, data: d, error: warningMsg };
-    } catch (error: any) {
-      lastErr = error;
-      const status: number | null = error?.status ?? null;
-      const transient =
-        status === 522 || status === 524 || status === 504 || status === 502 || status === 503 ||
-        /timeout|aborted|network/i.test(error?.message ?? "");
-      if (!transient || attempt === 1) break;
-      await new Promise((r) => setTimeout(r, 600));
-    }
-  }
-  const status: number | null = lastErr?.status ?? null;
-  const requestId: string | null = lastErr?.requestId ?? null;
-  const message = friendlyError(status, lastErr?.message ?? "");
-  console.error("Travel search failed", { path, status, requestId, raw: lastErr?.message });
-  return {
-    data: { offers: [], hotels: [], tours: [], visas: [], plans: [], vehicles: [] },
-    error: message,
-    requestId,
-  };
+async function createLead(input: {
+  vertical: "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+  provider_slug: string;
+  inventory_item_id?: string;
+  external_reference?: string;
+  amount: number;
+  currency?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  payload: Record<string, any>;
+}) {
+  const { data: prov } = await supabaseAdmin
+    .from("providers")
+    .select("id")
+    .eq("slug", input.provider_slug)
+    .maybeSingle();
+  const { data: row, error } = await supabaseAdmin
+    .from("bookings_unified")
+    .insert({
+      vertical: input.vertical,
+      provider_id: prov?.id ?? null,
+      inventory_item_id: input.inventory_item_id ?? null,
+      external_reference: input.external_reference ?? null,
+      amount: input.amount,
+      currency: input.currency ?? "USD",
+      customer_name: input.customer_name,
+      customer_email: input.customer_email,
+      customer_phone: input.customer_phone ?? null,
+      payload: input.payload,
+      status: "pending",
+    })
+    .select("id, status, created_at")
+    .single();
+  if (error) return { ok: false as const, error: error.message };
+  return { ok: true as const, booking: row };
 }
 
 /* ------------------------------ CATALOG ---------------------------- */
 /**
- * Live catalog of supported countries/cities per vertical.
- * Per integration brief: never hard-code countries — fetch from /catalog.
+ * Returns the list of supported countries/cities derived from crawled
+ * inventory + a small built-in default. Used by the SearchTabsForms /
+ * CountryAutocomplete components — kept loose so they always render.
  */
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
   try {
-    const res: any = await call("/catalog", null, "GET");
-    return { data: res?.data ?? res ?? {}, error: null as string | null };
-  } catch (err: any) {
-    const message = friendlyError(err?.status ?? null, err?.message ?? "");
-    return { data: {}, error: message };
+    const { data: rows } = await supabaseAdmin
+      .from("inventory_items")
+      .select("destination, origin")
+      .eq("is_active", true)
+      .limit(1000);
+    const set = new Set<string>();
+    (rows ?? []).forEach((r: any) => {
+      if (r.destination) set.add(String(r.destination));
+      if (r.origin) set.add(String(r.origin));
+    });
+    const countries = Array.from(set)
+      .filter(Boolean)
+      .sort()
+      .map((name) => ({ name }));
+    return ok({ countries, cities: countries });
+  } catch {
+    return ok({ countries: [], cities: [] });
   }
 });
 
-/* ----------------------------- FLIGHTS ----------------------------- */
+/* ----------------------------- FLIGHTS (Duffel) -------------------- */
+
+const FlightSearchInput = z
+  .object({
+    origin: z.string().optional(),
+    destination: z.string().optional(),
+    departure_date: z.string().optional(),
+    return_date: z.string().optional(),
+    segments: z
+      .array(
+        z.object({
+          origin: z.string(),
+          destination: z.string(),
+          departure_date: z.string(),
+        }),
+      )
+      .optional(),
+    adults: z.number().int().min(1).max(9),
+    children: z.number().int().min(0).max(9).optional(),
+    infants: z.number().int().min(0).max(9).optional(),
+    cabin: z.string().optional(),
+  })
+  .passthrough();
+
+function normalizeCabin(c?: string): "economy" | "premium_economy" | "business" | "first" {
+  const v = (c || "economy").toLowerCase();
+  if (v === "premium_economy" || v === "premium economy") return "premium_economy";
+  if (v === "business") return "business";
+  if (v === "first") return "first";
+  return "economy";
+}
+
+async function runDuffelSearch(input: z.infer<typeof FlightSearchInput>) {
+  // Duffel expects a single slice pair; multi-city falls back to first segment.
+  const seg0 = input.segments?.[0];
+  const origin = input.origin || seg0?.origin || "";
+  const destination = input.destination || seg0?.destination || "";
+  const departure_date = input.departure_date || seg0?.departure_date || "";
+  if (!origin || !destination || !departure_date) {
+    return { offers: [] as any[], error: "Please complete origin, destination and date." };
+  }
+  const res: any = await duffelSearchFlights({
+    data: {
+      origin,
+      destination,
+      departure_date,
+      return_date: input.return_date,
+      adults: input.adults,
+      children: input.children ?? 0,
+      infants: input.infants ?? 0,
+      cabin: normalizeCabin(input.cabin),
+    },
+  });
+  if (!res?.ok) return { offers: [], error: res?.error || "Flights unavailable." };
+  return { offers: res.offers ?? [], error: null as string | null };
+}
 
 /**
- * Start a flight search. Returns a `search_id` quickly so the client can
- * poll `pollFlightSearch` instead of holding the edge worker open past
- * the 25s upstream timeout.
+ * The UI calls startFlightSearch -> pollFlightSearch. Duffel returns offers
+ * inline, so we resolve immediately and return inline offers with no
+ * search_id (the poll path is then skipped by the UI).
  */
 export const startFlightSearch = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: {
-      origin?: string;
-      destination?: string;
-      departure_date?: string;
-      return_date?: string;
-      segments?: Array<{ origin: string; destination: string; departure_date: string }>;
-      adults: number;
-      children?: number;
-      infants?: number;
-      cabin?: string;
-    }) => input,
-  )
+  .inputValidator((d: unknown) => FlightSearchInput.parse(d))
   .handler(async ({ data }) => {
-    // Reshape to Travsify spec: passengers object + cabin_class.
-    const payload: Record<string, unknown> = {
-      origin: data.origin,
-      destination: data.destination,
-      departure_date: data.departure_date,
-      return_date: data.return_date || undefined,
-      segments: data.segments,
-      passengers: {
-        adults: Math.max(1, Number(data.adults) || 1),
-        children: Number(data.children) || 0,
-        infants: Number(data.infants) || 0,
-      },
-      cabin_class: data.cabin || "economy",
-    };
-    try {
-      const res: any = await call("/flights/search", payload);
-      const inline = normalizeData(res?.data ?? res ?? {});
-      const search_id: string | undefined =
-        inline.search_id || inline.id || res?.search_id || res?.id;
-      const hasInlineOffers = Array.isArray(inline.offers) && inline.offers.length > 0;
-      if (!search_id && !hasInlineOffers) {
-        return { search_id: null, data: { offers: [] }, error: "No results returned." };
-      }
-      return { search_id: search_id ?? null, data: inline, error: null };
-    } catch (err: any) {
-      const status: number | null = err?.status ?? null;
-      const requestId: string | null = err?.requestId ?? null;
-      const message = friendlyError(status, err?.message ?? "");
-      console.error("Flight search start failed", { status, requestId, raw: err?.message });
-      return { search_id: null, data: { offers: [] }, error: message, requestId };
-    }
+    const r = await runDuffelSearch(data);
+    if (r.error) return { search_id: null, data: { offers: [] }, error: r.error };
+    return { search_id: null, data: { offers: r.offers }, error: null };
   });
 
 export const pollFlightSearch = createServerFn({ method: "POST" })
-  .inputValidator((input: { search_id: string }) => input)
-  .handler(async ({ data }) => {
-    try {
-      const res: any = await call(`/flights/search/${encodeURIComponent(data.search_id)}`, null, "GET");
-      const payload = normalizeData(res?.data ?? res ?? {});
-      const rawStatus: string =
-        payload.status || res?.status || (Array.isArray(payload.offers) ? "completed" : "processing");
-      // Travsify uses "succeeded"/"complete"/"done" — normalize to "completed".
-      // "queued"/"running"/"in_progress" -> "processing". "error"/"cancelled" -> "failed".
-      const s = String(rawStatus).toLowerCase();
-      const status =
-        ["completed", "complete", "succeeded", "success", "done", "finished"].includes(s)
-          ? "completed"
-          : ["failed", "error", "errored", "cancelled", "canceled", "expired"].includes(s)
-            ? "failed"
-            : "processing";
-      return { status, data: payload, error: null };
-    } catch (err: any) {
-      const status: number | null = err?.status ?? null;
-      const requestId: string | null = err?.requestId ?? null;
-      const message = friendlyError(status, err?.message ?? "");
-      console.error("Flight search poll failed", { status, requestId, raw: err?.message });
-      return { status: "failed", data: { offers: [] }, error: message, requestId };
-    }
+  .inputValidator((d: unknown) => z.object({ search_id: z.string() }).parse(d))
+  .handler(async () => {
+    // No-op: results were returned inline by startFlightSearch.
+    return { status: "completed" as const, data: { offers: [] }, error: null };
   });
 
 /** @deprecated Prefer startFlightSearch + pollFlightSearch. */
 export const searchFlights = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: {
-      origin?: string;
-      destination?: string;
-      departure_date?: string;
-      return_date?: string;
-      segments?: Array<{ origin: string; destination: string; departure_date: string }>;
-      adults: number;
-      children?: number;
-      infants?: number;
-      cabin?: string;
-    }) => input,
-  )
-  .handler(async ({ data }) =>
-    searchCall("/flights/search", {
-      origin: data.origin,
-      destination: data.destination,
-      departure_date: data.departure_date,
-      return_date: data.return_date || undefined,
-      segments: data.segments,
-      passengers: {
-        adults: Math.max(1, Number(data.adults) || 1),
-        children: Number(data.children) || 0,
-        infants: Number(data.infants) || 0,
-      },
-      cabin_class: data.cabin || "economy",
-    }),
-  );
+  .inputValidator((d: unknown) => FlightSearchInput.parse(d))
+  .handler(async ({ data }) => {
+    const r = await runDuffelSearch(data);
+    if (r.error) return fail(r.error, { offers: [] });
+    return ok({ offers: r.offers });
+  });
 
 export const bookFlight = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { offer_id: string; passengers: Array<Record<string, string>> }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          offer_id: z.string(),
+          passengers: z.array(z.record(z.string(), z.any())).min(1),
+        })
+        .parse(d),
   )
-  .handler(async ({ data }) => call("/flights/orders", data));
+  .handler(async ({ data }) => {
+    // Re-fetch the offer to lock price + capture as a lead. Manual fulfillment.
+    const offerRes: any = await duffelGetOffer({ data: { offer_id: data.offer_id } });
+    const offer = offerRes?.offer;
+    const lead = data.passengers[0] || {};
+    const amount = Number(offer?.total_amount ?? 0);
+    const currency = offer?.total_currency ?? "USD";
+    const r = await createLead({
+      vertical: "flights",
+      provider_slug: "duffel",
+      external_reference: data.offer_id,
+      amount,
+      currency,
+      customer_name: `${lead.firstName ?? lead.given_name ?? ""} ${lead.lastName ?? lead.family_name ?? ""}`.trim() || "Guest",
+      customer_email: lead.email ?? "",
+      customer_phone: lead.phone,
+      payload: { offer_id: data.offer_id, passengers: data.passengers, offer },
+    });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. Our agent will contact you to confirm." });
+  });
 
-/* ------------------------------ HOTELS ----------------------------- */
+/* ------------------------------ HOTELS (LiteAPI) ------------------- */
 
 export const searchHotels = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      country_code: string;
-      checkin: string;
-      checkout: string;
-      adults: number;
-      children?: number;
-      currency?: string;
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          country_code: z.string().optional(),
+          city: z.string().optional(),
+          checkin: z.string(),
+          checkout: z.string(),
+          adults: z.number(),
+          children: z.number().optional(),
+          rooms: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) => searchCall("/hotels/search", data));
+  .handler(async ({ data }) => {
+    const res: any = await liteSearchHotels({
+      data: {
+        cityName: data.city,
+        countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
+        checkin: data.checkin,
+        checkout: data.checkout,
+        adults: Math.max(1, Number(data.adults) || 1),
+        children: [],
+        rooms: Math.max(1, Number(data.rooms) || 1),
+        currency: data.currency || "USD",
+        guestNationality: "US",
+      },
+    });
+    if (!res?.ok) return fail(res?.error || "Hotels unavailable.", { hotels: [] });
+    return ok({ hotels: res.hotels ?? [] });
+  });
 
 export const bookHotel = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      offer_id: string;
-      holder: { firstName: string; lastName: string; email: string; phone?: string };
-      guests: Array<{ firstName: string; lastName: string }>;
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          offer_id: z.string(),
+          holder: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            phone: z.string().optional(),
+          }),
+          guests: z.array(z.object({ firstName: z.string(), lastName: z.string() })).optional(),
+          amount: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
   .handler(async ({ data }) => {
-    // Map UI shape -> Travsify guest object. Travsify requires a phone number
-    // on the lead guest; fall back to a placeholder if the UI didn't collect one.
-    const phone = data.holder.phone?.trim() || "+10000000000";
-    return call("/hotels/bookings", {
-      offer_id: data.offer_id,
-      guest: {
-        first_name: data.holder.firstName,
-        last_name: data.holder.lastName,
-        email: data.holder.email,
-        phone,
-      },
-      additional_guests: (data.guests || []).map((g) => ({
-        first_name: g.firstName,
-        last_name: g.lastName,
-      })),
+    const r = await createLead({
+      vertical: "stays",
+      provider_slug: "liteapi",
+      external_reference: data.offer_id,
+      amount: Number(data.amount ?? 0),
+      currency: data.currency ?? "USD",
+      customer_name: `${data.holder.firstName} ${data.holder.lastName}`.trim(),
+      customer_email: data.holder.email,
+      customer_phone: data.holder.phone,
+      payload: { offer_id: data.offer_id, holder: data.holder, guests: data.guests ?? [] },
     });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. Our agent will confirm your stay shortly." });
   });
 
-/* ------------------------------ TOURS ------------------------------ */
+/* ------------------------------ TOURS (crawled) -------------------- */
 
 export const searchTours = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { destination: string; date: string; participants: number }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          destination: z.string(),
+          date: z.string().optional(),
+          participants: z.number().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) =>
-    searchCall("/tours/search", {
-      // Travsify accepts query/destination/city/keyword/q — send `query` (canonical).
-      query: data.destination,
-      date_from: data.date || undefined,
-      date_to: data.date || undefined,
-      participants: data.participants,
-    }),
-  );
+  .handler(async ({ data }) => {
+    const r = await fetchInventory("tours", { destination: data.destination });
+    if (r.error) return fail(r.error, { tours: [] });
+    return ok({ tours: r.items });
+  });
 
 export const bookTour = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      tour_id: string;
-      participants: Array<{ firstName: string; lastName: string; email: string }>;
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          tour_id: z.string(),
+          participants: z.array(
+            z.object({ firstName: z.string(), lastName: z.string(), email: z.string().email() }),
+          ),
+          amount: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
   .handler(async ({ data }) => {
     const lead = data.participants[0];
-    return call("/tours/bookings", {
-      offer_id: data.tour_id,
-      guest: lead
-        ? { first_name: lead.firstName, last_name: lead.lastName, email: lead.email }
-        : undefined,
-      participants: data.participants.map((p) => ({
-        first_name: p.firstName,
-        last_name: p.lastName,
-        email: p.email,
-      })),
+    const r = await createLead({
+      vertical: "tours",
+      provider_slug: "getyourguide",
+      inventory_item_id: data.tour_id,
+      amount: Number(data.amount ?? 0),
+      currency: data.currency ?? "USD",
+      customer_name: `${lead.firstName} ${lead.lastName}`.trim(),
+      customer_email: lead.email,
+      payload: { tour_id: data.tour_id, participants: data.participants },
     });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. Our agent will confirm your tour shortly." });
   });
 
-/* ------------------------------ VISAS ------------------------------ */
+/* ------------------------------ VISAS (crawled) -------------------- */
 
 export const searchVisas = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: { nationality: string; destination: string; purpose: string }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          nationality: z.string(),
+          destination: z.string(),
+          purpose: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) => searchCall("/visas/search", data));
+  .handler(async ({ data }) => {
+    const r = await fetchInventory("visas", { destination: data.destination, origin: data.nationality });
+    if (r.error) return fail(r.error, { visas: [] });
+    return ok({ visas: r.items });
+  });
 
 export const bookVisa = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      visa_id: string;
-      applicant: { firstName: string; lastName: string; email: string; passport: string };
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          visa_id: z.string(),
+          applicant: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            passport: z.string(),
+            phone: z.string().optional(),
+          }),
+          amount: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) =>
-    call("/visas/bookings", {
-      offer_id: data.visa_id,
-      guest: {
-        first_name: data.applicant.firstName,
-        last_name: data.applicant.lastName,
-        email: data.applicant.email,
-        passport_number: data.applicant.passport,
-      },
-    }),
-  );
+  .handler(async ({ data }) => {
+    const r = await createLead({
+      vertical: "visas",
+      provider_slug: "atlys",
+      inventory_item_id: data.visa_id,
+      amount: Number(data.amount ?? 0),
+      currency: data.currency ?? "USD",
+      customer_name: `${data.applicant.firstName} ${data.applicant.lastName}`.trim(),
+      customer_email: data.applicant.email,
+      customer_phone: data.applicant.phone,
+      payload: { visa_id: data.visa_id, applicant: data.applicant },
+    });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. Our visa specialist will reach out shortly." });
+  });
 
-/* --------------------------- INSURANCE ----------------------------- */
+/* --------------------------- INSURANCE (crawled) ------------------- */
 
 export const searchInsurance = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      nationality: string;
-      destination: string;
-      start_date: string;
-      end_date: string;
-      travelers: number;
-      ages?: number[];
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          nationality: z.string(),
+          destination: z.string(),
+          start_date: z.string().optional(),
+          end_date: z.string().optional(),
+          travelers: z.number().optional(),
+          ages: z.array(z.number()).optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
   .handler(async ({ data }) => {
-    const count = Math.max(1, Number(data.travelers) || 1);
-    const ages =
-      data.ages && data.ages.length === count
-        ? data.ages
-        : Array.from({ length: count }, () => 30);
-    return searchCall("/insurance/search", {
-      nationality: data.nationality,
-      destination: data.destination,
-      start_date: data.start_date,
-      end_date: data.end_date,
-      travelers: ages.map((age) => ({ age })),
-    });
+    const r = await fetchInventory("insurance", { destination: data.destination });
+    if (r.error) return fail(r.error, { plans: [] });
+    return ok({ plans: r.items });
   });
 
 export const bookInsurance = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      plan_id: string;
-      holder: { firstName: string; lastName: string; email: string; born_on: string };
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          plan_id: z.string(),
+          holder: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            born_on: z.string(),
+            phone: z.string().optional(),
+          }),
+          amount: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) =>
-    call("/insurance/bookings", {
-      offer_id: data.plan_id,
-      guest: {
-        first_name: data.holder.firstName,
-        last_name: data.holder.lastName,
-        email: data.holder.email,
-        date_of_birth: data.holder.born_on,
-      },
-    }),
-  );
+  .handler(async ({ data }) => {
+    const r = await createLead({
+      vertical: "insurance",
+      provider_slug: "safetywing",
+      inventory_item_id: data.plan_id,
+      amount: Number(data.amount ?? 0),
+      currency: data.currency ?? "USD",
+      customer_name: `${data.holder.firstName} ${data.holder.lastName}`.trim(),
+      customer_email: data.holder.email,
+      customer_phone: data.holder.phone,
+      payload: { plan_id: data.plan_id, holder: data.holder },
+    });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. We'll send the policy details shortly." });
+  });
 
-/* ---------------------------- TRANSFERS ---------------------------- */
+/* ---------------------------- TRANSFERS (crawled) ------------------ */
 
 export const searchTransfers = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      pickup: string;
-      drop: string;
-      date: string;
-      time: string;
-      passengers?: number;
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          pickup: z.string(),
+          drop: z.string(),
+          date: z.string().optional(),
+          time: z.string().optional(),
+          passengers: z.number().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) =>
-    searchCall("/transfers/search", {
-      pickup_address: data.pickup,
-      dropoff_address: data.drop,
-      pickup_datetime: `${data.date}T${data.time || "12:00"}:00`,
-      num_passengers: data.passengers ?? 2,
-    }),
-  );
+  .handler(async ({ data }) => {
+    const r = await fetchInventory("pickups", { origin: data.pickup, destination: data.drop });
+    if (r.error) return fail(r.error, { vehicles: [] });
+    return ok({ vehicles: r.items });
+  });
 
 export const bookTransfer = createServerFn({ method: "POST" })
   .inputValidator(
-    (input: {
-      vehicle_id: string;
-      passenger: { firstName: string; lastName: string; email: string; phone?: string };
-    }) => input,
+    (d: unknown) =>
+      z
+        .object({
+          vehicle_id: z.string(),
+          passenger: z.object({
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            phone: z.string().optional(),
+          }),
+          amount: z.number().optional(),
+          currency: z.string().optional(),
+        })
+        .passthrough()
+        .parse(d),
   )
-  .handler(async ({ data }) =>
-    call("/transfers/bookings", {
-      offer_id: data.vehicle_id,
-      guest: {
-        first_name: data.passenger.firstName,
-        last_name: data.passenger.lastName,
-        email: data.passenger.email,
-        phone: data.passenger.phone,
-      },
-    }),
-  );
+  .handler(async ({ data }) => {
+    const r = await createLead({
+      vertical: "pickups",
+      provider_slug: "mozio",
+      inventory_item_id: data.vehicle_id,
+      amount: Number(data.amount ?? 0),
+      currency: data.currency ?? "USD",
+      customer_name: `${data.passenger.firstName} ${data.passenger.lastName}`.trim(),
+      customer_email: data.passenger.email,
+      customer_phone: data.passenger.phone,
+      payload: { vehicle_id: data.vehicle_id, passenger: data.passenger },
+    });
+    if (!r.ok) return fail(r.error);
+    return ok({ booking: r.booking, message: "Lead captured. Your driver details will be sent shortly." });
+  });
 
-/* ----------------------------- RENTALS ----------------------------- */
+/* ----------------------------- RENTALS (stub) ---------------------- */
 
 export const searchRentals = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: { location: string; pickup_date: string; dropoff_date: string }) => input,
-  )
-  .handler(async ({ data }) => searchCall("/rentals/search", data));
+  .inputValidator((d: unknown) => z.object({}).passthrough().parse(d))
+  .handler(async () => ok({ rentals: [] }));
 
 export const bookRental = createServerFn({ method: "POST" })
-  .inputValidator(
-    (input: {
-      rental_id: string;
-      driver: { firstName: string; lastName: string; email: string };
-    }) => input,
-  )
-  .handler(async ({ data }) =>
-    call("/rentals/bookings", {
-      offer_id: data.rental_id,
-      guest: {
-        first_name: data.driver.firstName,
-        last_name: data.driver.lastName,
-        email: data.driver.email,
-      },
-    }),
-  );
+  .inputValidator((d: unknown) => z.object({}).passthrough().parse(d))
+  .handler(async () => fail("Car rentals are not yet available. Please check back soon."));
