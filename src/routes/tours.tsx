@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useChildMatches } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
@@ -40,6 +40,8 @@ export const Route = createFileRoute("/tours")({
 });
 
 function ToursPage() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
   const { tours, query, error } = Route.useLoaderData() as any;
   const hasSearched = !!query.date;
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
