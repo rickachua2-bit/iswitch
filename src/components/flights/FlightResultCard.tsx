@@ -159,11 +159,12 @@ export function FlightResultCard({ offer }: { offer: any }) {
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {fares.map((f: any) => (
-              <FareCard key={f.id} fare={f} formatPrice={formatPrice} onPick={() => selectFare(f.id)} />
+              <FareCard key={f.id} fare={f} formatPrice={formatPrice} onPick={() => selectFare(f.id)} loading={!!fareLoadingId} />
             ))}
           </div>
         </div>
       )}
+      <ErrorToast message={selectError} onDismiss={clearError} />
 
       {/* ---- show flight details (segment-level) ---- */}
       {showDetails && (
@@ -391,10 +392,12 @@ function FareCard({
   fare,
   onPick,
   formatPrice,
+  loading,
 }: {
   fare: ReturnType<typeof buildFares>[number];
   onPick: () => void;
   formatPrice: (amount: number, currency: string) => string;
+  loading?: boolean;
 }) {
   return (
     <div
@@ -427,9 +430,14 @@ function FareCard({
 
       <button
         onClick={onPick}
-        className="mt-auto inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary-glow"
+        disabled={loading}
+        className="mt-auto inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary-glow disabled:cursor-wait disabled:opacity-70"
       >
-        Book {fare.name} <ChevronRight className="h-3.5 w-3.5" />
+        {loading ? (
+          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening…</>
+        ) : (
+          <>Book {fare.name} <ChevronRight className="h-3.5 w-3.5" /></>
+        )}
       </button>
     </div>
   );
