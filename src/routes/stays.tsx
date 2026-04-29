@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useSelectOffer } from "@/lib/use-select-offer";
 import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Header } from "@/components/Header";
@@ -123,6 +123,8 @@ function nightsBetween(a?: string, b?: string) {
 }
 
 function StaysPage() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
   const { hotels, query, error } = Route.useLoaderData() as any;
   const formatPrice = usePriceFormat();
   const hasSearched = !!(query.checkIn && query.checkOut);
