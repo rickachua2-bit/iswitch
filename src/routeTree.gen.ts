@@ -44,6 +44,7 @@ import { Route as AdminMarkupsRouteImport } from './routes/admin.markups'
 import { Route as AdminCurrenciesRouteImport } from './routes/admin.currencies'
 import { Route as AdminConsultationsRouteImport } from './routes/admin.consultations'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
+import { Route as AdminApiProvidersRouteImport } from './routes/admin.api-providers'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
 
 const VisasRoute = VisasRouteImport.update({
@@ -221,6 +222,11 @@ const AdminBookingsRoute = AdminBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminApiProvidersRoute = AdminApiProvidersRouteImport.update({
+  id: '/api-providers',
+  path: '/api-providers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAgentsRoute = AdminAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/tours': typeof ToursRouteWithChildren
   '/visas': typeof VisasRouteWithChildren
   '/admin/agents': typeof AdminAgentsRoute
+  '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/admin/agents'
+    | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
     | '/admin/currencies'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/admin/agents'
+    | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
     | '/admin/currencies'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/tours'
     | '/visas'
     | '/admin/agents'
+    | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
     | '/admin/currencies'
@@ -720,6 +732,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/api-providers': {
+      id: '/admin/api-providers'
+      path: '/api-providers'
+      fullPath: '/admin/api-providers'
+      preLoaderRoute: typeof AdminApiProvidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/agents': {
       id: '/admin/agents'
       path: '/agents'
@@ -732,6 +751,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAgentsRoute: typeof AdminAgentsRoute
+  AdminApiProvidersRoute: typeof AdminApiProvidersRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminConsultationsRoute: typeof AdminConsultationsRoute
   AdminCurrenciesRoute: typeof AdminCurrenciesRoute
@@ -744,6 +764,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAgentsRoute: AdminAgentsRoute,
+  AdminApiProvidersRoute: AdminApiProvidersRoute,
   AdminBookingsRoute: AdminBookingsRoute,
   AdminConsultationsRoute: AdminConsultationsRoute,
   AdminCurrenciesRoute: AdminCurrenciesRoute,
@@ -862,12 +883,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
