@@ -52,6 +52,15 @@ function ApiProvidersPage() {
 
 // ===================== LIST VIEW =====================
 function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
+  const listProviders = useServerFn(listProvidersFn);
+  const getApiProviderRouting = useServerFn(getApiProviderRoutingFn);
+  const updateApiProviderRouting = useServerFn(updateApiProviderRoutingFn);
+  const updateProvider = useServerFn(updateProviderFn);
+  const deleteProvider = useServerFn(deleteProviderFn);
+  const testProvider = useServerFn(testProviderFn);
+  const triggerCrawl = useServerFn(triggerCrawlFn);
+  const createProvider = useServerFn(createProviderFn);
+
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [routing, setRouting] = useState<Record<Vertical, "default" | "travsify">>({
@@ -67,9 +76,11 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   async function refresh() {
     const [a, b] = await Promise.all([listProviders(), getApiProviderRouting()]);
     if (a.ok) setProviders(a.providers as Provider[]);
-    setRouting(b.routing as any);
-    setRoutingLabels(b.providers);
-    setTravsifyConfigured(b.travsifyConfigured);
+    if (b?.routing) {
+      setRouting(b.routing as any);
+      setRoutingLabels(b.providers ?? {});
+      setTravsifyConfigured(!!b.travsifyConfigured);
+    }
     setLoading(false);
   }
   useEffect(() => { void refresh(); }, []);
