@@ -196,11 +196,11 @@ function HotelBookingPage() {
           </div>
 
           {/* Stay details */}
-          <SectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${guests}`}>
+          <SectionCard title="Your stay" subtitle={`${nights} night${nights > 1 ? "s" : ""} · ${effGuests}`}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <Stat icon={CalendarIcon} label="Check-in" value={checkIn || "—"} sub="From 3:00 PM" />
-              <Stat icon={CalendarIcon} label="Check-out" value={checkOut || "—"} sub="Until 12:00 PM" />
-              <Stat icon={Users} label="Guests" value={guests} sub="1 room" />
+              <Stat icon={CalendarIcon} label="Check-in" value={effCheckIn || "—"} sub="From 3:00 PM" />
+              <Stat icon={CalendarIcon} label="Check-out" value={effCheckOut || "—"} sub="Until 12:00 PM" />
+              <Stat icon={Users} label="Guests" value={effGuests} sub="1 room" />
             </div>
             <div className="mt-4 rounded-lg bg-secondary/60 p-3">
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -249,7 +249,7 @@ function HotelBookingPage() {
               <div className="text-xs text-muted-foreground">Your booking</div>
               <div className="mt-1 text-base font-extrabold text-foreground">{hotel.name}</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {checkIn} → {checkOut}
+                {effCheckIn} → {effCheckOut}
               </div>
               <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
                 <Row label={`${formatPrice(pricePerNight, currency)} × ${nights} night${nights > 1 ? "s" : ""}`} value={formatPrice(subtotal, currency)} />
