@@ -13,8 +13,13 @@ export const triggerCrawl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ slug: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin((context as any).userId);
-    return runCrawl(data.slug, (context as any).userId);
+    try {
+      await assertAdmin((context as any).userId);
+      return await runCrawl(data.slug, (context as any).userId);
+    } catch (e: any) {
+      console.error("triggerCrawl failed:", e);
+      return { status: "failed" as const, error: e?.message ?? "Crawl failed", items_upserted: 0 };
+    }
   });
 
 /**
@@ -25,10 +30,15 @@ export const triggerCrawl = createServerFn({ method: "POST" })
 export const seedAllInventory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin((context as any).userId);
-    const results = await runAllCrawls((context as any).userId);
-    const total = results.reduce((s, r) => s + (r.items_upserted ?? 0), 0);
-    return { ok: true as const, total, results };
+    try {
+      await assertAdmin((context as any).userId);
+      const results = await runAllCrawls((context as any).userId);
+      const total = results.reduce((s, r) => s + (r.items_upserted ?? 0), 0);
+      return { ok: true as const, total, results };
+    } catch (e: any) {
+      console.error("seedAllInventory failed:", e);
+      return { ok: false as const, total: 0, results: [], error: e?.message ?? "Seeding failed" };
+    }
   });
 
 export const listCrawlerSources = createServerFn({ method: "GET" })
