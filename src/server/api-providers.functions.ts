@@ -59,7 +59,7 @@ export const listProviders = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
       .from("providers")
-      .select("id, slug, name, vertical, kind, base_url, enabled, notes, total_calls, total_errors, last_ok_at, last_error_at, last_error, created_at, updated_at")
+      .select("id, slug, name, vertical, kind, base_url, enabled, mode, notes, total_calls, total_errors, last_ok_at, last_error_at, last_error, created_at, updated_at")
       .order("vertical", { ascending: true })
       .order("name", { ascending: true });
     if (error) return { ok: false as const, error: error.message, providers: [] as any[] };
