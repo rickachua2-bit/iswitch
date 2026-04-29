@@ -116,10 +116,17 @@ const PROMO_TILES = [
   { tag: "New", title: "Member rewards", subtitle: "Up to 20% bonus on app" },
 ];
 
+function nightsBetween(a?: string, b?: string) {
+  if (!a || !b) return 0;
+  const ms = new Date(b).getTime() - new Date(a).getTime();
+  return Math.max(0, Math.round(ms / 86_400_000));
+}
+
 function StaysPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
   const formatPrice = usePriceFormat();
   const hasSearched = !!(query.checkIn && query.checkOut);
+  const nights = nightsBetween(query.checkIn, query.checkOut);
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
   function goToBooking(h: any) {
@@ -129,7 +136,7 @@ function StaysPage() {
       sessionPrefix: "hotel",
       cachePrefix: "hotel",
       id,
-      payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, destination: query.destination },
+      payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, destination: query.destination, nights },
       to: "/stays/book",
       search: {
         destination: query.destination,
