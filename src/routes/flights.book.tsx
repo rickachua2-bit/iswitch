@@ -249,7 +249,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="booking-form space-y-4">
       <FlightSummaryCard offer={offer} fare={fare} />
 
       <FareAndTransitRules offer={offer} fare={fare} />
@@ -257,13 +257,13 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
       <BookingSectionCard
         title="Passenger details"
         subtitle="Enter the lead traveller's information exactly as on their passport."
+        icon={User}
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="Title">
+          <Field label="Title" icon={BadgeCheck}>
             <select
               value={pax.title}
               onChange={(e) => update("title", e.target.value)}
-              className="form-input"
             >
               <option value="mr">Mr</option>
               <option value="mrs">Mrs</option>
@@ -271,48 +271,43 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
               <option value="mstr">Master</option>
             </select>
           </Field>
-          <Field label="Gender">
+          <Field label="Gender" icon={VenetianMask}>
             <select
               value={pax.gender}
               onChange={(e) => update("gender", e.target.value)}
-              className="form-input"
             >
               <option value="m">Male</option>
               <option value="f">Female</option>
             </select>
           </Field>
-          <Field label="First name (given names)" required>
+          <Field label="First name (given names)" required icon={User}>
             <input
               required
               value={pax.given_name}
               onChange={(e) => update("given_name", e.target.value)}
-              className="form-input"
               placeholder="As on passport"
             />
           </Field>
-          <Field label="Last name (surname)" required>
+          <Field label="Last name (surname)" required icon={User}>
             <input
               required
               value={pax.family_name}
               onChange={(e) => update("family_name", e.target.value)}
-              className="form-input"
               placeholder="As on passport"
             />
           </Field>
-          <Field label="Date of birth" required>
+          <Field label="Date of birth" required icon={CalendarIcon}>
             <input
               required
               type="date"
               value={pax.born_on}
               onChange={(e) => update("born_on", e.target.value)}
-              className="form-input"
             />
           </Field>
-          <Field label="Nationality">
+          <Field label="Nationality" icon={Globe2}>
             <input
               value={pax.nationality}
               onChange={(e) => update("nationality", e.target.value)}
-              className="form-input"
               placeholder="e.g. Nigerian"
             />
           </Field>
@@ -322,24 +317,23 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
       <BookingSectionCard
         title="Contact information"
         subtitle="We'll send your e-ticket and any flight updates here."
+        icon={Mail}
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="Email" required>
+          <Field label="Email" required icon={Mail}>
             <input
               required
               type="email"
               value={pax.email}
               onChange={(e) => update("email", e.target.value)}
-              className="form-input"
               placeholder="you@example.com"
             />
           </Field>
-          <Field label="Phone number" required>
+          <Field label="Phone number" required icon={Phone}>
             <input
               required
               value={pax.phone_number}
               onChange={(e) => update("phone_number", e.target.value)}
-              className="form-input"
               placeholder="+2348012345678"
             />
           </Field>
