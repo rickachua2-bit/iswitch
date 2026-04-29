@@ -121,6 +121,66 @@ function liteApiHeaders() {
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
+/**
+ * Resolve a free-form destination string ("Abidjan, Côte d'Ivoire", "Paris",
+ * "Lagos, Nigeria", "FR") into a { cityName, countryCode } pair LiteAPI accepts.
+ * Uses LiteAPI's /data/countries (cached for the lifetime of the worker) to
+ * recognise any country by name — replaces a hardcoded ~25-city map that
+ * silently fell back to "AE" for everything unknown.
+ */
+let _countryCache: { code: string; name: string; lc: string }[] | null = null;
+async function getCountryList() {
+  if (_countryCache) return _countryCache;
+  try {
+    const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/data/countries`, {
+      method: "GET", headers: liteApiHeaders(),
+    });
+    if (status >= 400) return [];
+    const json = JSON.parse(text);
+    _countryCache = (json?.data ?? [])
+      .filter((c: any) => c?.code && c?.name)
+      .map((c: any) => ({ code: String(c.code).toUpperCase(), name: String(c.name), lc: String(c.name).toLowerCase() }));
+    return _countryCache;
+  } catch {
+    return [];
+  }
+}
+
+const COUNTRY_ALIAS: Record<string, string> = {
+  "uae": "AE", "u.a.e.": "AE", "usa": "US", "u.s.a.": "US", "u.s.": "US",
+  "uk": "GB", "u.k.": "GB", "great britain": "GB", "england": "GB",
+  "ivory coast": "CI", "cote d'ivoire": "CI", "côte d'ivoire": "CI",
+  "south korea": "KR", "north korea": "KP", "russia": "RU", "czech republic": "CZ",
+  "vietnam": "VN", "iran": "IR", "syria": "SY", "venezuela": "VE", "bolivia": "BO",
+  "tanzania": "TZ", "moldova": "MD",
+};
+
+async function resolveDestination(raw: string | undefined | null): Promise<{ cityName?: string; countryCode?: string }> {
+  if (!raw) return {};
+  const cleaned = String(raw).trim();
+  if (!cleaned) return {};
+  // Already a 2-letter country code
+  if (/^[a-z]{2}$/i.test(cleaned)) return { countryCode: cleaned.toUpperCase() };
+
+  const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
+  const cityToken = parts[0];
+  // Try every token (right-to-left) as a country first.
+  const countries = (await getCountryList()) ?? [];
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const tok = parts[i].toLowerCase().replace(/\.+$/g, "");
+    if (COUNTRY_ALIAS[tok]) {
+      return { cityName: i === 0 ? undefined : cityToken, countryCode: COUNTRY_ALIAS[tok] };
+    }
+    const hit = countries.find((c) => c.lc === tok);
+    if (hit) return { cityName: i === 0 ? undefined : cityToken, countryCode: hit.code };
+    // Loose contains match (handles "République de Côte d'Ivoire" vs "Côte d'Ivoire")
+    const loose = countries.find((c) => c.lc.includes(tok) && tok.length >= 4);
+    if (loose) return { cityName: i === 0 ? undefined : cityToken, countryCode: loose.code };
+  }
+  // No country recognised — pass cityName through; LiteAPI can match on city alone.
+  return { cityName: cityToken };
+}
+
 function iata(s: string): string {
   const m = s.match(/\(([A-Z]{3})\)/);
   return (m ? m[1] : s).toUpperCase().trim();
@@ -191,6 +251,32 @@ async function getDuffelOffer(offer_id: string) {
   }
 }
 
+/** Fetch metadata (name, images, address, stars, rating) for a batch of LiteAPI hotelIds. */
+async function fetchLiteHotelMeta(hotelIds: string[]): Promise<Map<string, any>> {
+  const out = new Map<string, any>();
+  if (!hotelIds.length) return out;
+  // LiteAPI accepts comma-separated hotelIds. Cap URL length by chunking.
+  const CHUNK = 50;
+  for (let i = 0; i < hotelIds.length; i += CHUNK) {
+    const ids = hotelIds.slice(i, i + CHUNK).join(",");
+    try {
+      const { status, text } = await timedFetch(
+        "liteapi",
+        `${LITEAPI_BASE}/data/hotels?hotelIds=${encodeURIComponent(ids)}&limit=${CHUNK}`,
+        { method: "GET", headers: liteApiHeaders() },
+      );
+      if (status >= 400) continue;
+      const json = JSON.parse(text);
+      for (const h of json?.data ?? []) {
+        if (h?.id) out.set(h.id, h);
+      }
+    } catch {
+      // best-effort enrichment; rate row still renders without it
+    }
+  }
+  return out;
+}
+
 async function searchLiteHotels(input: {
   cityName?: string;
   countryCode?: string;
@@ -219,10 +305,23 @@ async function searchLiteHotels(input: {
     });
     if (status >= 400) return { ok: false as const, error: friendlyError(status, text), hotels: [] };
     const json = JSON.parse(text);
-    const hotels = (json?.data ?? []).slice(0, 50).map((h: any) => {
+    const rateRows = (json?.data ?? []).slice(0, 50);
+    const ids = rateRows.map((h: any) => h.hotelId).filter(Boolean);
+    const meta = await fetchLiteHotelMeta(ids);
+
+    const hotels = rateRows.map((h: any) => {
       const firstRoom = h.roomTypes?.[0];
       const firstRate = firstRoom?.rates?.[0];
       const total = firstRate?.retailRate?.total?.[0];
+      const m = meta.get(h.hotelId) ?? {};
+      const photos: string[] = [];
+      if (m.main_photo) photos.push(m.main_photo);
+      if (Array.isArray(m.hotelImages)) {
+        for (const im of m.hotelImages) {
+          const u = typeof im === "string" ? im : im?.url ?? im?.urlHd;
+          if (u && !photos.includes(u)) photos.push(u);
+        }
+      }
       return {
         id: h.hotelId,
         offer_id: firstRoom?.offerId ?? firstRate?.rateId ?? h.hotelId,
@@ -231,6 +330,22 @@ async function searchLiteHotels(input: {
         board: firstRate?.boardName,
         refundable: firstRate?.cancellationPolicies?.refundableTag === "RFN",
         room_name: firstRoom?.roomTypes?.[0]?.name ?? firstRate?.name,
+        // Enriched metadata for Agoda-style cards
+        name: m.name ?? `Hotel ${h.hotelId}`,
+        image: m.main_photo ?? m.thumbnail ?? null,
+        thumbnail: m.thumbnail ?? null,
+        images: photos.length ? photos : undefined,
+        address: m.address ?? null,
+        location: [m.address, m.city, m.country?.toUpperCase?.()].filter(Boolean).join(", ") || null,
+        city: m.city ?? null,
+        country: m.country ?? null,
+        stars: m.stars ?? 0,
+        review_score: m.rating ?? null,
+        review_count: m.reviewCount ?? null,
+        latitude: m.latitude ?? null,
+        longitude: m.longitude ?? null,
+        description: m.hotelDescription ?? null,
+        chain: m.chain ?? null,
         raw: h,
       };
     });
@@ -455,6 +570,7 @@ export const searchHotels = createServerFn({ method: "POST" })
     (d: unknown) =>
       z
         .object({
+          destination: z.string().optional(),
           country_code: z.string().optional(),
           city: z.string().optional(),
           checkin: z.string(),
@@ -473,9 +589,18 @@ export const searchHotels = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { hotels: [] });
       return ok({ hotels: t.data?.hotels ?? t.data?.data?.hotels ?? [] });
     }
+    // Resolve free-text destination ("Abidjan, Côte d'Ivoire") into city + country.
+    let cityName = data.city || undefined;
+    let countryCode =
+      data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined;
+    if ((!cityName && !countryCode) || data.destination) {
+      const r = await resolveDestination(data.destination);
+      cityName = cityName ?? r.cityName;
+      countryCode = countryCode ?? r.countryCode;
+    }
     const res = await searchLiteHotels({
-      cityName: data.city,
-      countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
+      cityName,
+      countryCode,
       checkin: data.checkin,
       checkout: data.checkout,
       adults: Math.max(1, Number(data.adults) || 1),
