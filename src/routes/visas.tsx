@@ -112,17 +112,21 @@ export const Route = createFileRoute("/visas")({
   validateSearch: (s) => searchSchema.parse(s),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
+    const submitted = !!deps.submitted && !!deps.nationality && !!deps.destination;
+    if (!submitted) {
+      return { visas: [], query: deps, error: null as string | null, submitted: false };
+    }
     try {
       const res = await searchVisas({
         data: {
-          nationality: toCC(deps.nationality),
-          destination: toCC(deps.destination),
-          purpose: toPurpose(deps.visaType),
+          nationality: toCC(deps.nationality!),
+          destination: toCC(deps.destination!),
+          purpose: toPurpose(deps.visaType ?? "Tourist"),
         },
       });
-      return { visas: res?.data?.visas ?? [], query: deps, error: (res?.error as string | null) ?? null };
+      return { visas: res?.data?.visas ?? [], query: deps, error: (res?.error as string | null) ?? null, submitted: true };
     } catch (e: any) {
-      return { visas: [], query: deps, error: e?.message ?? "Search failed" };
+      return { visas: [], query: deps, error: e?.message ?? "Search failed", submitted: true };
     }
   },
   errorComponent: ({ error }) => <div className="p-8 text-center text-destructive">Failed to load: {error.message}</div>,
