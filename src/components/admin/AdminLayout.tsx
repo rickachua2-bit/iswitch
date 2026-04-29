@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Crown,
   Plug,
+  History,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Footer } from "@/components/Footer";
