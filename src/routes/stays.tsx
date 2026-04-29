@@ -532,14 +532,19 @@ function ResultsBoard({
             </div>
           ) : (
             <div className="space-y-4">
-              {filtered.map((h: any) => (
-                <HotelResultCard
-                  key={h.id}
-                  hotel={h}
-                  formatPrice={formatPrice}
-                  onSelect={onSelect}
-                />
-              ))}
+              {filtered.map((h: any) => {
+                const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
+                return (
+                  <HotelResultCard
+                    key={h.id}
+                    hotel={h}
+                    formatPrice={formatPrice}
+                    onSelect={onSelect}
+                    loading={isSelecting(id)}
+                    disabled={selecting && !isSelecting(id)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
