@@ -20,6 +20,7 @@ import {
   Plug,
   CreditCard,
   History,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Footer } from "@/components/Footer";

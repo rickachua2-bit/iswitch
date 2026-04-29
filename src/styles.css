@@ -258,4 +258,86 @@
     box-shadow: 0 12px 30px -8px color-mix(in oklab, var(--color-primary) 70%, transparent) !important;
   }
   .auth-form button[type="submit"]:active { transform: translateY(1px); }
+
+  /* ===== Premium Admin Console ===== */
+  .admin-sidebar {
+    background:
+      radial-gradient(1200px 400px at -10% -20%, color-mix(in oklab, var(--color-accent) 22%, transparent) 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, color-mix(in oklab, var(--color-primary-glow) 30%, transparent) 0%, transparent 55%),
+      linear-gradient(180deg, oklch(0.22 0.13 262) 0%, oklch(0.16 0.10 264) 100%);
+    color: oklch(0.98 0.01 250);
+    position: relative;
+  }
+  .admin-sidebar::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: linear-gradient(180deg, transparent 0%, color-mix(in oklab, white 4%, transparent) 100%);
+    pointer-events: none;
+  }
+  .admin-nav-link {
+    display: flex; align-items: center; gap: 0.625rem;
+    padding: 0.55rem 0.75rem; border-radius: 0.75rem;
+    font-weight: 600; font-size: 0.875rem;
+    color: color-mix(in oklab, white 78%, transparent);
+    transition: background 160ms, color 160ms, transform 120ms;
+    position: relative;
+  }
+  .admin-nav-link:hover {
+    background: color-mix(in oklab, white 8%, transparent);
+    color: white;
+  }
+  .admin-nav-link.is-active {
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--color-accent) 95%, transparent),
+      color-mix(in oklab, var(--color-accent-glow) 80%, transparent));
+    color: oklch(0.20 0.06 260);
+    box-shadow:
+      0 8px 22px -8px color-mix(in oklab, var(--color-accent) 60%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
+  }
+  .admin-nav-link.is-active::before {
+    content: "";
+    position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
+    height: 22px; width: 4px; border-radius: 4px;
+    background: var(--color-accent);
+    box-shadow: 0 0 12px color-mix(in oklab, var(--color-accent) 70%, transparent);
+  }
+  .admin-group-label {
+    color: color-mix(in oklab, white 55%, transparent);
+    letter-spacing: 0.18em;
+  }
+  .admin-card {
+    background: var(--gradient-card);
+    border: 1px solid color-mix(in oklab, var(--color-primary) 8%, var(--color-border));
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+  .admin-page-hero {
+    position: relative; overflow: hidden;
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(700px 200px at 0% 0%, color-mix(in oklab, var(--color-accent) 18%, transparent), transparent 60%),
+      radial-gradient(600px 220px at 100% 100%, color-mix(in oklab, var(--color-primary-glow) 35%, transparent), transparent 60%),
+      var(--gradient-primary);
+    color: var(--color-primary-foreground);
+    padding: 1.75rem 1.75rem;
+    box-shadow: var(--shadow-elevated);
+  }
+  .admin-page-hero::after {
+    content: "";
+    position: absolute; right: -40px; top: -40px;
+    height: 180px; width: 180px; border-radius: 999px;
+    background: radial-gradient(circle, color-mix(in oklab, var(--color-accent) 50%, transparent), transparent 70%);
+    filter: blur(8px);
+    pointer-events: none;
+  }
+  @keyframes admin-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .admin-shimmer {
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, white 18%, transparent), transparent);
+    background-size: 200% 100%;
+    animation: admin-shimmer 6s linear infinite;
+  }
 }
