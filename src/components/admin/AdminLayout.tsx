@@ -20,6 +20,7 @@ import {
   Plug,
   CreditCard,
   History,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Footer } from "@/components/Footer";
@@ -37,6 +38,7 @@ const NAV: { to: string; label: string; icon: typeof Users; group: "Overview" | 
   { to: "/admin/api-providers", label: "API Providers", icon: Plug, group: "System" },
   { to: "/admin/payment-providers", label: "Payment Providers", icon: CreditCard, group: "System" },
   { to: "/admin/crawl-jobs", label: "Crawl History", icon: History, group: "System" },
+  { to: "/admin/settings", label: "Settings", icon: SettingsIcon, group: "System" },
 ];
 
 export function AdminLayout({ children }: { children?: ReactNode }) {
@@ -84,23 +86,26 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
   return (
     <div className="min-h-screen bg-secondary/30">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
-        <div className="flex h-14 items-center gap-3 px-4 md:px-6">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-xl">
+        <div className="flex h-16 items-center gap-3 px-4 md:px-6">
           <button onClick={() => setOpen((o) => !o)} className="rounded-md border border-border p-2 md:hidden">
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
-          <Link to="/admin" className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground shadow-md">
+          <Link to="/admin" className="flex items-center gap-2.5">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
               <Crown className="h-4 w-4" />
             </span>
             <div className="leading-tight">
-              <div className="font-display text-sm font-extrabold">Admin Console</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">iSwitch Control</div>
+              <div className="font-display text-sm font-extrabold tracking-tight">Admin Console</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">iSwitch Control</div>
             </div>
           </Link>
           <div className="ml-auto flex items-center gap-3">
             <Link to="/dashboard" className="hidden text-xs font-semibold text-muted-foreground hover:text-primary md:block">
               ← Back to user dashboard
+            </Link>
+            <Link to="/admin/settings" className="hidden items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-bold hover:border-primary hover:text-primary md:inline-flex">
+              <SettingsIcon className="h-3.5 w-3.5" /> Settings
             </Link>
             <span className="hidden truncate max-w-[180px] text-xs text-muted-foreground md:block">{user.email}</span>
             <button onClick={() => signOut()} className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs font-bold hover:border-destructive hover:text-destructive">
@@ -113,14 +118,14 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
       <div className="mx-auto flex max-w-[1500px]">
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-14 left-0 z-30 w-64 transform border-r border-border bg-card transition-transform md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:translate-x-0 ${
+          className={`admin-sidebar fixed inset-y-16 left-0 z-30 w-64 transform transition-transform md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:translate-x-0 ${
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <nav className="flex h-full flex-col overflow-y-auto p-3">
+          <nav className="relative flex h-full flex-col overflow-y-auto p-3">
             {groups.map((g) => (
-              <div key={g} className="mb-3">
-                <div className="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{g}</div>
+              <div key={g} className="mb-4">
+                <div className="admin-group-label px-2 pb-1.5 text-[10px] font-bold uppercase">{g}</div>
                 {NAV.filter((n) => n.group === g).map((n) => {
                   const active =
                     n.to === "/admin"
@@ -130,23 +135,19 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
                     <Link
                       key={n.to}
                       to={n.to}
-                      className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold transition ${
-                        active
-                          ? "bg-gradient-primary text-primary-foreground shadow-md"
-                          : "text-foreground hover:bg-secondary"
-                      }`}
+                      className={`admin-nav-link ${active ? "is-active" : ""}`}
                     >
-                      <n.icon className="h-4 w-4" />
-                      <span className="flex-1">{n.label}</span>
-                      {active && <ChevronRight className="h-3.5 w-3.5 opacity-80" />}
+                      <n.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 truncate">{n.label}</span>
+                      {active && <ChevronRight className="h-3.5 w-3.5 opacity-90" />}
                     </Link>
                   );
                 })}
               </div>
             ))}
-            <div className="mt-auto rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/10 p-3 text-[11px] text-muted-foreground">
-              <div className="flex items-center gap-1.5 font-bold text-foreground">
-                <ShieldAlert className="h-3.5 w-3.5 text-primary" /> Audit mode
+            <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-3.5 text-[11px] text-white/70 backdrop-blur">
+              <div className="mb-1 flex items-center gap-1.5 font-bold text-white">
+                <ShieldAlert className="h-3.5 w-3.5 text-[color:var(--color-accent)]" /> Audit mode
               </div>
               All destructive actions require explicit confirmation.
             </div>
@@ -154,7 +155,7 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
         </aside>
 
         {/* Backdrop for mobile */}
-        {open && <div onClick={() => setOpen(false)} className="fixed inset-0 top-14 z-20 bg-foreground/30 md:hidden" />}
+        {open && <div onClick={() => setOpen(false)} className="fixed inset-0 top-16 z-20 bg-foreground/40 backdrop-blur-sm md:hidden" />}
 
         {/* Main */}
         <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
@@ -169,17 +170,17 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
 
 export function AdminPageHeader({ icon: Icon, title, description, action }: { icon: typeof Users; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
-      <div className="flex items-start gap-3">
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-md">
+    <div className="admin-page-hero mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="relative flex items-start gap-3.5">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white shadow-glow ring-1 ring-white/25 backdrop-blur">
           <Icon className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-extrabold leading-tight">{title}</h1>
-          {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+          <h1 className="font-display text-2xl font-extrabold leading-tight tracking-tight">{title}</h1>
+          {description && <p className="mt-1 max-w-xl text-sm text-white/85">{description}</p>}
         </div>
       </div>
-      {action}
+      {action && <div className="relative">{action}</div>}
     </div>
   );
 }
