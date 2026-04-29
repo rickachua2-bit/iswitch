@@ -249,13 +249,29 @@ function HotelBookingPage() {
               <div className="text-xs text-muted-foreground">Your booking</div>
               <div className="mt-1 text-base font-extrabold text-foreground">{hotel.name}</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                {effCheckIn} → {effCheckOut}
+                {effCheckIn} → {effCheckOut} · {nights} night{nights > 1 ? "s" : ""}
               </div>
-              <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-                <Row label={`${formatPrice(pricePerNight, currency)} × ${nights} night${nights > 1 ? "s" : ""}`} value={formatPrice(subtotal, currency)} />
+
+              <div className="mt-4 rounded-lg bg-secondary/60 p-3">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Daily rate</span>
+                  <span className="text-base font-extrabold text-primary">
+                    {formatPrice(pricePerNight, currency)}
+                    <span className="ml-1 text-[11px] font-semibold text-muted-foreground">/ night</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-2 border-t border-border pt-3 text-sm">
+                <Row
+                  label={`${formatPrice(pricePerNight, currency)} × ${nights} night${nights > 1 ? "s" : ""}`}
+                  value={formatPrice(subtotal, currency)}
+                />
                 <Row label="Taxes & fees (est.)" value={formatPrice(taxes, currency)} />
                 <div className="flex items-center justify-between border-t border-border pt-3 text-base">
-                  <span className="font-bold text-foreground">Total</span>
+                  <span className="font-bold text-foreground">
+                    Total for {nights} night{nights > 1 ? "s" : ""}
+                  </span>
                   <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
                 </div>
               </div>

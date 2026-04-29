@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronDown, ChevronRight, Plane, Wifi, Utensils, Tv, Zap,
-  Briefcase, Luggage, RefreshCw, Pencil, Check, X, Clock,
+  Briefcase, Luggage, RefreshCw, Pencil, Check, X, Clock, Loader2,
 } from "lucide-react";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { useSelectOffer } from "@/lib/use-select-offer";
+import { ErrorToast } from "@/components/booking/ErrorToast";
 
 /* ---------------- shared utils (kept local to keep card self-contained) ---------------- */
 
@@ -49,8 +50,8 @@ function fmtDuration(min: number) {
 export function FlightResultCard({ offer }: { offer: any }) {
   const [open, setOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const navigate = useNavigate();
   const formatPrice = usePriceFormat();
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
   const slices: any[] = offer?.slices ?? offer?.itineraries ?? [];
   const carrier = offerCarrier(offer);
@@ -61,32 +62,25 @@ export function FlightResultCard({ offer }: { offer: any }) {
   // Standard / Flex pair from the price so the experience matches even with sample data.
   const fares = buildFares(offer, price, cur);
 
-  async function selectFare(fareId: string) {
+  function selectFare(fareId: string) {
     const selectedFare = fares.find((f: any) => f.id === fareId);
+    // Mirror the legacy keys so /flights/book session-recovery still works.
     try {
       sessionStorage.setItem(`offer:${offer.id}`, JSON.stringify(offer));
-      sessionStorage.setItem(
-        `fare:${offer.id}:${fareId}`,
-        JSON.stringify(selectedFare),
-      );
+      sessionStorage.setItem(`fare:${offer.id}:${fareId}`, JSON.stringify(selectedFare));
     } catch { /* ignore quota errors */ }
-    // Await the server-side cache write so the booking page can recover the
-    // offer on refresh / cross-tab / payment redirect, not race the navigation.
-    try {
-      const { saveOffer } = await import("@/server/offer-cache.functions");
-      await saveOffer({
-        data: {
-          id: `flight:${offer.id}`,
-          vertical: "flights",
-          payload: { offer, fares: { [fareId]: selectedFare } },
-        },
-      });
-    } catch { /* non-blocking */ }
-    navigate({
+
+    void select({
+      vertical: "flights",
+      sessionPrefix: "offer",
+      cachePrefix: "flight",
+      id: String(offer.id),
+      payload: { offer, fares: { [fareId]: selectedFare } },
       to: "/flights/book",
-      search: { offer_id: offer.id, fare_id: fareId } as never,
+      search: { offer_id: offer.id, fare_id: fareId },
     });
   }
+  const fareLoadingId = isSelecting(String(offer.id)) ? "active" : null;
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition hover:shadow-elevated">
@@ -165,11 +159,12 @@ export function FlightResultCard({ offer }: { offer: any }) {
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {fares.map((f: any) => (
-              <FareCard key={f.id} fare={f} formatPrice={formatPrice} onPick={() => selectFare(f.id)} />
+              <FareCard key={f.id} fare={f} formatPrice={formatPrice} onPick={() => selectFare(f.id)} loading={!!fareLoadingId} />
             ))}
           </div>
         </div>
       )}
+      <ErrorToast message={selectError} onDismiss={clearError} />
 
       {/* ---- show flight details (segment-level) ---- */}
       {showDetails && (
@@ -397,10 +392,12 @@ function FareCard({
   fare,
   onPick,
   formatPrice,
+  loading,
 }: {
   fare: ReturnType<typeof buildFares>[number];
   onPick: () => void;
   formatPrice: (amount: number, currency: string) => string;
+  loading?: boolean;
 }) {
   return (
     <div
@@ -433,9 +430,14 @@ function FareCard({
 
       <button
         onClick={onPick}
-        className="mt-auto inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary-glow"
+        disabled={loading}
+        className="mt-auto inline-flex items-center justify-center gap-1 rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary-glow disabled:cursor-wait disabled:opacity-70"
       >
-        Book {fare.name} <ChevronRight className="h-3.5 w-3.5" />
+        {loading ? (
+          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Opening…</>
+        ) : (
+          <>Book {fare.name} <ChevronRight className="h-3.5 w-3.5" /></>
+        )}
       </button>
     </div>
   );
