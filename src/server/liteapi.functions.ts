@@ -27,7 +27,6 @@ export const searchHotels = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SearchInput.parse(d))
   .handler(async ({ data }) => {
     try {
-      // Step 1: get rates
       const occupancies = Array.from({ length: data.rooms }, () => ({ adults: data.adults, children: data.children }));
       const ratesBody: any = {
         checkin: data.checkin,
@@ -37,8 +36,22 @@ export const searchHotels = createServerFn({ method: "POST" })
         occupancies,
       };
       if (data.hotelIds?.length) ratesBody.hotelIds = data.hotelIds;
-      else if (data.cityName) ratesBody.cityName = data.cityName;
-      else if (data.countryCode) ratesBody.countryCode = data.countryCode;
+      else if (data.cityName) {
+        // Resolve cityName -> hotelIds (LiteAPI v3 no longer accepts cityName on /hotels/rates)
+        const parts = [`cityName=${encodeURIComponent(data.cityName)}`, "limit=50"];
+        if (data.countryCode) parts.push(`countryCode=${data.countryCode}`);
+        const lookup = await timedFetch("liteapi", `${BASE}/data/hotels?${parts.join("&")}`, { method: "GET", headers: lHeaders() });
+        if (lookup.status < 400) {
+          const lj = JSON.parse(lookup.text);
+          const ids = (lj?.data ?? []).map((h: any) => h?.id).filter(Boolean).slice(0, 50);
+          if (ids.length) ratesBody.hotelIds = ids;
+        }
+        if (!ratesBody.hotelIds && data.countryCode) ratesBody.countryCode = data.countryCode;
+      } else if (data.countryCode) ratesBody.countryCode = data.countryCode;
+
+      if (!ratesBody.hotelIds && !ratesBody.countryCode) {
+        return { ok: false as const, error: "Please pick a city or country to search hotels.", hotels: [] };
+      }
 
       const { status, text } = await timedFetch("liteapi", `${BASE}/hotels/rates`, {
         method: "POST", headers: lHeaders(), body: JSON.stringify(ratesBody),

@@ -184,3 +184,63 @@ export const deleteInventoryItem = createServerFn({ method: "POST" })
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
+
+// ============ TEST PROVIDER (health probe) ============
+export const testProvider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { data: prov } = await supabaseAdmin
+      .from("providers").select("id, slug, kind, base_url").eq("id", data.id).maybeSingle();
+    if (!prov) return { ok: false as const, error: "Provider not found" };
+
+    const t0 = Date.now();
+    let status: number | null = null;
+    let ok = false;
+    let message = "";
+
+    try {
+      if (prov.slug === "duffel") {
+        const key = process.env.DUFFEL_API_KEY;
+        if (!key) throw new Error("DUFFEL_API_KEY not configured");
+        const r = await fetch("https://api.duffel.com/air/airlines?limit=1", {
+          headers: { Authorization: `Bearer ${key}`, "Duffel-Version": "v2", Accept: "application/json" },
+        });
+        status = r.status; ok = r.ok;
+        message = r.ok ? "Duffel API responding" : (await r.text()).slice(0, 200);
+      } else if (prov.slug === "liteapi") {
+        const key = process.env.LITEAPI_KEY;
+        if (!key) throw new Error("LITEAPI_KEY not configured");
+        const r = await fetch("https://api.liteapi.travel/v3.0/data/countries", {
+          headers: { "X-API-Key": key, Accept: "application/json" },
+        });
+        status = r.status; ok = r.ok;
+        message = r.ok ? "LiteAPI responding" : (await r.text()).slice(0, 200);
+      } else if (prov.kind === "crawl" && prov.base_url) {
+        const r = await fetch(prov.base_url, { method: "HEAD", redirect: "follow" });
+        status = r.status; ok = r.status < 400;
+        message = ok ? "Source URL reachable" : `HTTP ${r.status}`;
+      } else if (prov.base_url) {
+        const r = await fetch(prov.base_url, { method: "HEAD", redirect: "follow" });
+        status = r.status; ok = r.status < 500;
+        message = `HTTP ${r.status}`;
+      } else {
+        return { ok: false as const, error: "No base URL configured for this provider." };
+      }
+    } catch (e: any) {
+      message = String(e?.message ?? e).slice(0, 300);
+    }
+
+    const latency = Date.now() - t0;
+    await supabaseAdmin.from("provider_health_events").insert({
+      provider_id: prov.id, ok, status_code: status, latency_ms: latency, message,
+    });
+    if (ok) {
+      await supabaseAdmin.from("providers").update({ last_ok_at: new Date().toISOString(), last_error: null }).eq("id", prov.id);
+    } else {
+      await supabaseAdmin.from("providers").update({ last_error_at: new Date().toISOString(), last_error: message }).eq("id", prov.id);
+    }
+
+    return { ok: true as const, healthy: ok, status, latency, message };
+  });

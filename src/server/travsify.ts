@@ -295,8 +295,30 @@ async function searchLiteHotels(input: {
       guestNationality: "US",
       occupancies,
     };
-    if (input.cityName) ratesBody.cityName = input.cityName;
-    else if (input.countryCode) ratesBody.countryCode = input.countryCode;
+
+    // LiteAPI v3 no longer accepts `cityName` on /hotels/rates — must use one of:
+    // countryCode | hotelIds | latitude+longitude | placeId | iataCode | lastUpdatedAt.
+    // If the caller gave a cityName, resolve it to a list of hotelIds first.
+    if (input.cityName) {
+      const lookupParts = [`cityName=${encodeURIComponent(input.cityName)}`, `limit=50`];
+      if (input.countryCode) lookupParts.push(`countryCode=${input.countryCode}`);
+      try {
+        const { status: ls, text: lt } = await timedFetch(
+          "liteapi",
+          `${LITEAPI_BASE}/data/hotels?${lookupParts.join("&")}`,
+          { method: "GET", headers: liteApiHeaders() },
+        );
+        if (ls < 400) {
+          const lj = JSON.parse(lt);
+          const ids = (lj?.data ?? []).map((h: any) => h?.id).filter(Boolean).slice(0, 50);
+          if (ids.length) ratesBody.hotelIds = ids;
+        }
+      } catch {/* fall through to countryCode below */}
+    }
+    if (!ratesBody.hotelIds && input.countryCode) ratesBody.countryCode = input.countryCode;
+    if (!ratesBody.hotelIds && !ratesBody.countryCode) {
+      return { ok: false as const, error: "Please pick a city or country to search hotels.", hotels: [] };
+    }
 
     const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/hotels/rates`, {
       method: "POST",

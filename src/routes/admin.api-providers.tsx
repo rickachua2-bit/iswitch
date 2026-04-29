@@ -2,14 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
-  ArrowLeft, Search, Power, ExternalLink, Package, Activity, X,
+  ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
   getApiProviderRouting, updateApiProviderRouting,
   listProviders, createProvider, updateProvider, deleteProvider,
   listProviderInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem,
+  testProvider,
 } from "@/server/api-providers.functions";
+import { triggerCrawl } from "@/server/crawler.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/api-providers")({
@@ -87,6 +89,34 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   async function onToggle(p: Provider) {
     const res = await updateProvider({ data: { id: p.id, enabled: !p.enabled } });
     res.ok ? refresh() : toast.error(res.error);
+  }
+
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<"test" | "crawl" | null>(null);
+
+  async function onTest(p: Provider) {
+    setBusyId(p.id); setBusyAction("test");
+    try {
+      const res: any = await testProvider({ data: { id: p.id } });
+      if (!res.ok) toast.error(res.error);
+      else if (res.healthy) toast.success(`✓ ${p.name} is up — ${res.latency}ms`);
+      else toast.error(`✗ ${p.name} is down: ${res.message}`);
+      refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Test failed"); }
+    setBusyId(null); setBusyAction(null);
+  }
+
+  async function onCrawl(p: Provider) {
+    if (p.kind !== "crawl") return toast.error("Only crawl providers can be crawled.");
+    setBusyId(p.id); setBusyAction("crawl");
+    toast.message(`Crawling ${p.name}…`, { description: "Fetching up to 50 items" });
+    try {
+      const res: any = await triggerCrawl({ data: { slug: p.slug } });
+      if (res.status === "succeeded") toast.success(`Crawled ${res.items_upserted} items from ${p.name}`);
+      else toast.error(`Crawl failed: ${res.error ?? "unknown error"}`);
+      refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Crawl failed"); }
+    setBusyId(null); setBusyAction(null);
   }
 
   const filtered = useMemo(() => providers.filter((p) => {
@@ -176,7 +206,8 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
         {filtered.map((p) => {
           const errRate = p.total_calls > 0 ? Math.round((p.total_errors / p.total_calls) * 100) : 0;
           return (
-            <div key={p.id} className="group rounded-2xl border border-border bg-card p-4 shadow-card transition hover:shadow-md">
+            <div key={p.id} className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-card transition hover:shadow-lg hover:-translate-y-0.5">
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-70" />
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -186,8 +217,8 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <span className="rounded bg-gradient-primary px-1.5 py-0.5 text-primary-foreground">{p.vertical}</span>
-                    <span className="rounded bg-secondary px-1.5 py-0.5">{p.kind}</span>
+                    <span className="rounded bg-gradient-primary px-1.5 py-0.5 text-primary-foreground shadow-sm">{p.vertical}</span>
+                    <span className={`rounded px-1.5 py-0.5 ${p.kind === "crawl" ? "bg-accent/30 text-accent-foreground" : "bg-secondary"}`}>{p.kind}</span>
                     <span className="truncate font-mono normal-case tracking-normal">{p.slug}</span>
                   </div>
                 </div>
@@ -214,10 +245,22 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
                 <Stat label="Err rate" value={`${errRate}%`} tone={errRate > 5 ? "warn" : undefined} />
               </div>
 
-              <button onClick={() => onOpen(p.id)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-secondary/40 px-3 py-2 text-xs font-bold hover:bg-secondary">
-                <Package className="h-3.5 w-3.5" /> Manage inventory
-              </button>
+              <div className="grid gap-1.5" style={{ gridTemplateColumns: p.kind === "crawl" ? "1fr 1fr 1fr" : "1fr 1fr" }}>
+                <button onClick={() => onTest(p)} disabled={busyId === p.id}
+                  className="inline-flex items-center justify-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1.5 text-[11px] font-bold text-primary hover:bg-primary/10 disabled:opacity-50">
+                  {busyId === p.id && busyAction === "test" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />} Test
+                </button>
+                {p.kind === "crawl" && (
+                  <button onClick={() => onCrawl(p)} disabled={busyId === p.id}
+                    className="inline-flex items-center justify-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2 py-1.5 text-[11px] font-bold text-accent-foreground hover:bg-accent/20 disabled:opacity-50">
+                    {busyId === p.id && busyAction === "crawl" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />} Crawl 50
+                  </button>
+                )}
+                <button onClick={() => onOpen(p.id)}
+                  className="inline-flex items-center justify-center gap-1 rounded-md bg-gradient-primary px-2 py-1.5 text-[11px] font-bold text-primary-foreground hover:opacity-95">
+                  <Package className="h-3 w-3" /> Inventory
+                </button>
+              </div>
             </div>
           );
         })}
