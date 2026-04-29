@@ -204,13 +204,25 @@ function ParticipantsForm({ tour }: { tour: any; pax: number }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookTour({
-        data: {
+      const { startCheckout } = await import("@/lib/checkout");
+      const unit = Number(tour.price ?? 0);
+      const res = await startCheckout({
+        vertical: "tours",
+        provider_slug: tour.provider_slug ?? "travsify",
+        amount: unit,
+        currency: tour.currency ?? "USD",
+        customer_name: `${v.firstName} ${v.lastName}`.trim(),
+        customer_email: v.email,
+        customer_phone: v.phone,
+        payload: {
           tour_id: tour.id,
-          participants: [{ firstName: v.firstName, lastName: v.lastName, email: v.email }],
+          participants: [{ firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone }],
+          pickup: v.pickup,
+          tour_name: tour.title ?? tour.name,
         },
       });
-      setDone({ reference: res?.data?.reference, status: res?.data?.status ?? "confirmed" });
+      if (!res.ok) { setError(res.error); return; }
+      window.location.href = res.checkoutUrl;
     } catch (err: any) {
       setError(err?.message ?? "Booking failed. Please try again.");
     } finally {

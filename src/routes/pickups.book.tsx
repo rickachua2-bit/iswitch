@@ -198,13 +198,24 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookTransfer({
-        data: {
+      const { startCheckout } = await import("@/lib/checkout");
+      const res = await startCheckout({
+        vertical: "pickups",
+        provider_slug: vehicle.provider_slug ?? "travsify",
+        amount: Number(vehicle.price ?? vehicle.fare ?? 0),
+        currency: vehicle.currency ?? "USD",
+        customer_name: `${v.firstName} ${v.lastName}`.trim(),
+        customer_email: v.email,
+        customer_phone: v.phone,
+        payload: {
           vehicle_id: vehicle.id,
           passenger: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
+          flight: v.flight,
+          notes: v.notes,
         },
       });
-      setDone({ reference: res?.data?.reference, status: res?.data?.status ?? "confirmed" });
+      if (!res.ok) { setError(res.error); return; }
+      window.location.href = res.checkoutUrl;
     } catch (err: any) {
       setError(err?.message ?? "Booking failed. Please try again.");
     } finally {
