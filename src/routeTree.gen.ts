@@ -32,6 +32,7 @@ import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as DashboardWalletRouteImport } from './routes/dashboard.wallet'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardConsultationsRouteImport } from './routes/dashboard.consultations'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
@@ -151,6 +152,11 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardConsultationsRoute = DashboardConsultationsRouteImport.update({
+  id: '/consultations',
+  path: '/consultations',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/consultations': typeof DashboardConsultationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/consultations': typeof DashboardConsultationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/agents/apply': typeof AgentsApplyRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/dashboard/consultations': typeof DashboardConsultationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
+    | '/dashboard/consultations'
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
+    | '/dashboard/consultations'
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/agents/apply'
     | '/dashboard/book'
     | '/dashboard/bookings'
+    | '/dashboard/consultations'
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
@@ -518,6 +530,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/consultations': {
+      id: '/dashboard/consultations'
+      path: '/consultations'
+      fullPath: '/dashboard/consultations'
+      preLoaderRoute: typeof DashboardConsultationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/bookings': {
       id: '/dashboard/bookings'
       path: '/bookings'
@@ -545,6 +564,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardBookRoute: typeof DashboardBookRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
+  DashboardConsultationsRoute: typeof DashboardConsultationsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardWalletRoute: typeof DashboardWalletRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -553,6 +573,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardBookRoute: DashboardBookRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
+  DashboardConsultationsRoute: DashboardConsultationsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardWalletRoute: DashboardWalletRoute,
   DashboardIndexRoute: DashboardIndexRoute,

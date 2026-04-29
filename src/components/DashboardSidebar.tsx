@@ -18,7 +18,7 @@ const PRIMARY = [
 
 const ACCOUNT = [
   { title: "Profile", url: "/dashboard/profile", icon: User },
-  { title: "Consultations", url: "/consultations", icon: GraduationCap },
+  { title: "Consultations", url: "/dashboard/consultations", icon: GraduationCap },
   { title: "Become an agent", url: "/agents/apply", icon: ShieldCheck },
 ];
 
