@@ -469,4 +469,75 @@
     color: transparent;
     font-weight: 800;
   }
+
+  /* ===== Booking forms — colorful, branded inputs ===== */
+  .booking-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .booking-form select,
+  .booking-form textarea {
+    width: 100%;
+    border-width: 1.5px !important;
+    border-style: solid;
+    border-color: color-mix(in oklab, var(--color-primary) 22%, var(--color-border)) !important;
+    background: linear-gradient(180deg,
+      color-mix(in oklab, var(--color-primary) 3%, var(--color-card)),
+      var(--color-card)) !important;
+    border-radius: 0.625rem;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.9rem;
+    color: var(--color-foreground);
+    transition: border-color 150ms, box-shadow 150ms, background 150ms, transform 120ms;
+  }
+  .booking-form .field-with-icon input,
+  .booking-form .field-with-icon select {
+    padding-left: 2.4rem;
+  }
+  .booking-form input:hover,
+  .booking-form select:hover,
+  .booking-form textarea:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border)) !important;
+  }
+  .booking-form input:focus,
+  .booking-form select:focus,
+  .booking-form textarea:focus,
+  .booking-form input:focus-visible,
+  .booking-form select:focus-visible,
+  .booking-form textarea:focus-visible {
+    outline: none;
+    border-color: var(--color-primary) !important;
+    box-shadow:
+      0 0 0 4px color-mix(in oklab, var(--color-primary) 16%, transparent),
+      0 0 0 1px color-mix(in oklab, var(--color-accent) 35%, transparent) !important;
+    background: var(--color-card) !important;
+  }
+  .booking-form .field-label {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-primary) 70%, var(--color-foreground));
+    margin-bottom: 0.35rem;
+  }
+  .booking-form .field-label svg {
+    height: 0.85rem; width: 0.85rem;
+    color: var(--color-primary);
+  }
+  .booking-form .field-with-icon {
+    position: relative;
+  }
+  .booking-form .field-with-icon > .field-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: color-mix(in oklab, var(--color-primary) 70%, var(--color-muted-foreground));
+    pointer-events: none;
+    height: 1rem; width: 1rem;
+  }
+  .booking-form .form-section-accent {
+    background:
+      linear-gradient(135deg,
+        color-mix(in oklab, var(--color-primary) 4%, var(--color-card)),
+        var(--color-card));
+  }
 }
