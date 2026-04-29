@@ -86,8 +86,10 @@ function RootComponent() {
   return (
     <AuthProvider>
       <CurrencyProvider>
-        <Outlet />
-        <MobileBottomNav />
+        <TranslationProvider>
+          <Outlet />
+          <MobileBottomNav />
+        </TranslationProvider>
       </CurrencyProvider>
     </AuthProvider>
   );
