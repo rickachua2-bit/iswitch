@@ -153,9 +153,11 @@ function BookingPage() {
   const oCode = firstSeg?.origin?.iata_code ?? firstSlice?.origin?.iata_code ?? firstSlice?.origin ?? "—";
   const dCode = lastSeg?.destination?.iata_code ?? firstSlice?.destination?.iata_code ?? firstSlice?.destination ?? "—";
   const carrier = firstSeg?.marketing_carrier?.name ?? firstSeg?.marketing_carrier?.iata_code ?? offer?.owner?.name ?? "Airline";
-  const totalAmount = Number(fare?.total_amount ?? offer?.total_amount ?? offer?.price ?? 0);
-  const currency = fare?.total_currency ?? offer?.total_currency ?? offer?.currency ?? "USD";
-  const sym = currencySymbol(currency);
+  const totalAmount = Number(
+    fare?.price ?? fare?.total_amount ?? offer?.total_amount ?? offer?.price?.total ?? offer?.price ?? 0,
+  );
+  const currency =
+    fare?.currency ?? fare?.total_currency ?? offer?.total_currency ?? offer?.price?.currency ?? offer?.currency ?? "USD";
   const heroDate = fmtDate(firstSeg?.departing_at);
   const tripType = slices.length > 1 ? "Round-trip" : "One-way";
 
@@ -170,7 +172,7 @@ function BookingPage() {
       fare?.name ? { icon: Briefcase, label: `${fare.name} fare` } : null,
     ].filter(Boolean) as BookingHeroProps["meta"],
     priceLabel: "Total fare",
-    priceValue: `${sym}${totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+    priceValue: formatPrice(totalAmount, currency),
     priceFootnote: "All taxes & airline fees included",
     backTo: "/flights",
   };
