@@ -33,6 +33,7 @@ export const Route = createFileRoute("/pickups/book")({
 
 function TransferBookingPage() {
   const { vehicle_id, pickup, drop, date, time } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [vehicle, setVehicle] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
