@@ -1,7 +1,7 @@
 import { Link, useLocation, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Home, Search, User, LayoutGrid, X,
+  Home, User, LayoutGrid, X, MessageSquareHeart, Briefcase,
   Plane, Hotel, FileCheck2, ShieldCheck, Compass, Car,
 } from "lucide-react";
 
@@ -65,7 +65,7 @@ export function MobileBottomNav() {
 
           <div className="relative flex items-end justify-between gap-1 rounded-2xl border border-primary/15 bg-card/95 px-2 pt-2 pb-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <TabLink to="/" label="Home" Icon={Home} exact />
-            <TabLink to="/dashboard/book" label="Search" Icon={Search} />
+            <TabLink to="/consultations" label="Consult" Icon={MessageSquareHeart} />
 
             {/* Central launcher */}
             <button
@@ -83,7 +83,7 @@ export function MobileBottomNav() {
               </span>
             </button>
 
-            <TabLink to="/dashboard/bookings" label="Trips" Icon={Compass} />
+            <TabLink to="/agents/apply" label="B2B" Icon={Briefcase} />
             <TabLink to="/dashboard/profile" label="Account" Icon={User} />
           </div>
         </div>
