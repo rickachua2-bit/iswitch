@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTransfer } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Car, Users, Briefcase, Snowflake, MapPin, Clock, ShieldCheck, CheckCircle2, Plane, Phone, Calendar as CalendarIcon,
+  User, Mail, Hash, MessageSquare,
 } from "lucide-react";
 
 const searchSchema = z.object({
