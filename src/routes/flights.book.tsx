@@ -91,16 +91,22 @@ function BookingPage() {
         }
       } catch { /* ignore */ }
 
-      // 2. Fall back to server-persisted cache (survives refresh / redirects)
-      try {
-        const { getOffer } = await import("@/server/offer-cache.functions");
-        const res = await getOffer({ data: { id: `flight:${offer_id}` } });
-        if (!cancelled && res.ok) {
-          const p: any = res.payload;
-          setOffer(p?.offer ?? null);
-          if (fare_id && p?.fares?.[fare_id]) setFare(p.fares[fare_id]);
-        }
-      } catch { /* ignore */ }
+      // 2. Fall back to server-persisted cache (survives refresh / redirects).
+      // Retry once after a short delay to cover the race where saveOffer is
+      // still in-flight at the moment the booking page mounts.
+      const { getOffer } = await import("@/server/offer-cache.functions");
+      for (let attempt = 0; attempt < 2 && !cancelled; attempt++) {
+        try {
+          const res = await getOffer({ data: { id: `flight:${offer_id}` } });
+          if (!cancelled && res.ok) {
+            const p: any = res.payload;
+            setOffer(p?.offer ?? null);
+            if (fare_id && p?.fares?.[fare_id]) setFare(p.fares[fare_id]);
+            break;
+          }
+        } catch { /* ignore */ }
+        if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
+      }
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
