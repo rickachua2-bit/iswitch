@@ -166,11 +166,11 @@ function TransferBookingPage() {
             <div className="mt-1 text-base font-extrabold text-foreground">{vehicle.name ?? vehicle.type ?? "Vehicle"}</div>
             <div className="mt-1 text-xs text-muted-foreground">{date} · {time || "12:00"}</div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <Row label="Vehicle fare" value={`${currency} ${price.toFixed(2)}`} />
+              <Row label="Vehicle fare" value={formatPrice(price, currency)} />
               <Row label="Tolls & fees" value="Included" />
               <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-primary">{currency} {price.toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatPrice(price, currency)}</span>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
