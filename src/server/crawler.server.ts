@@ -75,20 +75,42 @@ const SOURCES: SourceConfig[] = [
   },
 ];
 
+// Walk an arbitrary object and return the first array of plain objects we find.
+// Firecrawl's JSON extract wraps results under varying keys ({items}, {data},
+// {results}, {products}, the vertical name, etc.) — instead of guessing every
+// shape, recursively pick the largest object-array we can find.
+function deepFindItems(node: any, depth = 0): any[] {
+  if (!node || depth > 6) return [];
+  if (Array.isArray(node)) {
+    const objs = node.filter(x => x && typeof x === "object" && !Array.isArray(x));
+    if (objs.length) return objs;
+    return [];
+  }
+  if (typeof node !== "object") return [];
+  let best: any[] = [];
+  for (const k of Object.keys(node)) {
+    const found = deepFindItems(node[k], depth + 1);
+    if (found.length > best.length) best = found;
+  }
+  return best;
+}
+
 async function firecrawlScrape(url: string, prompt: string): Promise<any[]> {
   const FK = process.env.FIRECRAWL_API_KEY;
   if (!FK) throw new Error("FIRECRAWL_API_KEY not configured");
 
   const res = await fetch(`${FIRECRAWL_API}/scrape`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${FK}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${FK}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       url,
-      formats: [{ type: "json", prompt }],
+      // Ask for both markdown (fallback context) + structured JSON extraction.
+      formats: [
+        "markdown",
+        { type: "json", prompt: `${prompt}\n\nIMPORTANT: Always return a top-level JSON object with an "items" array, even if you can only extract 1-3 entries from the page. Never return an empty object.` },
+      ],
       onlyMainContent: true,
+      waitFor: 2000,
     }),
   });
   if (!res.ok) {
@@ -96,9 +118,16 @@ async function firecrawlScrape(url: string, prompt: string): Promise<any[]> {
     throw new Error(`firecrawl ${res.status}: ${t.slice(0, 300)}`);
   }
   const json = await res.json();
-  // SDK v2 returns { data: { json: {...} } } or { json: {...} } depending on version
-  const payload = json?.data?.json ?? json?.json ?? json?.data ?? json;
-  return Array.isArray(payload?.items) ? payload.items : Array.isArray(payload) ? payload : [];
+  // SDK v2 may return { data: { json, markdown } } or { json, markdown } at root.
+  const root = json?.data ?? json;
+  const extracted = root?.json ?? root?.extract ?? root?.llm_extraction ?? root;
+  const items = deepFindItems(extracted);
+  if (!items.length) {
+    console.log(`[crawler] ${url} → empty extract. Top keys:`, Object.keys(root ?? {}), "json keys:", Object.keys(extracted ?? {}));
+  } else {
+    console.log(`[crawler] ${url} → ${items.length} items extracted`);
+  }
+  return items;
 }
 
 function normalize(raw: any, sourceUrl: string): NormalizedItem | null {
