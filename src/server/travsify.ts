@@ -165,7 +165,7 @@ async function resolveDestination(raw: string | undefined | null): Promise<{ cit
   const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
   const cityToken = parts[0];
   // Try every token (right-to-left) as a country first.
-  const countries = await getCountryList();
+  const countries = (await getCountryList()) ?? [];
   for (let i = parts.length - 1; i >= 0; i--) {
     const tok = parts[i].toLowerCase().replace(/\.+$/g, "");
     if (COUNTRY_ALIAS[tok]) {
