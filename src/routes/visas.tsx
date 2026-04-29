@@ -137,20 +137,18 @@ function VisasPage() {
   const { visas, query, error, submitted } = Route.useLoaderData() as any;
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
+  const { select, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(v: any) {
-    const id = v.id ?? v.visa_id ?? v.external_id;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(v: any) {
+    const id = String(v.id ?? v.visa_id ?? v.external_id);
+    void select({
       vertical: "visas",
       sessionPrefix: "visa",
       cachePrefix: "visa",
-      id: String(id),
+      id,
       payload: { ...v, nationality: query.nationality, destination: query.destination, visaType: query.visaType },
-    });
-    navigate({
       to: "/visas/book",
-      search: { visa_id: String(id), nationality: query.nationality ?? "", destination: query.destination ?? "" } as never,
+      search: { visa_id: id, nationality: query.nationality ?? "", destination: query.destination ?? "" },
     });
   }
   const nationality = query.nationality ?? "";
