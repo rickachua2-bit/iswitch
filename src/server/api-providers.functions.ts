@@ -237,9 +237,8 @@ export const testProvider = createServerFn({ method: "POST" })
       provider_id: prov.id, ok, status_code: status, latency_ms: latency, message,
     });
     await supabaseAdmin.from("providers").update({
-      total_calls: undefined, // updated atomically below via rpc-less increment
-      last_ok_at: ok ? new Date().toISOString() : undefined,
-      last_error_at: ok ? undefined : new Date().toISOString(),
+      last_ok_at: ok ? new Date().toISOString() : null,
+      last_error_at: ok ? null : new Date().toISOString(),
       last_error: ok ? null : message,
     }).eq("id", prov.id);
 
