@@ -275,7 +275,6 @@ function Policy({ children }: { children: React.ReactNode }) {
 function BookingForm({ hotel }: { hotel: any; navigate: any }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ reference?: string; status?: string } | null>(null);
   const [v, setV] = useState({ firstName: "", lastName: "", email: "", phone: "", requests: "" });
 
   function set<K extends keyof typeof v>(k: K, val: string) {
@@ -287,32 +286,43 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookHotel({
-        data: {
-          offer_id: hotel.offer_id ?? hotel.id,
+      const { startCheckout } = await import("@/lib/checkout");
+      const nights = nightsBetween(
+        (hotel.checkIn ?? "") as string,
+        (hotel.checkOut ?? "") as string
+      );
+      const pricePerNight = Number(hotel.price ?? 0);
+      const subtotal = pricePerNight * nights;
+      const taxes = Math.round(subtotal * 0.1 * 100) / 100;
+      const total = subtotal + taxes;
+
+      const res = await startCheckout({
+        vertical: "stays",
+        provider_slug: hotel.provider_slug ?? "liteapi",
+        amount: total,
+        currency: hotel.currency ?? "USD",
+        customer_name: `${v.firstName} ${v.lastName}`.trim(),
+        customer_email: v.email,
+        customer_phone: v.phone,
+        payload: {
+          lite_rate_id: hotel.rate_id ?? hotel.offer_id ?? hotel.id,
           holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
           guests: [{ firstName: v.firstName, lastName: v.lastName }],
+          requests: v.requests,
+          hotel_name: hotel.name,
+          hotel_id: hotel.hotelId ?? hotel.id,
         },
       });
-      setDone({ reference: res?.data?.reference, status: res?.data?.status ?? "confirmed" });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      window.location.href = res.checkoutUrl;
     } catch (err: any) {
-      setError(err?.message ?? "Booking failed. Please try again.");
+      setError(err?.message ?? "Checkout failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (done) {
-    return (
-      <SuccessCard
-        title="Booking confirmed!"
-        reference={done.reference}
-        status={done.status}
-        email={v.email}
-        backTo="/stays"
-        backLabel="Search more stays"
-      />
-    );
   }
 
   return (
@@ -344,7 +354,7 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>
       )}
-      <ConfirmButton submitting={submitting} label="Confirm and pay" />
+      <ConfirmButton submitting={submitting} label="Continue to secure payment" />
     </form>
   );
 }
