@@ -73,6 +73,7 @@ const ProviderInput = z.object({
   kind: z.enum(KINDS),
   base_url: z.string().url().optional().or(z.literal("")),
   enabled: z.boolean().default(true),
+  mode: z.enum(["test", "live"]).optional(),
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
 
