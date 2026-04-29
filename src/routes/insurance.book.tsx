@@ -178,10 +178,10 @@ function InsuranceBookingPage() {
             <div className="text-xs text-muted-foreground">Order summary</div>
             <div className="mt-1 text-base font-extrabold text-foreground">{plan.name}</div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <Row label={`${currency} ${price.toFixed(2)} × ${travelers}`} value={`${currency} ${total.toFixed(2)}`} />
+              <Row label={`${formatPrice(price, currency)} × ${travelers}`} value={formatPrice(total, currency)} />
               <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-primary">{currency} {total.toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
