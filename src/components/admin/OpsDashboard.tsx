@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Loader2, Activity, Database, ListChecks, Receipt, RefreshCw, Plug, Power, ExternalLink } from "lucide-react";
+import { Loader2, Activity, Database, ListChecks, Receipt, RefreshCw, Plug, Power, ExternalLink, Percent, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { triggerCrawl } from "@/server/crawler.functions";
+import { triggerCrawl, seedAllInventory } from "@/server/crawler.functions";
+import { listMarkups, setMarkup } from "@/server/markups.functions";
+import { invalidateMarkupCache } from "@/lib/use-markup";
 
 type Provider = {
   id: string; slug: string; name: string; vertical: string; kind: "api" | "crawl";
@@ -14,21 +16,51 @@ type InventoryRow = { id: string; title: string; vertical: string; price: number
 type BookingRow = { id: string; vertical: string; status: string; amount: number; currency: string; customer_email: string; customer_name: string; created_at: string; provider_id: string | null };
 
 export function OpsDashboard() {
-  const [sub, setSub] = useState<"providers" | "inventory" | "crawls" | "bookings" | "health">("providers");
+  const [sub, setSub] = useState<"providers" | "inventory" | "crawls" | "bookings" | "health" | "markups">("providers");
+  const seedAll = useServerFn(seedAllInventory);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState<string | null>(null);
+
+  async function runSeedAll() {
+    setSeeding(true); setSeedMsg(null);
+    try {
+      const r: any = await seedAll({});
+      const lines = (r.results ?? []).map((x: any) => `${x.vertical}: ${x.items_upserted}`).join(" · ");
+      setSeedMsg(`Seeded ${r.total} items (${lines})`);
+    } catch (e: any) {
+      setSeedMsg(`Failed: ${e?.message ?? "unknown error"}`);
+    }
+    setSeeding(false);
+  }
+
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <SubTab active={sub === "providers"} onClick={() => setSub("providers")} icon={Plug}>Providers</SubTab>
         <SubTab active={sub === "inventory"} onClick={() => setSub("inventory")} icon={Database}>Inventory</SubTab>
         <SubTab active={sub === "crawls"} onClick={() => setSub("crawls")} icon={RefreshCw}>Crawl jobs</SubTab>
         <SubTab active={sub === "bookings"} onClick={() => setSub("bookings")} icon={Receipt}>Bookings</SubTab>
         <SubTab active={sub === "health"} onClick={() => setSub("health")} icon={Activity}>Health</SubTab>
+        <SubTab active={sub === "markups"} onClick={() => setSub("markups")} icon={Percent}>Markups</SubTab>
+        <div className="ml-auto flex items-center gap-2">
+          {seedMsg && <span className="text-xs text-muted-foreground">{seedMsg}</span>}
+          <button
+            disabled={seeding}
+            onClick={runSeedAll}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50"
+            title="Crawl up to 50 items per vertical (visas, insurance, tours, pickups)"
+          >
+            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            Seed all inventory
+          </button>
+        </div>
       </div>
       {sub === "providers" && <ProvidersPanel />}
       {sub === "inventory" && <InventoryPanel />}
       {sub === "crawls" && <CrawlsPanel />}
       {sub === "bookings" && <BookingsPanel />}
       {sub === "health" && <HealthPanel />}
+      {sub === "markups" && <MarkupsPanel />}
     </div>
   );
 }
