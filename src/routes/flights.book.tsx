@@ -377,34 +377,6 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
 
 /* ------------ small UI primitives ------------ */
 
-function SectionCard({
-  title, subtitle, children,
-}: {
-  title: string; subtitle?: string; children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-card md:p-5">
-      <div className="mb-3">
-        <div className="text-sm font-bold text-foreground">{title}</div>
-        {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Field({
-  label, required, children,
-}: { label: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        {label} {required && <span className="text-destructive">*</span>}
-      </div>
-      {children}
-    </label>
-  );
-}
 
 function Addon({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
   const [on, setOn] = useState(false);
