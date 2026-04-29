@@ -17,6 +17,7 @@ import {
   LogOut,
   ChevronRight,
   Crown,
+  Plug,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Footer } from "@/components/Footer";
@@ -31,6 +32,7 @@ const NAV: { to: string; label: string; icon: typeof Users; group: "Overview" | 
   { to: "/admin/operations", label: "Operations", icon: Activity, group: "System" },
   { to: "/admin/markups", label: "Markups & Settings", icon: Percent, group: "System" },
   { to: "/admin/currencies", label: "Currencies", icon: DollarSign, group: "System" },
+  { to: "/admin/api-providers", label: "API Providers", icon: Plug, group: "System" },
 ];
 
 export function AdminLayout({ children }: { children?: ReactNode }) {
