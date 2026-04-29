@@ -389,6 +389,12 @@ async function runDuffelSearch(input: z.infer<typeof FlightSearchInput>) {
 export const startFlightSearch = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => FlightSearchInput.parse(d))
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("flights")) === "travsify") {
+      const t = await travsifySearch("/flights/search", data);
+      if (!t.ok) return { search_id: null, data: { offers: [] }, error: t.error };
+      const offers = t.data?.offers ?? t.data?.data?.offers ?? [];
+      return { search_id: null, data: { offers }, error: null };
+    }
     const r = await runDuffelSearch(data);
     if (r.error) return { search_id: null, data: { offers: [] }, error: r.error };
     return { search_id: null, data: { offers: r.offers }, error: null };
