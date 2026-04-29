@@ -10,6 +10,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
+import iswitchLogo from "@/assets/iswitch-logo.jpeg";
 
 type Variant = "customer" | "agent";
 
@@ -73,11 +74,11 @@ export function AuthSplitLayout({
           <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-accent/30 blur-3xl" />
 
           <div className="relative">
-            <Link to="/" className="inline-flex items-center gap-2 text-sm font-extrabold tracking-tight">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
-                <Plane className="h-4 w-4" />
+            <Link to="/" className="inline-flex items-center gap-3 text-sm font-extrabold tracking-tight">
+              <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg ring-2 ring-white/40">
+                <img src={iswitchLogo} alt="iSwitch logo" className="h-full w-full object-cover" />
               </span>
-              iSwitch
+              <span className="font-display text-lg">iSwitch</span>
             </Link>
 
             <div className="mt-12 max-w-md">
@@ -126,8 +127,8 @@ export function AuthSplitLayout({
         <main className="flex min-h-screen flex-col bg-secondary/30">
           <header className="flex items-center justify-between px-5 py-4 lg:hidden">
             <Link to="/" className="flex items-center gap-2 text-sm font-extrabold">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-                <Plane className="h-3.5 w-3.5" />
+              <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-white ring-2 ring-primary/20">
+                <img src={iswitchLogo} alt="iSwitch logo" className="h-full w-full object-cover" />
               </span>
               iSwitch
             </Link>
@@ -150,7 +151,9 @@ export function AuthSplitLayout({
                 )}
               </div>
 
-              <div className="mt-6">{children}</div>
+              <div className="auth-form mt-6 rounded-2xl border-2 border-primary/15 bg-card p-6 shadow-xl shadow-primary/5 ring-1 ring-accent/10">
+                {children}
+              </div>
 
               {showGuestExit && (
                 <div className="mt-6 rounded-2xl border border-dashed border-border bg-card p-4 text-center">
