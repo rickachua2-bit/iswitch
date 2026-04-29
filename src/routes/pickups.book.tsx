@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTransfer } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Car, Users, Briefcase, Snowflake, MapPin, Clock, ShieldCheck, CheckCircle2, Plane, Phone, Calendar as CalendarIcon,
+  User, Mail, Hash, MessageSquare,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/pickups/book")({
 
 function TransferBookingPage() {
   const { vehicle_id, pickup, drop, date, time } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [vehicle, setVehicle] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +91,7 @@ function TransferBookingPage() {
       { icon: Briefcase, label: `${vehicle.bags ?? 2} bags` },
     ],
     priceLabel: "Total fare",
-    priceValue: `${currency} ${price.toFixed(2)}`,
+    priceValue: formatPrice(price, currency),
     priceFootnote: "Fixed price · all tolls & fees included",
     backTo: "/pickups",
   };
@@ -163,11 +166,11 @@ function TransferBookingPage() {
             <div className="mt-1 text-base font-extrabold text-foreground">{vehicle.name ?? vehicle.type ?? "Vehicle"}</div>
             <div className="mt-1 text-xs text-muted-foreground">{date} · {time || "12:00"}</div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <Row label="Vehicle fare" value={`${currency} ${price.toFixed(2)}`} />
+              <Row label="Vehicle fare" value={formatPrice(price, currency)} />
               <Row label="Tolls & fees" value="Included" />
               <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-primary">{currency} {price.toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatPrice(price, currency)}</span>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
@@ -276,30 +279,30 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Lead passenger details">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Lead passenger details" icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Mobile (used by driver)" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
+          <Field label="Mobile (used by driver)" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
           </Field>
         </div>
       </BookingSectionCard>
-      <BookingSectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically.">
+      <BookingSectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically." icon={Plane}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="Flight number">
-            <input value={v.flight} onChange={(e) => set("flight", e.target.value)} className={inputCls} placeholder="e.g. EK783" />
+          <Field label="Flight number" icon={Hash}>
+            <input value={v.flight} onChange={(e) => set("flight", e.target.value)} placeholder="e.g. EK783" />
           </Field>
-          <Field label="Driver instructions">
-            <input value={v.notes} onChange={(e) => set("notes", e.target.value)} className={inputCls} placeholder="Child seat, large luggage…" />
+          <Field label="Driver instructions" icon={MessageSquare}>
+            <input value={v.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Child seat, large luggage…" />
           </Field>
         </div>
       </BookingSectionCard>

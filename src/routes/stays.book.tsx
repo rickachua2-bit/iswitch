@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookHotel } from "@/server/travsify";
@@ -10,7 +10,7 @@ import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Star, MapPin, Hotel as HotelIcon, BedDouble, Wifi, Coffee, Waves, Dumbbell,
   Utensils, ParkingCircle, Sparkles, ShieldCheck, Calendar as CalendarIcon, Users,
-  CheckCircle2, Tag,
+  CheckCircle2, Tag, User, Mail, Phone, MessageSquare,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -388,28 +388,28 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Lead guest details" subtitle="Enter the primary guest's information for the reservation.">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Lead guest details" subtitle="Enter the primary guest's information for the reservation." icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} placeholder="Jane" />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="Jane" />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} placeholder="Doe" />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Doe" />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} placeholder="you@example.com" />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} placeholder="you@example.com" />
           </Field>
-          <Field label="Phone (with country code)" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+2348012345678" />
+          <Field label="Phone (with country code)" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+2348012345678" />
           </Field>
         </div>
       </BookingSectionCard>
-      <BookingSectionCard title="Special requests" subtitle="Optional — the property will do their best to accommodate.">
+      <BookingSectionCard title="Special requests" subtitle="Optional — the property will do their best to accommodate." icon={MessageSquare}>
         <textarea
           value={v.requests}
           onChange={(e) => set("requests", e.target.value)}
-          className={`${inputCls} min-h-[88px]`}
+          className="min-h-[88px]"
           placeholder="Late check-in, high floor, twin beds…"
         />
       </BookingSectionCard>

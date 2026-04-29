@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookInsurance } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   ShieldCheck, CheckCircle2, Heart, Briefcase, Plane, Stethoscope, Wallet, X, Calendar as CalendarIcon, Globe2, Users,
+  User, Mail, Phone,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -40,6 +42,7 @@ const DEFAULT_BENEFITS = [
 
 function InsuranceBookingPage() {
   const { plan_id, destination, start, end, travelers } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [plan, setPlan] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -105,8 +108,8 @@ function InsuranceBookingPage() {
       { icon: Globe2, label: destination || "Worldwide" },
     ],
     priceLabel: "Total premium",
-    priceValue: `${currency} ${total.toFixed(2)}`,
-    priceFootnote: `${currency} ${price.toFixed(2)} per traveller`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `${formatPrice(price, currency)} per traveller`,
     backTo: "/insurance",
   };
 
@@ -127,7 +130,7 @@ function InsuranceBookingPage() {
               </div>
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">Per traveller</div>
-                <div className="text-2xl font-extrabold text-primary">{currency} {price.toFixed(2)}</div>
+                <div className="text-2xl font-extrabold text-primary">{formatPrice(price, currency)}</div>
               </div>
             </div>
           </div>
@@ -175,10 +178,10 @@ function InsuranceBookingPage() {
             <div className="text-xs text-muted-foreground">Order summary</div>
             <div className="mt-1 text-base font-extrabold text-foreground">{plan.name}</div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-              <Row label={`${currency} ${price.toFixed(2)} × ${travelers}`} value={`${currency} ${total.toFixed(2)}`} />
+              <Row label={`${formatPrice(price, currency)} × ${travelers}`} value={formatPrice(total, currency)} />
               <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                 <span className="font-bold text-foreground">Total</span>
-                <span className="text-xl font-extrabold text-primary">{currency} {total.toFixed(2)}</span>
+                <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-300">
@@ -254,23 +257,23 @@ function PolicyForm({ plan }: { plan: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase.">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase." icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Phone" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
+          <Field label="Phone" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
           </Field>
-          <Field label="Date of birth" required>
-            <input required type="date" value={v.born_on} onChange={(e) => set("born_on", e.target.value)} className={inputCls} />
+          <Field label="Date of birth" required icon={CalendarIcon}>
+            <input required type="date" value={v.born_on} onChange={(e) => set("born_on", e.target.value)} />
           </Field>
         </div>
       </BookingSectionCard>

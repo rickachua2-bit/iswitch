@@ -299,19 +299,40 @@ export function BookingSectionCard({
 export function Field({
   label,
   required,
+  icon: Icon,
   children,
 }: {
   label: string;
   required?: boolean;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
   children: ReactNode;
 }) {
   return (
     <label className="block">
-      <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        {label} {required && <span className="text-destructive">*</span>}
+      <div className="field-label">
+        {Icon && <Icon />}
+        <span>
+          {label} {required && <span className="text-destructive">*</span>}
+        </span>
       </div>
       {children}
     </label>
+  );
+}
+
+/** Wrap an <input> with a leading icon. Use inside .booking-form. */
+export function IconInput({
+  icon: Icon,
+  children,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  children: ReactNode;
+}) {
+  return (
+    <div className="field-with-icon">
+      <Icon className="field-icon" />
+      {children}
+    </div>
   );
 }
 

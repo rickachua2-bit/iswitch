@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTour } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Compass, MapPin, Clock, Users, Languages, CheckCircle2, X, Calendar as CalendarIcon, Star,
+  User, Mail, Phone, MapPinned,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -48,6 +50,7 @@ function pickImages(t: any): string[] {
 
 function TourBookingPage() {
   const { tour_id, destination, date, guests } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [tour, setTour] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -119,8 +122,8 @@ function TourBookingPage() {
       { icon: Clock, label: tour.duration ?? "Approx. 4 hours" },
     ],
     priceLabel: "Total",
-    priceValue: `${currency} ${total.toFixed(2)}`,
-    priceFootnote: `${currency} ${price.toFixed(2)} × ${pax} guest${pax > 1 ? "s" : ""}`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `${formatPrice(price, currency)} × ${pax} guest${pax > 1 ? "s" : ""}`,
     backTo: "/tours",
   };
 
@@ -204,10 +207,10 @@ function TourBookingPage() {
               <div className="mt-1 text-base font-extrabold text-foreground">{tour.title}</div>
               <div className="mt-1 text-xs text-muted-foreground">{date} · {pax} guest{pax > 1 ? "s" : ""}</div>
               <div className="mt-4 space-y-2 border-t border-border pt-3 text-sm">
-                <Row label={`${currency} ${price.toFixed(2)} × ${pax}`} value={`${currency} ${total.toFixed(2)}`} />
+                <Row label={`${formatPrice(price, currency)} × ${pax}`} value={formatPrice(total, currency)} />
                 <div className="flex items-center justify-between border-t border-border pt-3 text-base">
                   <span className="font-bold text-foreground">Total</span>
-                  <span className="text-xl font-extrabold text-primary">{currency} {total.toFixed(2)}</span>
+                  <span className="text-xl font-extrabold text-primary">{formatPrice(total, currency)}</span>
                 </div>
               </div>
             </div>
@@ -283,25 +286,25 @@ function ParticipantsForm({ tour }: { tour: any; pax: number }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Lead traveller details">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Lead traveller details" icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Phone" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
+          <Field label="Phone" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
           </Field>
         </div>
       </BookingSectionCard>
-      <BookingSectionCard title="Pickup location" subtitle="Hotel name and address — leave blank if you'll meet at the start point.">
-        <input value={v.pickup} onChange={(e) => set("pickup", e.target.value)} className={inputCls} placeholder="e.g. Atlantis The Palm, Dubai" />
+      <BookingSectionCard title="Pickup location" subtitle="Hotel name and address — leave blank if you'll meet at the start point." icon={MapPinned}>
+        <input value={v.pickup} onChange={(e) => set("pickup", e.target.value)} placeholder="e.g. Atlantis The Palm, Dubai" />
       </BookingSectionCard>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
       <ConfirmButton submitting={submitting} label="Pay & confirm experience" />
