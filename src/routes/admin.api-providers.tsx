@@ -143,6 +143,19 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
     setBusyId(null); setBusyAction(null);
   }
 
+  async function onChangeGlobalMode(mode: "test" | "live") {
+    setGlobalMode(mode);
+    const r = await setGlobalProviderMode({ data: { mode } });
+    r.ok ? toast.success(`Switched all providers to ${mode.toUpperCase()} mode`) : toast.error(r.error);
+  }
+
+  async function onChangeProviderMode(p: Provider, mode: "test" | "live") {
+    const r = await setProviderModeOverride({ data: { id: p.id, mode } });
+    if (!r.ok) return toast.error(r.error);
+    toast.success(`${p.name} → ${mode.toUpperCase()}`);
+    refresh();
+  }
+
   const filtered = useMemo(() => providers.filter((p) => {
     if (filterVertical !== "all" && p.vertical !== filterVertical) return false;
     if (search && !`${p.name} ${p.slug} ${p.base_url ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
