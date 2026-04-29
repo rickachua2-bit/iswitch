@@ -220,8 +220,17 @@ export const pollFlightSearch = createServerFn({ method: "POST" })
     try {
       const res: any = await call(`/flights/search/${encodeURIComponent(data.search_id)}`, null, "GET");
       const payload = normalizeData(res?.data ?? res ?? {});
-      const status: string =
+      const rawStatus: string =
         payload.status || res?.status || (Array.isArray(payload.offers) ? "completed" : "processing");
+      // Travsify uses "succeeded"/"complete"/"done" — normalize to "completed".
+      // "queued"/"running"/"in_progress" -> "processing". "error"/"cancelled" -> "failed".
+      const s = String(rawStatus).toLowerCase();
+      const status =
+        ["completed", "complete", "succeeded", "success", "done", "finished"].includes(s)
+          ? "completed"
+          : ["failed", "error", "errored", "cancelled", "canceled", "expired"].includes(s)
+            ? "failed"
+            : "processing";
       return { status, data: payload, error: null };
     } catch (err: any) {
       const status: number | null = err?.status ?? null;
