@@ -99,29 +99,47 @@ async function firecrawlScrape(url: string, prompt: string): Promise<any[]> {
   const FK = process.env.FIRECRAWL_API_KEY;
   if (!FK) throw new Error("FIRECRAWL_API_KEY not configured");
 
-  const res = await fetch(`${FIRECRAWL_API}/scrape`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${FK}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url,
-      // Ask for both markdown (fallback context) + structured JSON extraction.
-      formats: [
-        "markdown",
-        { type: "json", prompt: `${prompt}\n\nIMPORTANT: Always return a top-level JSON object with an "items" array, even if you can only extract 1-3 entries from the page. Never return an empty object.` },
-      ],
-      onlyMainContent: true,
-      waitFor: 2000,
-    }),
-  });
+  // Cap each scrape to ~45s so the outer server function doesn't hit the
+  // edge upstream timeout (~60s on Cloudflare Workers).
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 45000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${FIRECRAWL_API}/scrape`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FK}`, "Content-Type": "application/json" },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        url,
+        formats: [
+          { type: "json", prompt: `${prompt}\n\nIMPORTANT: Always return a top-level JSON object with an "items" array, even if you can only extract 1-3 entries from the page. Never return an empty object.` },
+        ],
+        onlyMainContent: true,
+        // Tighter Firecrawl-side timeout to prevent long-tail page loads.
+        timeout: 30000,
+      }),
+    });
+  } catch (e: any) {
+    clearTimeout(timer);
+    if (e?.name === "AbortError") {
+      throw new Error(`firecrawl timeout after 45s for ${url}`);
+    }
+    throw e;
+  }
+  clearTimeout(timer);
+
   if (!res.ok) {
     const t = await res.text();
     if (res.status === 402 || /insufficient credits/i.test(t)) {
       throw new Error("Firecrawl has insufficient credits. Top up the Firecrawl account for the configured API key, then run Seed all again.");
     }
+    if (res.status === 408 || res.status === 504 || /timeout/i.test(t)) {
+      throw new Error(`firecrawl timeout for ${url}`);
+    }
     throw new Error(`firecrawl ${res.status}: ${t.slice(0, 300)}`);
   }
   const json = await res.json();
-  // SDK v2 may return { data: { json, markdown } } or { json, markdown } at root.
   const root = json?.data ?? json;
   const extracted = root?.json ?? root?.extract ?? root?.llm_extraction ?? root;
   const items = deepFindItems(extracted);
