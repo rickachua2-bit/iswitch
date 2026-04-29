@@ -211,4 +211,51 @@
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 18%, transparent);
   }
+
+  /* Colorful auth form styling — applies to inputs/selects/textareas inside .auth-form */
+  .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .auth-form select,
+  .auth-form textarea {
+    border-width: 2px !important;
+    border-color: color-mix(in oklab, var(--color-primary) 25%, var(--color-border)) !important;
+    background: linear-gradient(180deg,
+      color-mix(in oklab, var(--color-primary) 3%, var(--color-card)),
+      var(--color-card)) !important;
+    transition: border-color 150ms, box-shadow 150ms, background 150ms;
+  }
+  .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+  .auth-form select:hover,
+  .auth-form textarea:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-border)) !important;
+  }
+  .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+  .auth-form select:focus,
+  .auth-form textarea:focus,
+  .auth-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus-visible,
+  .auth-form select:focus-visible,
+  .auth-form textarea:focus-visible {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary) 18%, transparent),
+                0 0 0 1px color-mix(in oklab, var(--color-accent) 35%, transparent) !important;
+    background: var(--color-card) !important;
+  }
+  .auth-form label {
+    font-weight: 700;
+    color: color-mix(in oklab, var(--color-primary-dark, var(--color-primary)) 85%, var(--color-foreground));
+  }
+  .auth-form button[type="submit"] {
+    background: var(--gradient-primary) !important;
+    color: var(--color-primary-foreground) !important;
+    border: none !important;
+    box-shadow: 0 8px 24px -10px color-mix(in oklab, var(--color-primary) 60%, transparent),
+                inset 0 1px 0 color-mix(in oklab, white 25%, transparent) !important;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    transition: transform 120ms, box-shadow 150ms, filter 150ms;
+  }
+  .auth-form button[type="submit"]:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 12px 30px -8px color-mix(in oklab, var(--color-primary) 70%, transparent) !important;
+  }
+  .auth-form button[type="submit"]:active { transform: translateY(1px); }
 }
