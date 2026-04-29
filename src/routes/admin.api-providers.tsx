@@ -91,6 +91,34 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
     res.ok ? refresh() : toast.error(res.error);
   }
 
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<"test" | "crawl" | null>(null);
+
+  async function onTest(p: Provider) {
+    setBusyId(p.id); setBusyAction("test");
+    try {
+      const res: any = await testProvider({ data: { id: p.id } });
+      if (!res.ok) toast.error(res.error);
+      else if (res.healthy) toast.success(`✓ ${p.name} is up — ${res.latency}ms`);
+      else toast.error(`✗ ${p.name} is down: ${res.message}`);
+      refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Test failed"); }
+    setBusyId(null); setBusyAction(null);
+  }
+
+  async function onCrawl(p: Provider) {
+    if (p.kind !== "crawl") return toast.error("Only crawl providers can be crawled.");
+    setBusyId(p.id); setBusyAction("crawl");
+    toast.message(`Crawling ${p.name}…`, { description: "Fetching up to 50 items" });
+    try {
+      const res: any = await triggerCrawl({ data: { slug: p.slug } });
+      if (res.status === "succeeded") toast.success(`Crawled ${res.items_upserted} items from ${p.name}`);
+      else toast.error(`Crawl failed: ${res.error ?? "unknown error"}`);
+      refresh();
+    } catch (e: any) { toast.error(e?.message ?? "Crawl failed"); }
+    setBusyId(null); setBusyAction(null);
+  }
+
   const filtered = useMemo(() => providers.filter((p) => {
     if (filterVertical !== "all" && p.vertical !== filterVertical) return false;
     if (search && !`${p.name} ${p.slug} ${p.base_url ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
