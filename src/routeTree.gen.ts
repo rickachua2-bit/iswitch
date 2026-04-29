@@ -24,6 +24,7 @@ import { Route as ConsultationsRouteImport } from './routes/consultations'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VisasBookRouteImport } from './routes/visas.book'
 import { Route as ToursBookRouteImport } from './routes/tours.book'
 import { Route as StaysBookRouteImport } from './routes/stays.book'
@@ -112,6 +113,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const VisasBookRoute = VisasBookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -175,7 +181,7 @@ const AgentsApplyRoute = AgentsApplyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
@@ -200,11 +206,11 @@ export interface FileRoutesByFullPath {
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/consultations': typeof ConsultationsRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
@@ -228,12 +234,13 @@ export interface FileRoutesByTo {
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
@@ -258,6 +265,7 @@ export interface FileRoutesById {
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
   '/visas/book': typeof VisasBookRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -289,11 +297,11 @@ export interface FileRouteTypes {
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/admin/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/consultations'
     | '/flights'
     | '/forgot-password'
@@ -317,6 +325,7 @@ export interface FileRouteTypes {
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/admin'
     | '/dashboard'
   id:
     | '__root__'
@@ -346,12 +355,13 @@ export interface FileRouteTypes {
     | '/stays/book'
     | '/tours/book'
     | '/visas/book'
+    | '/admin/'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ConsultationsRoute: typeof ConsultationsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   FlightsRoute: typeof FlightsRouteWithChildren
@@ -474,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/visas/book': {
       id: '/visas/book'
       path: '/book'
@@ -560,6 +577,16 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardBookRoute: typeof DashboardBookRoute
@@ -649,7 +676,7 @@ const VisasRouteWithChildren = VisasRoute._addFileChildren(VisasRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ConsultationsRoute: ConsultationsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   FlightsRoute: FlightsRouteWithChildren,
