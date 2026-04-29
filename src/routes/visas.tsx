@@ -134,7 +134,7 @@ export const Route = createFileRoute("/visas")({
 });
 
 function VisasPage() {
-  const { visas, query, error } = Route.useLoaderData() as any;
+  const { visas, query, error, submitted } = Route.useLoaderData() as any;
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
@@ -143,10 +143,13 @@ function VisasPage() {
     try { sessionStorage.setItem(`visa:${id}`, JSON.stringify(v)); } catch {}
     navigate({
       to: "/visas/book",
-      search: { visa_id: String(id), nationality: query.nationality, destination: query.destination } as never,
+      search: { visa_id: String(id), nationality: query.nationality ?? "", destination: query.destination ?? "" } as never,
     });
   }
-  const searchedRoute = `${query.nationality} → ${query.destination}`;
+  const nationality = query.nationality ?? "";
+  const destination = query.destination ?? "";
+  const visaType = query.visaType ?? "Tourist";
+  const searchedRoute = nationality && destination ? `${nationality} → ${destination}` : "";
 
   // Annotate each result with kinds, then sort: e-Visa & visa-free first.
   const annotated = (visas as any[]).map((v) => ({ ...v, _kinds: classifyVisa(v) }));
@@ -154,7 +157,8 @@ function VisasPage() {
     k === "visa-free" ? 0 : k === "evisa" ? 1 : k === "voa" ? 2 : k === "biometrics" ? 3 : k === "interview" ? 4 : 5;
   annotated.sort((a, b) => Math.min(...a._kinds.map(rank)) - Math.min(...b._kinds.map(rank)));
 
-  const showNoResults = !dismissed && (!!error || annotated.length === 0);
+  // Only show the "no results" dialog AFTER a real search ran and came back empty/errored.
+  const showNoResults = submitted && !dismissed && (!!error || annotated.length === 0);
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
@@ -182,6 +186,20 @@ function VisasPage() {
         initial={query}
       />
 
+      {!submitted ? (
+        <section className="mx-auto max-w-3xl px-4 py-16 text-center md:px-6">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <ShieldCheck className="h-7 w-7" />
+          </div>
+          <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+            Where are you headed?
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
+            Choose your nationality, destination and purpose above, then hit search to see every visa option — costs, processing time and required documents.
+          </p>
+        </section>
+      ) : (
+      <>
       {/* Result summary banner — Sherpa-style */}
       <section className="mx-auto max-w-6xl px-4 pt-8 md:px-6">
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm md:p-6">
@@ -191,11 +209,11 @@ function VisasPage() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 text-base font-semibold text-foreground md:text-lg">
-                <span>{query.nationality}</span>
+                <span>{nationality}</span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                <span>{query.destination}</span>
+                <span>{destination}</span>
                 <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  {query.visaType}
+                  {visaType}
                 </span>
               </div>
               {!error && annotated.length > 0 && (
