@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookInsurance } from "@/server/travsify";
@@ -132,7 +132,7 @@ function InsuranceBookingPage() {
             </div>
           </div>
 
-          <SectionCard title="What's covered" subtitle="Headline benefits — see policy wording for full limits.">
+          <BookingSectionCard title="What's covered" subtitle="Headline benefits — see policy wording for full limits.">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {benefits.map((b: any, i: number) => {
                 const Icon = b.icon ?? ShieldCheck;
@@ -147,9 +147,9 @@ function InsuranceBookingPage() {
                 );
               })}
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="What's not covered">
+          <BookingSectionCard title="What's not covered">
             <ul className="space-y-2 text-sm">
               {exclusions.map((e, i) => (
                 <li key={i} className="flex items-start gap-2">
@@ -158,14 +158,14 @@ function InsuranceBookingPage() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="24/7 emergency assistance">
+          <BookingSectionCard title="24/7 emergency assistance">
             <p className="text-sm text-muted-foreground">
               Once your policy is active you get a 24/7 multilingual emergency hotline,
               direct hospital billing in 180+ countries, and concierge support for claims.
             </p>
-          </SectionCard>
+          </BookingSectionCard>
 
           <PolicyForm plan={plan} />
         </div>
@@ -255,7 +255,7 @@ function PolicyForm({ plan }: { plan: any }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <SectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase.">
+      <BookingSectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase.">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="First name" required>
             <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
@@ -273,7 +273,7 @@ function PolicyForm({ plan }: { plan: any }) {
             <input required type="date" value={v.born_on} onChange={(e) => set("born_on", e.target.value)} className={inputCls} />
           </Field>
         </div>
-      </SectionCard>
+      </BookingSectionCard>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
       <ConfirmButton submitting={submitting} label="Pay & activate cover" />
     </form>

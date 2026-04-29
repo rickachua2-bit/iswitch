@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
-  BookingShell, SectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
+  BookingShell, BookingSectionCard, Field, inputCls, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookTransfer } from "@/server/travsify";
@@ -124,7 +124,7 @@ function TransferBookingPage() {
             </div>
           </div>
 
-          <SectionCard title="Your route">
+          <BookingSectionCard title="Your route">
             <div className="space-y-3">
               <RouteRow label="Pickup" value={pickup} icon={MapPin} />
               <RouteRow label="Drop-off" value={drop} icon={MapPin} />
@@ -133,9 +133,9 @@ function TransferBookingPage() {
                 <Stat icon={Clock} label="Time" value={time || "12:00"} />
               </div>
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="What's included">
+          <BookingSectionCard title="What's included">
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2 text-sm">
               <Inc>Meet & greet by name board</Inc>
               <Inc>Free 60 min waiting time at airport</Inc>
@@ -144,15 +144,15 @@ function TransferBookingPage() {
               <Inc>Free cancellation up to 24h before pickup</Inc>
               <Inc>24/7 customer support hotline</Inc>
             </div>
-          </SectionCard>
+          </BookingSectionCard>
 
-          <SectionCard title="Driver assignment">
+          <BookingSectionCard title="Driver assignment">
             <p className="text-sm text-muted-foreground">
               Your driver's name, photo and phone number will be sent by email and SMS
               <strong className="text-foreground"> 24 hours before pickup</strong>. They'll
               monitor your flight and adjust the pickup time automatically if needed.
             </p>
-          </SectionCard>
+          </BookingSectionCard>
 
           <PassengerForm vehicle={vehicle} />
         </div>
@@ -277,7 +277,7 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <SectionCard title="Lead passenger details">
+      <BookingSectionCard title="Lead passenger details">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="First name" required>
             <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
@@ -292,8 +292,8 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
             <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
           </Field>
         </div>
-      </SectionCard>
-      <SectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically.">
+      </BookingSectionCard>
+      <BookingSectionCard title="Flight details (recommended)" subtitle="So your driver can track delays automatically.">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Field label="Flight number">
             <input value={v.flight} onChange={(e) => set("flight", e.target.value)} className={inputCls} placeholder="e.g. EK783" />
@@ -302,7 +302,7 @@ function PassengerForm({ vehicle }: { vehicle: any }) {
             <input value={v.notes} onChange={(e) => set("notes", e.target.value)} className={inputCls} placeholder="Child seat, large luggage…" />
           </Field>
         </div>
-      </SectionCard>
+      </BookingSectionCard>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>}
       <ConfirmButton submitting={submitting} label="Pay & confirm transfer" />
     </form>
