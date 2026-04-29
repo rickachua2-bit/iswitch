@@ -108,8 +108,8 @@ function InsuranceBookingPage() {
       { icon: Globe2, label: destination || "Worldwide" },
     ],
     priceLabel: "Total premium",
-    priceValue: `${currency} ${total.toFixed(2)}`,
-    priceFootnote: `${currency} ${price.toFixed(2)} per traveller`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `${formatPrice(price, currency)} per traveller`,
     backTo: "/insurance",
   };
 
