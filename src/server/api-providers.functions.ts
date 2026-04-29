@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAuth } from "@/integrations/supabase/auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const VERTICALS = ["flights", "stays", "visas", "insurance", "tours", "pickups"] as const;
@@ -17,7 +17,7 @@ async function assertAdmin(userId: string) {
 
 // ============ ROUTING (existing) ============
 export const getApiProviderRouting = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data } = await supabaseAdmin
@@ -39,7 +39,7 @@ export const getApiProviderRouting = createServerFn({ method: "GET" })
   });
 
 export const updateApiProviderRouting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => RoutingSchema.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -53,7 +53,7 @@ export const updateApiProviderRouting = createServerFn({ method: "POST" })
 
 // ============ PROVIDERS CRUD ============
 export const listProviders = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
@@ -76,7 +76,7 @@ const ProviderInput = z.object({
 });
 
 export const createProvider = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => ProviderInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -89,7 +89,7 @@ export const createProvider = createServerFn({ method: "POST" })
   });
 
 export const updateProvider = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => ProviderInput.partial().extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -103,7 +103,7 @@ export const updateProvider = createServerFn({ method: "POST" })
   });
 
 export const deleteProvider = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -114,7 +114,7 @@ export const deleteProvider = createServerFn({ method: "POST" })
 
 // ============ INVENTORY (per-provider listings) ============
 export const listProviderInventory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => z.object({ providerId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -147,7 +147,7 @@ const InventoryInput = z.object({
 });
 
 export const createInventoryItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => InventoryInput.parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -161,7 +161,7 @@ export const createInventoryItem = createServerFn({ method: "POST" })
   });
 
 export const updateInventoryItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => InventoryInput.partial().extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -176,7 +176,7 @@ export const updateInventoryItem = createServerFn({ method: "POST" })
   });
 
 export const deleteInventoryItem = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
@@ -187,7 +187,7 @@ export const deleteInventoryItem = createServerFn({ method: "POST" })
 
 // ============ TEST PROVIDER (health probe) ============
 export const testProvider = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);

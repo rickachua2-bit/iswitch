@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAuth } from "@/integrations/supabase/auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { runCrawl, runAllCrawls, CRAWLER_SOURCES } from "./crawler.server";
 
@@ -10,7 +10,7 @@ async function assertAdmin(userId: string) {
 }
 
 export const triggerCrawl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) => z.object({ slug: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
     try {
@@ -28,7 +28,7 @@ export const triggerCrawl = createServerFn({ method: "POST" })
  * Idempotent — re-running refreshes existing items.
  */
 export const seedAllInventory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .handler(async ({ context }) => {
     try {
       await assertAdmin((context as any).userId);

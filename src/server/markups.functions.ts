@@ -11,7 +11,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAuth } from "@/integrations/supabase/auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const VERTICALS = ["flights", "stays", "visas", "insurance", "tours", "pickups"] as const;
@@ -40,7 +40,7 @@ export const listMarkups = createServerFn({ method: "GET" }).handler(async () =>
 
 /** Admin-only update for a single vertical. */
 export const setMarkup = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([supabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
