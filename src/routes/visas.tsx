@@ -2,8 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { BookingDialog } from "@/components/BookingDialog";
-import { searchVisas, bookVisa } from "@/server/travsify";
+import { searchVisas } from "@/server/travsify";
 import {
   Dialog,
   DialogContent,
@@ -308,29 +307,6 @@ function VisasPage() {
         </div>
       </section>
 
-      {selected && (
-        <BookingDialog
-          open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
-          title={`Apply: ${selected.name}`}
-          summary={`${selected.currency ?? "USD"} ${selected.price}`}
-          fields={[
-            { name: "firstName", label: "First name", required: true },
-            { name: "lastName", label: "Last name", required: true },
-            { name: "email", label: "Email", type: "email", required: true },
-            { name: "passport", label: "Passport number", required: true },
-          ]}
-          onSubmit={async (v) => {
-            const res = await bookVisa({
-              data: {
-                visa_id: selected.id,
-                applicant: { firstName: v.firstName, lastName: v.lastName, email: v.email, passport: v.passport },
-              },
-            });
-            return { reference: res?.data?.reference, status: res?.data?.status };
-          }}
-        />
-      )}
       <Footer />
     </div>
   );
