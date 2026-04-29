@@ -224,12 +224,13 @@ function StaysPage() {
             { name: "firstName", label: "First name", required: true },
             { name: "lastName", label: "Last name", required: true },
             { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone (with country code)", type: "tel", required: true, placeholder: "+1234567890" },
           ]}
           onSubmit={async (v) => {
             const res = await bookHotel({
               data: {
                 offer_id: selected.offer_id ?? selected.id,
-                holder: { firstName: v.firstName, lastName: v.lastName, email: v.email },
+                holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
                 guests: [{ firstName: v.firstName, lastName: v.lastName }],
               },
             });

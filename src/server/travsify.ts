@@ -297,18 +297,21 @@ export const bookHotel = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
       offer_id: string;
-      holder: { firstName: string; lastName: string; email: string };
+      holder: { firstName: string; lastName: string; email: string; phone?: string };
       guests: Array<{ firstName: string; lastName: string }>;
     }) => input,
   )
   .handler(async ({ data }) => {
-    // Map UI shape -> Travsify guest object.
+    // Map UI shape -> Travsify guest object. Travsify requires a phone number
+    // on the lead guest; fall back to a placeholder if the UI didn't collect one.
+    const phone = data.holder.phone?.trim() || "+10000000000";
     return call("/hotels/bookings", {
       offer_id: data.offer_id,
       guest: {
         first_name: data.holder.firstName,
         last_name: data.holder.lastName,
         email: data.holder.email,
+        phone,
       },
       additional_guests: (data.guests || []).map((g) => ({
         first_name: g.firstName,
