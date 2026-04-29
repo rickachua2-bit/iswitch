@@ -570,6 +570,7 @@ export const searchHotels = createServerFn({ method: "POST" })
     (d: unknown) =>
       z
         .object({
+          destination: z.string().optional(),
           country_code: z.string().optional(),
           city: z.string().optional(),
           checkin: z.string(),
@@ -588,9 +589,18 @@ export const searchHotels = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { hotels: [] });
       return ok({ hotels: t.data?.hotels ?? t.data?.data?.hotels ?? [] });
     }
+    // Resolve free-text destination ("Abidjan, Côte d'Ivoire") into city + country.
+    let cityName = data.city || undefined;
+    let countryCode =
+      data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined;
+    if ((!cityName && !countryCode) || data.destination) {
+      const r = await resolveDestination(data.destination);
+      cityName = cityName ?? r.cityName;
+      countryCode = countryCode ?? r.countryCode;
+    }
     const res = await searchLiteHotels({
-      cityName: data.city,
-      countryCode: data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined,
+      cityName,
+      countryCode,
       checkin: data.checkin,
       checkout: data.checkout,
       adults: Math.max(1, Number(data.adults) || 1),
