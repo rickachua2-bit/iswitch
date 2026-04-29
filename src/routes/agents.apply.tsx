@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, Briefcase, Upload, FileCheck2, Clock, X } from "lucide-react";
+import {
+  Loader2, Briefcase, Upload, FileCheck2, Clock, X,
+  User, Mail, Lock, Phone, Building2, Hash, Globe, MapPin, Layers, ShieldCheck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthSplitLayout } from "@/components/AuthSplitLayout";
+import { AuthField, PasswordStrength } from "@/components/AuthField";
 
 export const Route = createFileRoute("/agents/apply")({
   head: () => ({
