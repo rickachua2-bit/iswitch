@@ -1,54 +1,40 @@
-Plan to fix this once across all verticals:
+# Mobile Header: Always-Visible Language & Currency
 
-1. Standardize the mobile vertical tabs
-   - Update the shared search tab UI so the six verticals render as exactly 2 rows × 3 columns on mobile.
-   - Keep desktop/tablet as a single 6-column row.
-   - Apply this to both shared tab components currently used by the home/dashboard search and vertical pages:
-     - `UnifiedSearchBar`
-     - `SearchTabs`
-   - Adjust tab label/icon spacing so long labels like “Car Transfers” still fit on mobile without horizontal scrolling.
+## Problem
+On mobile, the language and currency selectors only appear inside the hamburger drawer (`hidden md:block` on the header buttons; `<select>` fallbacks live inside the drawer). Users want them visible directly in the top header bar on mobile, the same as on desktop.
 
-2. Fix the root cause of “Book” returning the user to search
-   - The booking pages depend on the selected item being available after navigation. Some verticals only use `sessionStorage`, and flights save the backend fallback in a fire-and-forget way, so the booking page can mount before the selected offer is recoverable.
-   - Replace that fragile pattern with a consistent selected-offer handoff for every vertical:
-     - Save selected result in `sessionStorage` immediately for same-tab speed.
-     - Save selected result to the backend offer cache before navigating to the booking route.
-     - Then navigate to `/flights/book`, `/stays/book`, `/visas/book`, `/insurance/book`, `/tours/book`, or `/pickups/book`.
-   - If backend caching fails, navigation will still proceed using `sessionStorage`, but the app will no longer intentionally navigate before attempting the durable save.
+## Fix
+Single file: `src/components/Header.tsx`.
 
-3. Add cache recovery to every booking page
-   - Hotels and flights already have some recovery logic, but it is uneven.
-   - Add the same backend cache fallback to:
-     - `visas.book.tsx`
-     - `insurance.book.tsx`
-     - `tours.book.tsx`
-     - `pickups.book.tsx`
-   - Keep the existing loading state pattern so the page waits briefly while recovering the selected item instead of immediately showing “session expired” or sending the user back to search.
+### 1. Show the existing currency + language dropdown buttons on mobile
+- Remove `hidden md:block` from the two wrapper `<div>`s (currency at line 102, language at line 136). They become `relative` (always visible).
+- Tighten the trigger buttons for small screens:
+  - Currency button: show `currency.code` only, smaller padding (`px-1.5 py-1`), `text-[11px]` on mobile, `text-xs` on `sm+`.
+  - Language button: show `Globe` icon + uppercase code, same compact sizing.
+- Keep the existing dropdown panel logic untouched (it already opens on click, closes on outside click, has search + checkmark).
 
-4. Normalize selected item IDs and cache payloads
-   - Use stable ID extraction per vertical:
-     - flights: `offer.id`
-     - hotels: `offer_id ?? rate_id ?? id ?? hotelId`
-     - visas: `id ?? visa_id ?? external_id`
-     - insurance: `id ?? plan_id ?? external_id`
-     - tours: `id ?? tour_id ?? external_id`
-     - pickups: `id ?? vehicle_id ?? external_id`
-   - Store useful search context in the cache payload as well, such as dates, guests, destination, pickup/drop-off, so booking pages can display details after refresh or payment redirects.
+### 2. Make the dropdown panel mobile-friendly
+- `DropdownPanel`: change width from fixed `w-72` to `w-[min(18rem,calc(100vw-1.5rem))]` so the 288px panel never overflows on a 360–414px viewport. Keep `right-0 top-full` anchoring so it aligns under its trigger.
 
-5. Make booking navigation type-safe and less brittle
-   - Use `Route.useNavigate()` / `useNavigate({ from: ... })` where appropriate on route pages so relative search updates and absolute booking navigations do not accidentally resolve incorrectly.
-   - Preserve search parameters when needed; avoid clearing the selected vertical’s search unless the user explicitly closes a no-results dialog.
+### 3. Tighten the right-side cluster spacing on mobile
+- Right-side container (line 100): keep `gap-1` on mobile, `md:gap-2` on larger screens, so logo + 2 selectors + hamburger fit on a 360px viewport without wrapping.
+- Logo: keep current size; no change needed.
 
-6. Clean up unused booking imports
-   - Several booking pages still import older direct booking server functions (`bookHotel`, `bookTour`, etc.) but now use `startCheckout`. Remove unused imports while touching these files to reduce build warnings and confusion.
+### 4. Remove the now-redundant `<select>` block in the mobile drawer
+- Delete the `grid-cols-2` block (lines 257–282) that holds the duplicate native language/currency `<select>`s. They're no longer needed since the real dropdowns live in the header.
+- Keep the rest of the drawer (nav links, B2B, sign-in, dashboard, admin, consult) intact.
 
-7. Verification after implementation
-   - Check the mobile layout at a mobile breakpoint: all six vertical tabs should display as 3 across and 2 down, with no horizontal scroll.
-   - Validate the booking handoff path for each vertical:
-     - search results → select/book → review/details booking page → enter details → payment checkout.
-   - Specifically verify hotels and flights, since those are the flows you called out, then confirm the same mechanism is applied to visas, insurance, tours, and pickups.
+## Files Touched
+- `src/components/Header.tsx` (only)
 
-Technical notes:
-- No route tree should be manually edited; route files already exist for every booking page.
-- No database schema change is expected because the `offer_cache` table already exists and is typed.
-- This will mainly touch shared tab components, selected-result navigation handlers, and booking-page recovery logic.
+## Out of Scope
+- No changes to `useCurrency`, `i18n`, or any other component.
+- No new dependencies.
+- Bottom nav (`MobileBottomNav.tsx`) untouched.
+
+## QA Checklist
+- 360px viewport: header shows logo · CUR · 🌐EN · ☰ on one row, no wrap.
+- Tapping CUR opens currency dropdown anchored to the button, fits within viewport, search works.
+- Tapping 🌐EN opens language dropdown the same way.
+- Hamburger drawer no longer shows the duplicate language/currency selects.
+- Desktop (≥ md) layout unchanged.

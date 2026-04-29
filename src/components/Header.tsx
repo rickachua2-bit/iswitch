@@ -97,12 +97,12 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-1.5 md:gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           {/* Currency */}
-          <div className="relative hidden md:block">
+          <div className="relative">
             <button
               onClick={() => { setCurOpen((v) => !v); setLangOpen(false); setUserOpen(false); }}
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-primary-foreground/85 transition hover:bg-white/10"
+              className="flex items-center gap-0.5 rounded-md px-1.5 py-1 text-[11px] font-semibold text-primary-foreground/85 transition hover:bg-white/10 md:gap-1 md:px-2 md:py-1.5 md:text-xs"
               aria-label="Select currency"
             >
               {currency.code} <ChevronDown className="h-3 w-3" />
