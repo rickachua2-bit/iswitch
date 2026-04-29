@@ -246,3 +246,76 @@ export const testProvider = createServerFn({ method: "POST" })
 
     return { ok: true as const, healthy: ok, status, latency, message };
   });
+
+// ============ MODE (test vs live) ============
+export const getProviderMode = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const global = await getGlobalMode();
+    return {
+      ok: true as const,
+      global,
+      keys: {
+        duffel:   { live: isKeyConfigured("duffel", "live"),   test: isKeyConfigured("duffel", "test") },
+        liteapi:  { live: isKeyConfigured("liteapi", "live"),  test: isKeyConfigured("liteapi", "test") },
+        travsify: { live: isKeyConfigured("travsify", "live"), test: isKeyConfigured("travsify", "test") },
+      },
+    };
+  });
+
+export const setGlobalProviderMode = createServerFn({ method: "POST" })
+  .middleware([supabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mode: z.enum(["test", "live"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("system_settings")
+      .upsert({ key: "provider_mode", value: data.mode as any, updated_at: new Date().toISOString(), updated_by: context.userId },
+        { onConflict: "key" });
+    invalidateModeCache();
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+export const setProviderModeOverride = createServerFn({ method: "POST" })
+  .middleware([supabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), mode: z.enum(["test", "live"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("providers")
+      .update({ mode: data.mode, updated_at: new Date().toISOString() }).eq("id", data.id);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+// ============ CRAWL JOBS HISTORY ============
+export const listCrawlJobs = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data: jobs, error } = await supabaseAdmin
+      .from("crawl_jobs")
+      .select("id, provider_id, status, started_at, finished_at, items_seen, items_upserted, items_deactivated, error, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) return { ok: false as const, error: error.message, jobs: [], providers: [] };
+    const { data: provs } = await supabaseAdmin
+      .from("providers").select("id, name, slug, vertical, kind");
+    return { ok: true as const, jobs: jobs ?? [], providers: provs ?? [] };
+  });
+
+export const getProviderInventoryCounts = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("inventory_items").select("provider_id");
+    if (error) return { ok: false as const, error: error.message, counts: {} as Record<string, number> };
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const id = (row as any).provider_id as string;
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return { ok: true as const, counts };
+  });
