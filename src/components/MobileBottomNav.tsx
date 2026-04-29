@@ -26,7 +26,7 @@ const VERTICALS = [
   { to: "/pickups",   label: "Transfers", Icon: Car,          grad: "from-cyan-500 to-sky-600"        },
 ] as const;
 
-const HIDDEN_PREFIXES = ["/login", "/signup", "/forgot-password", "/reset-password", "/agents/apply"];
+const HIDDEN_PREFIXES = ["/login", "/signup", "/forgot-password", "/reset-password", "/agents/apply", "/admin"];
 
 export function MobileBottomNav() {
   const location = useLocation();
