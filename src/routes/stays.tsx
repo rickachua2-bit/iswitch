@@ -117,24 +117,21 @@ const PROMO_TILES = [
 function StaysPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
   const formatPrice = usePriceFormat();
-  const navigate = useNavigate();
   const hasSearched = !!(query.checkIn && query.checkOut);
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(h: any) {
-    const id = h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(h: any) {
+    const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
+    void select({
       vertical: "stays",
       sessionPrefix: "hotel",
       cachePrefix: "hotel",
-      id: String(id),
+      id,
       payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, destination: query.destination },
-    });
-    navigate({
       to: "/stays/book",
       search: {
         destination: query.destination,
-        offer_id: String(id),
+        offer_id: id,
         checkIn: query.checkIn,
         checkOut: query.checkOut,
         guests: query.guests,
