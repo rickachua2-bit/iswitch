@@ -85,7 +85,7 @@ export const getFlightOffer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offers/${data.offer_id}?return_available_services=true`, {
-        method: "GET", headers: dHeaders(),
+        method: "GET", headers: await dHeaders(),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
       return { ok: true as const, offer: JSON.parse(text)?.data };
