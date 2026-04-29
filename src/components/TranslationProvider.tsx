@@ -175,7 +175,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
       // Update html lang/dir always.
       document.documentElement.lang = lang;
-      document.documentElement.dir = RTL_LANGS.has(lang as any) ? "rtl" : "ltr";
+      document.documentElement.dir = RTL_LANGS.has(lang) ? "rtl" : "ltr";
 
       if (lang === "en") {
         restoreOriginals(document.body);
