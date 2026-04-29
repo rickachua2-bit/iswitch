@@ -11,6 +11,7 @@ import {
   listProviders as listProvidersFn, createProvider as createProviderFn, updateProvider as updateProviderFn, deleteProvider as deleteProviderFn,
   listProviderInventory as listProviderInventoryFn, createInventoryItem as createInventoryItemFn, updateInventoryItem as updateInventoryItemFn, deleteInventoryItem as deleteInventoryItemFn,
   testProvider as testProviderFn,
+  getProviderMode as getProviderModeFn, setGlobalProviderMode as setGlobalProviderModeFn, setProviderModeOverride as setProviderModeOverrideFn,
 } from "@/server/api-providers.functions";
 import { triggerCrawl as triggerCrawlFn } from "@/server/crawler.functions";
 import { toast } from "sonner";

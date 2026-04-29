@@ -36,16 +36,19 @@ import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile
 import { Route as DashboardConsultationsRouteImport } from './routes/dashboard.consultations'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
 import { Route as AdminMarkupsRouteImport } from './routes/admin.markups'
 import { Route as AdminCurrenciesRouteImport } from './routes/admin.currencies'
+import { Route as AdminCrawlJobsRouteImport } from './routes/admin.crawl-jobs'
 import { Route as AdminConsultationsRouteImport } from './routes/admin.consultations'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminApiProvidersRouteImport } from './routes/admin.api-providers'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
+import { Route as ApiPublicWebhooksKorapayRouteImport } from './routes/api.public.webhooks.korapay'
 
 const VisasRoute = VisasRouteImport.update({
   id: '/visas',
@@ -182,6 +185,11 @@ const DashboardBookRoute = DashboardBookRouteImport.update({
   path: '/book',
   getParentRoute: () => DashboardRoute,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentsApplyRoute = AgentsApplyRouteImport.update({
   id: '/agents/apply',
   path: '/agents/apply',
@@ -212,6 +220,11 @@ const AdminCurrenciesRoute = AdminCurrenciesRouteImport.update({
   path: '/currencies',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCrawlJobsRoute = AdminCrawlJobsRouteImport.update({
+  id: '/crawl-jobs',
+  path: '/crawl-jobs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminConsultationsRoute = AdminConsultationsRouteImport.update({
   id: '/consultations',
   path: '/consultations',
@@ -232,6 +245,12 @@ const AdminAgentsRoute = AdminAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicWebhooksKorapayRoute =
+  ApiPublicWebhooksKorapayRouteImport.update({
+    id: '/api/public/webhooks/korapay',
+    path: '/api/public/webhooks/korapay',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -252,12 +271,14 @@ export interface FileRoutesByFullPath {
   '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/crawl-jobs': typeof AdminCrawlJobsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/consultations': typeof DashboardConsultationsRoute
@@ -271,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/visas/book': typeof VisasBookRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -289,12 +311,14 @@ export interface FileRoutesByTo {
   '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/crawl-jobs': typeof AdminCrawlJobsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/consultations': typeof DashboardConsultationsRoute
@@ -308,6 +332,7 @@ export interface FileRoutesByTo {
   '/visas/book': typeof VisasBookRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -329,12 +354,14 @@ export interface FileRoutesById {
   '/admin/api-providers': typeof AdminApiProvidersRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/consultations': typeof AdminConsultationsRoute
+  '/admin/crawl-jobs': typeof AdminCrawlJobsRoute
   '/admin/currencies': typeof AdminCurrenciesRoute
   '/admin/markups': typeof AdminMarkupsRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/dashboard/consultations': typeof DashboardConsultationsRoute
@@ -348,6 +375,7 @@ export interface FileRoutesById {
   '/visas/book': typeof VisasBookRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -370,12 +398,14 @@ export interface FileRouteTypes {
     | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
+    | '/admin/crawl-jobs'
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
     | '/dashboard/consultations'
@@ -389,6 +419,7 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin/'
     | '/dashboard/'
+    | '/api/public/webhooks/korapay'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -407,12 +438,14 @@ export interface FileRouteTypes {
     | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
+    | '/admin/crawl-jobs'
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
     | '/dashboard/consultations'
@@ -426,6 +459,7 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin'
     | '/dashboard'
+    | '/api/public/webhooks/korapay'
   id:
     | '__root__'
     | '/'
@@ -446,12 +480,14 @@ export interface FileRouteTypes {
     | '/admin/api-providers'
     | '/admin/bookings'
     | '/admin/consultations'
+    | '/admin/crawl-jobs'
     | '/admin/currencies'
     | '/admin/markups'
     | '/admin/operations'
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
     | '/dashboard/consultations'
@@ -465,6 +501,7 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin/'
     | '/dashboard/'
+    | '/api/public/webhooks/korapay'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -483,24 +520,12 @@ export interface RootRouteChildren {
   ToursRoute: typeof ToursRouteWithChildren
   VisasRoute: typeof VisasRouteWithChildren
   AgentsApplyRoute: typeof AgentsApplyRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ApiPublicWebhooksKorapayRoute: typeof ApiPublicWebhooksKorapayRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/checkout/return': {
-      id: '/checkout/return'
-      path: '/checkout/return'
-      fullPath: '/checkout/return'
-      preLoaderRoute: any
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/webhooks/korapay': {
-      id: '/api/public/webhooks/korapay'
-      path: '/api/public/webhooks/korapay'
-      fullPath: '/api/public/webhooks/korapay'
-      preLoaderRoute: any
-      parentRoute: typeof rootRouteImport
-    }
     '/visas': {
       id: '/visas'
       path: '/visas'
@@ -690,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBookRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agents/apply': {
       id: '/agents/apply'
       path: '/agents/apply'
@@ -732,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCurrenciesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/crawl-jobs': {
+      id: '/admin/crawl-jobs'
+      path: '/crawl-jobs'
+      fullPath: '/admin/crawl-jobs'
+      preLoaderRoute: typeof AdminCrawlJobsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/consultations': {
       id: '/admin/consultations'
       path: '/consultations'
@@ -760,6 +799,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAgentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/webhooks/korapay': {
+      id: '/api/public/webhooks/korapay'
+      path: '/api/public/webhooks/korapay'
+      fullPath: '/api/public/webhooks/korapay'
+      preLoaderRoute: typeof ApiPublicWebhooksKorapayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -768,6 +814,7 @@ interface AdminRouteChildren {
   AdminApiProvidersRoute: typeof AdminApiProvidersRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminConsultationsRoute: typeof AdminConsultationsRoute
+  AdminCrawlJobsRoute: typeof AdminCrawlJobsRoute
   AdminCurrenciesRoute: typeof AdminCurrenciesRoute
   AdminMarkupsRoute: typeof AdminMarkupsRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
@@ -781,6 +828,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminApiProvidersRoute: AdminApiProvidersRoute,
   AdminBookingsRoute: AdminBookingsRoute,
   AdminConsultationsRoute: AdminConsultationsRoute,
+  AdminCrawlJobsRoute: AdminCrawlJobsRoute,
   AdminCurrenciesRoute: AdminCurrenciesRoute,
   AdminMarkupsRoute: AdminMarkupsRoute,
   AdminOperationsRoute: AdminOperationsRoute,
@@ -893,7 +941,18 @@ const rootRouteChildren: RootRouteChildren = {
   ToursRoute: ToursRouteWithChildren,
   VisasRoute: VisasRouteWithChildren,
   AgentsApplyRoute: AgentsApplyRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
+  ApiPublicWebhooksKorapayRoute: ApiPublicWebhooksKorapayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
