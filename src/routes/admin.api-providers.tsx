@@ -307,6 +307,8 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "wa
 function ProviderFormModal({ initial, onClose, onSaved }: {
   initial: Partial<Provider>; onClose: () => void; onSaved: () => void;
 }) {
+  const updateProvider = useServerFn(updateProviderFn);
+  const createProvider = useServerFn(createProviderFn);
   const isEdit = !!initial.id;
   const [form, setForm] = useState({
     slug: initial.slug ?? "",
