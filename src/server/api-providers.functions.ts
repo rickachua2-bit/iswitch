@@ -236,11 +236,10 @@ export const testProvider = createServerFn({ method: "POST" })
     await supabaseAdmin.from("provider_health_events").insert({
       provider_id: prov.id, ok, status_code: status, latency_ms: latency, message,
     });
-    await supabaseAdmin.from("providers").update({
-      last_ok_at: ok ? new Date().toISOString() : null,
-      last_error_at: ok ? null : new Date().toISOString(),
-      last_error: ok ? null : message,
-    }).eq("id", prov.id);
+    const patch: Record<string, any> = { last_error: ok ? null : message };
+    if (ok) patch.last_ok_at = new Date().toISOString();
+    else patch.last_error_at = new Date().toISOString();
+    await supabaseAdmin.from("providers").update(patch).eq("id", prov.id);
 
     return { ok: true as const, healthy: ok, status, latency, message };
   });
