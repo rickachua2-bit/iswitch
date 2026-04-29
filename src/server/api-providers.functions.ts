@@ -204,16 +204,16 @@ export const testProvider = createServerFn({ method: "POST" })
 
     try {
       if (prov.slug === "duffel") {
-        const key = process.env.DUFFEL_API_KEY;
-        if (!key) throw new Error("DUFFEL_API_KEY not configured");
+        const key = await getProviderKey("duffel");
+        if (!key) throw new Error("Duffel key not configured for current mode");
         const r = await fetch("https://api.duffel.com/air/airlines?limit=1", {
           headers: { Authorization: `Bearer ${key}`, "Duffel-Version": "v2", Accept: "application/json" },
         });
         status = r.status; ok = r.ok;
         message = r.ok ? "Duffel API responding" : (await r.text()).slice(0, 200);
       } else if (prov.slug === "liteapi") {
-        const key = process.env.LITEAPI_KEY;
-        if (!key) throw new Error("LITEAPI_KEY not configured");
+        const key = await getProviderKey("liteapi");
+        if (!key) throw new Error("LiteAPI key not configured for current mode");
         const r = await fetch("https://api.liteapi.travel/v3.0/data/countries", {
           headers: { "X-API-Key": key, Accept: "application/json" },
         });
