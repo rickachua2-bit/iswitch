@@ -1,6 +1,9 @@
 // Korapay API helpers - server-only
 import { createHmac, timingSafeEqual } from "node:crypto";
-const KORAPAY_BASE = "https://api.korapay.com/merchant/api/v1";
+import { getActiveCreds } from "./payment-settings.server";
+
+const KORAPAY_BASE_LIVE = "https://api.korapay.com/merchant/api/v1";
+const KORAPAY_BASE_SANDBOX = "https://api.korapay.com/merchant/api/v1"; // Korapay uses same base; mode = which key
 
 export type KorapayChargeInit = {
   amount: number;
@@ -14,9 +17,14 @@ export type KorapayChargeInit = {
   narration?: string;
 };
 
+async function getKorapayKey() {
+  const creds = await getActiveCreds("korapay");
+  if (!creds.secretKey) throw new Error("Korapay secret key is not configured. Add it in Admin → Payment Providers.");
+  return creds;
+}
+
 export async function initiateKorapayCharge(input: KorapayChargeInit) {
-  const secret = process.env.KORAPAY_SECRET_KEY;
-  if (!secret) throw new Error("KORAPAY_SECRET_KEY is not configured");
+  const { secretKey, mode } = await getKorapayKey();
 
   const body = {
     amount: input.amount,
@@ -28,14 +36,15 @@ export async function initiateKorapayCharge(input: KorapayChargeInit) {
       name: input.customerName,
       email: input.customerEmail,
     },
-    metadata: input.metadata ?? {},
+    metadata: { ...(input.metadata ?? {}), _mode: mode },
     narration: input.narration ?? "iSwitchUb booking payment",
   };
 
-  const res = await fetch(`${KORAPAY_BASE}/charges/initialize`, {
+  const base = mode === "live" ? KORAPAY_BASE_LIVE : KORAPAY_BASE_SANDBOX;
+  const res = await fetch(`${base}/charges/initialize`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${secret}`,
+      Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -53,17 +62,15 @@ export async function initiateKorapayCharge(input: KorapayChargeInit) {
 }
 
 export async function verifyKorapayCharge(reference: string) {
-  const secret = process.env.KORAPAY_SECRET_KEY;
-  if (!secret) throw new Error("KORAPAY_SECRET_KEY is not configured");
-
-  const res = await fetch(`${KORAPAY_BASE}/charges/${encodeURIComponent(reference)}`, {
-    headers: { Authorization: `Bearer ${secret}` },
+  const { secretKey, mode } = await getKorapayKey();
+  const base = mode === "live" ? KORAPAY_BASE_LIVE : KORAPAY_BASE_SANDBOX;
+  const res = await fetch(`${base}/charges/${encodeURIComponent(reference)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json?.status) {
     throw new Error(`Korapay verify failed [${res.status}]: ${JSON.stringify(json)}`);
   }
-  // status values: success, failed, processing, expired
   return {
     status: json.data?.status as string,
     amount: Number(json.data?.amount ?? 0),
@@ -73,8 +80,9 @@ export async function verifyKorapayCharge(reference: string) {
   };
 }
 
-export function verifyKorapaySignature(rawBody: string, signature: string | null) {
-  const secret = process.env.KORAPAY_WEBHOOK_SECRET || process.env.KORAPAY_SECRET_KEY;
+export async function verifyKorapaySignature(rawBody: string, signature: string | null) {
+  const creds = await getActiveCreds("korapay");
+  const secret = creds.webhookSecret || creds.secretKey;
   if (!secret || !signature) return false;
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   try {
