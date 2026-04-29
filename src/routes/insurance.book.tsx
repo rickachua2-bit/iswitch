@@ -40,13 +40,35 @@ const DEFAULT_BENEFITS = [
 function InsuranceBookingPage() {
   const { plan_id, destination, start, end, travelers } = Route.useSearch();
   const [plan, setPlan] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`plan:${plan_id}`);
-      if (o) setPlan(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "plan",
+        cachePrefix: "plan",
+        id: plan_id,
+      });
+      if (!cancelled) {
+        setPlan(payload);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [plan_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/insurance">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <ShieldCheck className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected plan…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!plan) {
     return (

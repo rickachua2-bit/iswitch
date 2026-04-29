@@ -66,9 +66,16 @@ function InsurancePage() {
   const navigate = useNavigate();
   const hasSearched = !!(query.start && query.end);
 
-  function goToBooking(p: any) {
-    const id = p.id ?? p.plan_id;
-    try { sessionStorage.setItem(`plan:${id}`, JSON.stringify(p)); } catch {}
+  async function goToBooking(p: any) {
+    const id = p.id ?? p.plan_id ?? p.external_id;
+    const { persistSelectedOffer } = await import("@/lib/select-offer");
+    await persistSelectedOffer({
+      vertical: "insurance",
+      sessionPrefix: "plan",
+      cachePrefix: "plan",
+      id: String(id),
+      payload: { ...p, destination: query.destination, start: query.start, end: query.end, travelers: query.travelers, nationality: query.nationality },
+    });
     navigate({
       to: "/insurance/book",
       search: {

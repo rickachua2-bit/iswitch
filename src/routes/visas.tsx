@@ -138,9 +138,16 @@ function VisasPage() {
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
-  function goToBooking(v: any) {
-    const id = v.id ?? v.visa_id;
-    try { sessionStorage.setItem(`visa:${id}`, JSON.stringify(v)); } catch {}
+  async function goToBooking(v: any) {
+    const id = v.id ?? v.visa_id ?? v.external_id;
+    const { persistSelectedOffer } = await import("@/lib/select-offer");
+    await persistSelectedOffer({
+      vertical: "visas",
+      sessionPrefix: "visa",
+      cachePrefix: "visa",
+      id: String(id),
+      payload: { ...v, nationality: query.nationality, destination: query.destination, visaType: query.visaType },
+    });
     navigate({
       to: "/visas/book",
       search: { visa_id: String(id), nationality: query.nationality ?? "", destination: query.destination ?? "" } as never,

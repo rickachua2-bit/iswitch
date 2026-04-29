@@ -48,13 +48,35 @@ function pickImages(t: any): string[] {
 function TourBookingPage() {
   const { tour_id, destination, date, guests } = Route.useSearch();
   const [tour, setTour] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`tour:${tour_id}`);
-      if (o) setTour(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "tour",
+        cachePrefix: "tour",
+        id: tour_id,
+      });
+      if (!cancelled) {
+        setTour(payload);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [tour_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/tours">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <Compass className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected experience…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!tour) {
     return (

@@ -29,13 +29,35 @@ export const Route = createFileRoute("/visas/book")({
 function VisaBookingPage() {
   const { visa_id, nationality, destination } = Route.useSearch();
   const [visa, setVisa] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`visa:${visa_id}`);
-      if (o) setVisa(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "visa",
+        cachePrefix: "visa",
+        id: visa_id,
+      });
+      if (!cancelled) {
+        setVisa(payload);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [visa_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/visas">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <Briefcase className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected visa option…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!visa) {
     return (

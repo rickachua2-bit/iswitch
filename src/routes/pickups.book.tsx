@@ -31,13 +31,35 @@ export const Route = createFileRoute("/pickups/book")({
 function TransferBookingPage() {
   const { vehicle_id, pickup, drop, date, time } = Route.useSearch();
   const [vehicle, setVehicle] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const o = sessionStorage.getItem(`vehicle:${vehicle_id}`);
-      if (o) setVehicle(JSON.parse(o));
-    } catch {}
+    let cancelled = false;
+    (async () => {
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "vehicle",
+        cachePrefix: "vehicle",
+        id: vehicle_id,
+      });
+      if (!cancelled) {
+        setVehicle(payload);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [vehicle_id]);
+
+  if (loading) {
+    return (
+      <BookingShell backTo="/pickups">
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+          <Car className="mx-auto mb-3 h-8 w-8 animate-pulse text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading your selected transfer…</p>
+        </div>
+      </BookingShell>
+    );
+  }
 
   if (!vehicle) {
     return (
