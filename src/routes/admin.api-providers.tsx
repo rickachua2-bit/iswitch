@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
   ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
+  FlaskConical, Radio,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
