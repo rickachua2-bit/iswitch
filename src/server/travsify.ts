@@ -121,6 +121,66 @@ function liteApiHeaders() {
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
+/**
+ * Resolve a free-form destination string ("Abidjan, Côte d'Ivoire", "Paris",
+ * "Lagos, Nigeria", "FR") into a { cityName, countryCode } pair LiteAPI accepts.
+ * Uses LiteAPI's /data/countries (cached for the lifetime of the worker) to
+ * recognise any country by name — replaces a hardcoded ~25-city map that
+ * silently fell back to "AE" for everything unknown.
+ */
+let _countryCache: { code: string; name: string; lc: string }[] | null = null;
+async function getCountryList() {
+  if (_countryCache) return _countryCache;
+  try {
+    const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/data/countries`, {
+      method: "GET", headers: liteApiHeaders(),
+    });
+    if (status >= 400) return [];
+    const json = JSON.parse(text);
+    _countryCache = (json?.data ?? [])
+      .filter((c: any) => c?.code && c?.name)
+      .map((c: any) => ({ code: String(c.code).toUpperCase(), name: String(c.name), lc: String(c.name).toLowerCase() }));
+    return _countryCache;
+  } catch {
+    return [];
+  }
+}
+
+const COUNTRY_ALIAS: Record<string, string> = {
+  "uae": "AE", "u.a.e.": "AE", "usa": "US", "u.s.a.": "US", "u.s.": "US",
+  "uk": "GB", "u.k.": "GB", "great britain": "GB", "england": "GB",
+  "ivory coast": "CI", "cote d'ivoire": "CI", "côte d'ivoire": "CI",
+  "south korea": "KR", "north korea": "KP", "russia": "RU", "czech republic": "CZ",
+  "vietnam": "VN", "iran": "IR", "syria": "SY", "venezuela": "VE", "bolivia": "BO",
+  "tanzania": "TZ", "moldova": "MD",
+};
+
+async function resolveDestination(raw: string | undefined | null): Promise<{ cityName?: string; countryCode?: string }> {
+  if (!raw) return {};
+  const cleaned = String(raw).trim();
+  if (!cleaned) return {};
+  // Already a 2-letter country code
+  if (/^[a-z]{2}$/i.test(cleaned)) return { countryCode: cleaned.toUpperCase() };
+
+  const parts = cleaned.split(",").map((p) => p.trim()).filter(Boolean);
+  const cityToken = parts[0];
+  // Try every token (right-to-left) as a country first.
+  const countries = await getCountryList();
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const tok = parts[i].toLowerCase().replace(/\.+$/g, "");
+    if (COUNTRY_ALIAS[tok]) {
+      return { cityName: i === 0 ? undefined : cityToken, countryCode: COUNTRY_ALIAS[tok] };
+    }
+    const hit = countries.find((c) => c.lc === tok);
+    if (hit) return { cityName: i === 0 ? undefined : cityToken, countryCode: hit.code };
+    // Loose contains match (handles "République de Côte d'Ivoire" vs "Côte d'Ivoire")
+    const loose = countries.find((c) => c.lc.includes(tok) && tok.length >= 4);
+    if (loose) return { cityName: i === 0 ? undefined : cityToken, countryCode: loose.code };
+  }
+  // No country recognised — pass cityName through; LiteAPI can match on city alone.
+  return { cityName: cityToken };
+}
+
 function iata(s: string): string {
   const m = s.match(/\(([A-Z]{3})\)/);
   return (m ? m[1] : s).toUpperCase().trim();
