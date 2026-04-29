@@ -238,7 +238,7 @@ function HotelBookingPage() {
           </SectionCard>
 
           {/* Form */}
-          <BookingForm hotel={hotel} navigate={navigate} />
+          <BookingForm hotel={{ ...hotel, checkIn: effCheckIn, checkOut: effCheckOut, guests: effGuests }} navigate={navigate} />
         </div>
 
         {/* Right: sticky price summary */}
