@@ -320,13 +320,15 @@ function scoreLabel(s: number) {
 }
 
 function ResultsBoard({
-  hotels, error, query, formatPrice, onSelect,
+  hotels, error, query, formatPrice, onSelect, isSelecting, selecting,
 }: {
   hotels: any[];
   error: string | null;
   query: { destination: string; checkIn: string; checkOut: string; guests: string };
   formatPrice: (n: number, c: string) => string;
   onSelect: (h: any) => void;
+  isSelecting: (id: string) => boolean;
+  selecting: boolean;
 }) {
   const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("best");
   const [maxPrice, setMaxPrice] = useState(1000);
