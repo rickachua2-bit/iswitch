@@ -294,6 +294,14 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${p.enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
                       {p.enabled ? "Live" : "Off"}
                     </span>
+                    <button
+                      onClick={() => onChangeProviderMode(p, p.mode === "test" ? "live" : "test")}
+                      title="Toggle test/live mode for this provider"
+                      className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider transition hover:scale-105 ${p.mode === "test" ? "bg-amber-500/20 text-amber-700 dark:text-amber-400" : "bg-success/15 text-success"}`}
+                    >
+                      {p.mode === "test" ? <FlaskConical className="h-2.5 w-2.5" /> : <Radio className="h-2.5 w-2.5" />}
+                      {p.mode}
+                    </button>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span className="rounded bg-gradient-primary px-1.5 py-0.5 text-primary-foreground shadow-sm">{p.vertical}</span>
