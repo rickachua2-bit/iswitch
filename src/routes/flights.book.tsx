@@ -370,26 +370,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 text-sm font-extrabold text-primary-foreground shadow-card transition hover:bg-primary-glow disabled:cursor-wait disabled:opacity-80"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Confirming your booking…
-            </>
-          ) : (
-            <>
-              <Lock className="h-4 w-4" /> Confirm and pay
-            </>
-          )}
-        </button>
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          By continuing you agree to iSwitch's terms & the airline's fare rules.
-        </p>
-      </div>
+      <ConfirmButton submitting={submitting} label="Confirm and pay" />
     </form>
   );
 }
