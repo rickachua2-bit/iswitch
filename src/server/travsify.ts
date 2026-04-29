@@ -536,6 +536,11 @@ export const searchTours = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("tours")) === "travsify") {
+      const t = await travsifySearch("/tours/search", data);
+      if (!t.ok) return fail(t.error, { tours: [] });
+      return ok({ tours: t.data?.tours ?? t.data?.data?.tours ?? [] });
+    }
     const r = await fetchInventory("tours", { destination: data.destination });
     if (r.error) return fail(r.error, { tours: [] });
     return ok({ tours: r.items });
@@ -587,6 +592,11 @@ export const searchVisas = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("visas")) === "travsify") {
+      const t = await travsifySearch("/visas/search", data);
+      if (!t.ok) return fail(t.error, { visas: [] });
+      return ok({ visas: t.data?.visas ?? t.data?.data?.visas ?? [] });
+    }
     const r = await fetchInventory("visas", { destination: data.destination, origin: data.nationality });
     if (r.error) return fail(r.error, { visas: [] });
     return ok({ visas: r.items });
@@ -645,6 +655,11 @@ export const searchInsurance = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("insurance")) === "travsify") {
+      const t = await travsifySearch("/insurance/search", data);
+      if (!t.ok) return fail(t.error, { plans: [] });
+      return ok({ plans: t.data?.plans ?? t.data?.data?.plans ?? [] });
+    }
     const r = await fetchInventory("insurance", { destination: data.destination });
     if (r.error) return fail(r.error, { plans: [] });
     return ok({ plans: r.items });
@@ -702,6 +717,11 @@ export const searchTransfers = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    if ((await getActiveProvider("pickups")) === "travsify") {
+      const t = await travsifySearch("/transfers/search", data);
+      if (!t.ok) return fail(t.error, { vehicles: [] });
+      return ok({ vehicles: t.data?.vehicles ?? t.data?.data?.vehicles ?? [] });
+    }
     const r = await fetchInventory("pickups", { origin: data.pickup, destination: data.drop });
     if (r.error) return fail(r.error, { vehicles: [] });
     return ok({ vehicles: r.items });
