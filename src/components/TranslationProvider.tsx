@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { translateBatch } from "@/server/translate.functions";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 
-const RTL_LANGS = new Set(
+const RTL_LANGS: Set<string> = new Set(
   SUPPORTED_LANGUAGES.filter((l) => (l as any).rtl).map((l) => l.code),
 );
 
