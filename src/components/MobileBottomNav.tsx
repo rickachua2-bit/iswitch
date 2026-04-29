@@ -1,7 +1,7 @@
 import { Link, useLocation, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Home, Search, User, LayoutGrid, X,
+  Home, User, LayoutGrid, X, MessageSquareHeart, Briefcase,
   Plane, Hotel, FileCheck2, ShieldCheck, Compass, Car,
 } from "lucide-react";
 
