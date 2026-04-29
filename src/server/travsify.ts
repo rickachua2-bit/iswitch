@@ -116,6 +116,55 @@ async function getDuffelOffer(offer_id: string) {
   }
 }
 
+async function searchLiteHotels(input: {
+  cityName?: string;
+  countryCode?: string;
+  checkin: string;
+  checkout: string;
+  adults: number;
+  rooms: number;
+  currency: string;
+}) {
+  try {
+    const occupancies = Array.from({ length: input.rooms }, () => ({ adults: input.adults, children: [] as number[] }));
+    const ratesBody: any = {
+      checkin: input.checkin,
+      checkout: input.checkout,
+      currency: input.currency,
+      guestNationality: "US",
+      occupancies,
+    };
+    if (input.cityName) ratesBody.cityName = input.cityName;
+    else if (input.countryCode) ratesBody.countryCode = input.countryCode;
+
+    const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/hotels/rates`, {
+      method: "POST",
+      headers: liteApiHeaders(),
+      body: JSON.stringify(ratesBody),
+    });
+    if (status >= 400) return { ok: false as const, error: friendlyError(status, text), hotels: [] };
+    const json = JSON.parse(text);
+    const hotels = (json?.data ?? []).slice(0, 50).map((h: any) => {
+      const firstRoom = h.roomTypes?.[0];
+      const firstRate = firstRoom?.rates?.[0];
+      const total = firstRate?.retailRate?.total?.[0];
+      return {
+        id: h.hotelId,
+        offer_id: firstRoom?.offerId ?? firstRate?.rateId ?? h.hotelId,
+        price: total?.amount,
+        currency: total?.currency ?? input.currency,
+        board: firstRate?.boardName,
+        refundable: firstRate?.cancellationPolicies?.refundableTag === "RFN",
+        room_name: firstRoom?.roomTypes?.[0]?.name ?? firstRate?.name,
+        raw: h,
+      };
+    });
+    return { ok: true as const, hotels };
+  } catch (e: any) {
+    return { ok: false as const, error: friendlyError(null, String(e?.message ?? e)), hotels: [] };
+  }
+}
+
 async function fetchInventory(
   vertical: "visas" | "insurance" | "tours" | "pickups",
   opts: { destination?: string; origin?: string; limit?: number } = {},
