@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Crown,
   Plug,
+  CreditCard,
   History,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
