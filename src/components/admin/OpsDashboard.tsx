@@ -26,7 +26,7 @@ export function OpsDashboard() {
     try {
       const r: any = await seedAll({});
       const lines = (r.results ?? []).map((x: any) => `${x.vertical}: ${x.items_upserted}`).join(" · ");
-      setSeedMsg(`Seeded ${r.total} items (${lines})`);
+      setSeedMsg(r.ok ? `Seeded ${r.total} items (${lines})` : `Seed failed: ${r.error ?? "unknown error"}${lines ? ` (${lines})` : ""}`);
     } catch (e: any) {
       setSeedMsg(`Failed: ${e?.message ?? "unknown error"}`);
     }
