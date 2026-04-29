@@ -2,7 +2,7 @@
 // Called only from server functions or scheduled hooks.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GW = "https://connector-gateway.lovable.dev/firecrawl";
+const FIRECRAWL_API = "https://api.firecrawl.dev/v2";
 
 type Vertical = "visas" | "insurance" | "tours" | "pickups";
 
@@ -76,16 +76,13 @@ const SOURCES: SourceConfig[] = [
 ];
 
 async function firecrawlScrape(url: string, prompt: string): Promise<any[]> {
-  const LK = process.env.LOVABLE_API_KEY;
   const FK = process.env.FIRECRAWL_API_KEY;
-  if (!LK) throw new Error("LOVABLE_API_KEY not configured");
   if (!FK) throw new Error("FIRECRAWL_API_KEY not configured");
 
-  const res = await fetch(`${GW}/v2/scrape`, {
+  const res = await fetch(`${FIRECRAWL_API}/scrape`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${LK}`,
-      "X-Connection-Api-Key": FK,
+      Authorization: `Bearer ${FK}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
