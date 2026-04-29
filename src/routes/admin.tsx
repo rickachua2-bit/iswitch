@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, Users, Briefcase, Settings as SettingsIcon, CheckCircle2, XCircle, Eye, DollarSign } from "lucide-react";
+import { Loader2, ShieldAlert, Users, Briefcase, Settings as SettingsIcon, CheckCircle2, XCircle, Eye, DollarSign, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CurrencyAdmin } from "@/components/admin/CurrencyAdmin";
+import { OpsDashboard } from "@/components/admin/OpsDashboard";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/admin")({
@@ -32,7 +33,7 @@ type Setting = { key: string; value: number; description: string | null };
 function AdminPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading, hasRole } = useAuth();
-  const [tab, setTab] = useState<"agents" | "settings" | "currencies">("agents");
+  const [tab, setTab] = useState<"ops" | "agents" | "settings" | "currencies">("ops");
 
   if (authLoading) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -69,13 +70,15 @@ VALUES ('${user.id}', 'admin');`}
         <h1 className="font-display text-3xl font-extrabold">Admin panel</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage agents, markups & system settings.</p>
 
-        <div className="mt-6 flex gap-2 border-b border-border">
+        <div className="mt-6 flex flex-wrap gap-2 border-b border-border">
+          <TabBtn active={tab === "ops"} onClick={() => setTab("ops")} icon={Activity}>Operations</TabBtn>
           <TabBtn active={tab === "agents"} onClick={() => setTab("agents")} icon={Users}>Agent applications</TabBtn>
           <TabBtn active={tab === "settings"} onClick={() => setTab("settings")} icon={SettingsIcon}>Markups & commission</TabBtn>
           <TabBtn active={tab === "currencies"} onClick={() => setTab("currencies")} icon={DollarSign}>Currencies</TabBtn>
         </div>
 
         <div className="mt-6">
+          {tab === "ops" && <OpsDashboard />}
           {tab === "agents" && <AgentApplications />}
           {tab === "settings" && <SystemSettings />}
           {tab === "currencies" && <CurrencyAdmin />}
