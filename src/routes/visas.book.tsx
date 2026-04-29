@@ -102,8 +102,8 @@ function VisaBookingPage() {
       { icon: Briefcase, label: visa.stay ?? visa.duration ?? "Up to 30 days" },
     ],
     priceLabel: "Total fee",
-    priceValue: `${currency} ${total.toFixed(2)}`,
-    priceFootnote: `Govt ${currency} ${fee.toFixed(2)} + service ${currency} ${service.toFixed(2)}`,
+    priceValue: formatPrice(total, currency),
+    priceFootnote: `Govt ${formatPrice(fee, currency)} + service ${formatPrice(service, currency)}`,
     backTo: "/visas",
   };
 
