@@ -65,28 +65,25 @@ export const Route = createFileRoute("/insurance")({
 
 function InsurancePage() {
   const { plans, query, error } = Route.useLoaderData() as any;
-  const navigate = useNavigate();
   const hasSearched = !!(query.start && query.end);
+  const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
 
-  async function goToBooking(p: any) {
-    const id = p.id ?? p.plan_id ?? p.external_id;
-    const { persistSelectedOffer } = await import("@/lib/select-offer");
-    await persistSelectedOffer({
+  function goToBooking(p: any) {
+    const id = String(p.id ?? p.plan_id ?? p.external_id);
+    void select({
       vertical: "insurance",
       sessionPrefix: "plan",
       cachePrefix: "plan",
-      id: String(id),
+      id,
       payload: { ...p, destination: query.destination, start: query.start, end: query.end, travelers: query.travelers, nationality: query.nationality },
-    });
-    navigate({
       to: "/insurance/book",
       search: {
-        plan_id: String(id),
+        plan_id: id,
         destination: query.destination,
         start: query.start,
         end: query.end,
         travelers: String(query.travelers ?? "1"),
-      } as never,
+      },
     });
   }
 
@@ -101,6 +98,8 @@ function InsurancePage() {
         initial={query}
       />
 
+      <ErrorToast message={selectError} onDismiss={clearError} />
+
       <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
         {!hasSearched ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Enter your travel dates above to get a live quote.</div>
@@ -112,13 +111,23 @@ function InsurancePage() {
           <>
             <h2 className="mb-4 font-display text-xl font-bold">{plans.length} plans · {query.destination}</h2>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              {plans.map((p: any) => (
-                <div key={p.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
-                  <div className="font-display text-lg font-bold">{p.name}</div>
-                  <div className="mt-2"><span className="text-3xl font-extrabold text-primary">{p.currency ?? "USD"} {p.price}</span></div>
-                  <button onClick={() => goToBooking(p)} className="mt-5 w-full rounded-lg bg-gradient-accent py-2.5 text-sm font-bold text-accent-foreground">Get covered</button>
-                </div>
-              ))}
+              {plans.map((p: any) => {
+                const id = String(p.id ?? p.plan_id ?? p.external_id);
+                const loading = isSelecting(id);
+                return (
+                  <div key={p.id} className="rounded-2xl border border-border bg-card p-6 shadow-card">
+                    <div className="font-display text-lg font-bold">{p.name}</div>
+                    <div className="mt-2"><span className="text-3xl font-extrabold text-primary">{p.currency ?? "USD"} {p.price}</span></div>
+                    <button
+                      onClick={() => goToBooking(p)}
+                      disabled={loading || (selecting && !loading)}
+                      className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-accent py-2.5 text-sm font-bold text-accent-foreground transition disabled:cursor-wait disabled:opacity-70"
+                    >
+                      {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Opening plan…</>) : "Review & get covered"}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </>
         )}
