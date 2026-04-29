@@ -130,7 +130,7 @@ function InsuranceBookingPage() {
               </div>
               <div className="text-right">
                 <div className="text-xs text-muted-foreground">Per traveller</div>
-                <div className="text-2xl font-extrabold text-primary">{currency} {price.toFixed(2)}</div>
+                <div className="text-2xl font-extrabold text-primary">{formatPrice(price, currency)}</div>
               </div>
             </div>
           </div>
