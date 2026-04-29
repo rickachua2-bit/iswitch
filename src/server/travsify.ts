@@ -43,9 +43,10 @@ async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "defa
   }
 }
 
-function travsifyHeaders() {
-  const key = process.env.TRAVSIFY_API_KEY;
-  if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
+async function travsifyHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("travsify");
+  if (!key) throw new Error("Travsify key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
