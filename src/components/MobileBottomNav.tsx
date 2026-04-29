@@ -65,7 +65,7 @@ export function MobileBottomNav() {
 
           <div className="relative flex items-end justify-between gap-1 rounded-2xl border border-primary/15 bg-card/95 px-2 pt-2 pb-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <TabLink to="/" label="Home" Icon={Home} exact />
-            <TabLink to="/consultation" label="Consult" Icon={MessageSquareHeart} />
+            <TabLink to="/consultations" label="Consult" Icon={MessageSquareHeart} />
 
             {/* Central launcher */}
             <button
