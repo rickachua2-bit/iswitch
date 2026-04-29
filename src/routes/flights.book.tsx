@@ -79,38 +79,34 @@ function BookingPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // 1. Try sessionStorage first (fastest, same-tab path)
+      // Try fare from sessionStorage first (carries the selected fare for the offer)
+      let fareFromSession: any = null;
       try {
-        const o = sessionStorage.getItem(`offer:${offer_id}`);
-        if (o) {
-          const parsed = JSON.parse(o);
-          if (!cancelled) setOffer(parsed);
-          if (fare_id) {
-            const f = sessionStorage.getItem(`fare:${offer_id}:${fare_id}`);
-            if (f && !cancelled) setFare(JSON.parse(f));
-          }
-          if (!cancelled) setLoading(false);
-          return;
+        if (fare_id) {
+          const f = sessionStorage.getItem(`fare:${offer_id}:${fare_id}`);
+          if (f) fareFromSession = JSON.parse(f);
         }
       } catch { /* ignore */ }
 
-      // 2. Fall back to server-persisted cache (survives refresh / redirects).
-      // Retry once after a short delay to cover the race where saveOffer is
-      // still in-flight at the moment the booking page mounts.
-      const { getOffer } = await import("@/server/offer-cache.functions");
-      for (let attempt = 0; attempt < 2 && !cancelled; attempt++) {
-        try {
-          const res = await getOffer({ data: { id: `flight:${offer_id}` } });
-          if (!cancelled && res.ok) {
-            const p: any = res.payload;
-            setOffer(p?.offer ?? null);
-            if (fare_id && p?.fares?.[fare_id]) setFare(p.fares[fare_id]);
-            break;
-          }
-        } catch { /* ignore */ }
-        if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "offer",
+        cachePrefix: "flight",
+        id: offer_id,
+        retries: 5,
+        retryDelayMs: 700,
+      });
+
+      if (cancelled) return;
+
+      if (payload) {
+        // payload may be the offer itself, or { offer, fares: { [id]: fare } }
+        const o = payload?.offer ?? payload;
+        setOffer(o);
+        if (fareFromSession) setFare(fareFromSession);
+        else if (fare_id && payload?.fares?.[fare_id]) setFare(payload.fares[fare_id]);
       }
-      if (!cancelled) setLoading(false);
+      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [offer_id, fare_id]);

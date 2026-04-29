@@ -93,19 +93,18 @@ function HotelBookingPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const o = sessionStorage.getItem(`hotel:${offer_id}`);
-        if (o) {
-          if (!cancelled) { setHotel(JSON.parse(o)); setLoading(false); }
-          return;
-        }
-      } catch {}
-      try {
-        const { getOffer } = await import("@/server/offer-cache.functions");
-        const res = await getOffer({ data: { id: `hotel:${offer_id}` } });
-        if (!cancelled && res.ok) setHotel(res.payload);
-      } catch {}
-      if (!cancelled) setLoading(false);
+      const { recoverSelectedOffer } = await import("@/lib/select-offer");
+      const payload = await recoverSelectedOffer({
+        sessionPrefix: "hotel",
+        cachePrefix: "hotel",
+        id: offer_id,
+        retries: 5,
+        retryDelayMs: 700,
+      });
+      if (!cancelled) {
+        setHotel(payload);
+        setLoading(false);
+      }
     })();
     return () => { cancelled = true; };
   }, [offer_id]);
