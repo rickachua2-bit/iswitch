@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchTours, bookTour } from "@/server/travsify";
+import { searchTours } from "@/server/travsify";
 import { Loader2, MapPin } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -41,8 +39,22 @@ export const Route = createFileRoute("/tours")({
 
 function ToursPage() {
   const { tours, query, error } = Route.useLoaderData() as any;
-  const [selected, setSelected] = useState<any | null>(null);
+  const navigate = useNavigate();
   const hasSearched = !!query.date;
+
+  function goToBooking(t: any) {
+    const id = t.id ?? t.tour_id;
+    try { sessionStorage.setItem(`tour:${id}`, JSON.stringify(t)); } catch {}
+    navigate({
+      to: "/tours/book",
+      search: {
+        tour_id: String(id),
+        destination: query.destination,
+        date: query.date,
+        guests: String(query.guests ?? "2"),
+      } as never,
+    });
+  }
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -72,7 +84,7 @@ function ToursPage() {
                   <div className="mt-1 font-bold">{t.title}</div>
                   <div className="mt-4 flex items-end justify-between">
                     <div className="text-lg font-extrabold text-primary">{t.currency ?? "USD"} {t.price}</div>
-                    <button onClick={() => setSelected(t)} className="rounded-lg bg-gradient-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">Book</button>
+                    <button onClick={() => goToBooking(t)} className="rounded-lg bg-gradient-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">Book</button>
                   </div>
                 </div>
               ))}
@@ -80,26 +92,6 @@ function ToursPage() {
           </>
         )}
       </section>
-
-      {selected && (
-        <BookingDialog
-          open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
-          title={`Book ${selected.title}`}
-          summary={`${selected.currency ?? "USD"} ${selected.price} · ${query.date}`}
-          fields={[
-            { name: "firstName", label: "First name", required: true },
-            { name: "lastName", label: "Last name", required: true },
-            { name: "email", label: "Email", type: "email", required: true },
-          ]}
-          onSubmit={async (v) => {
-            const res = await bookTour({
-              data: { tour_id: selected.id, participants: [{ firstName: v.firstName, lastName: v.lastName, email: v.email }] },
-            });
-            return { reference: res?.data?.reference, status: res?.data?.status };
-          }}
-        />
-      )}
       <Footer />
     </div>
   );
