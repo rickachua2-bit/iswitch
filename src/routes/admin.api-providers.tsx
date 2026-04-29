@@ -2,14 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
-  ArrowLeft, Search, Power, ExternalLink, Package, Activity, X,
+  ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
   getApiProviderRouting, updateApiProviderRouting,
   listProviders, createProvider, updateProvider, deleteProvider,
   listProviderInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem,
+  testProvider,
 } from "@/server/api-providers.functions";
+import { triggerCrawl } from "@/server/crawler.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/api-providers")({
