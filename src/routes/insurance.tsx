@@ -1,12 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { BookingDialog } from "@/components/BookingDialog";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchInsurance, bookInsurance } from "@/server/travsify";
+import { searchInsurance } from "@/server/travsify";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
