@@ -178,6 +178,48 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
         }
       />
 
+      {/* Global Test/Live mode (Drafts API) */}
+      <div className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${globalMode === "test" ? "border-amber-400/50 bg-gradient-to-r from-amber-50 to-amber-100/40 dark:from-amber-500/10 dark:to-amber-500/5" : "border-success/40 bg-gradient-to-r from-success/10 to-success/5"}`}>
+        <div className="flex items-start gap-2">
+          {globalMode === "test"
+            ? <FlaskConical className="mt-0.5 h-5 w-5 text-amber-600" />
+            : <Radio className="mt-0.5 h-5 w-5 text-success" />}
+          <div>
+            <div className="text-sm font-extrabold">
+              {globalMode === "test" ? "Sandbox / Test mode" : "Live / Production mode"}
+              <span className="ml-2 rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">{globalMode}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {globalMode === "test"
+                ? "All providers are using TEST keys (e.g. DUFFEL_TEST_API_KEY). Bookings won't charge real money. Edit and try drafts safely."
+                : "All providers are using LIVE keys. Real bookings and payments are processed."}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+              {(["duffel","liteapi","travsify"] as const).map((slug) => {
+                const k = keyStatus[slug];
+                if (!k) return null;
+                const has = globalMode === "test" ? k.test : k.live;
+                return (
+                  <span key={slug} className={`rounded px-1.5 py-0.5 font-bold uppercase tracking-wider ${has ? "bg-success/20 text-success" : "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"}`}>
+                    {slug} {has ? "✓" : "missing"}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
+          <button onClick={() => onChangeGlobalMode("test")}
+            className={`flex items-center gap-1 rounded px-3 py-1.5 text-xs font-extrabold transition ${globalMode === "test" ? "bg-amber-500 text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <FlaskConical className="h-3.5 w-3.5" /> Test
+          </button>
+          <button onClick={() => onChangeGlobalMode("live")}
+            className={`flex items-center gap-1 rounded px-3 py-1.5 text-xs font-extrabold transition ${globalMode === "live" ? "bg-success text-success-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <Radio className="h-3.5 w-3.5" /> Live
+          </button>
+        </div>
+      </div>
+
       {/* Travsify status */}
       <div className={`mb-5 flex items-start gap-2 rounded-xl border p-3 text-sm ${travsifyConfigured ? "border-success/40 bg-success/5" : "border-amber-400/40 bg-amber-50 dark:bg-amber-500/10"}`}>
         {travsifyConfigured ? <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> : <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />}
