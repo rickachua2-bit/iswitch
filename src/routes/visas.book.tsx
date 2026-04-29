@@ -31,6 +31,7 @@ export const Route = createFileRoute("/visas/book")({
 
 function VisaBookingPage() {
   const { visa_id, nationality, destination } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [visa, setVisa] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
