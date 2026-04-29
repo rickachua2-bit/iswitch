@@ -42,6 +42,7 @@ const DEFAULT_BENEFITS = [
 
 function InsuranceBookingPage() {
   const { plan_id, destination, start, end, travelers } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [plan, setPlan] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
