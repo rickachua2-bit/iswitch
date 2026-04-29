@@ -254,32 +254,6 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
                 </Link>
               );
             })}
-            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-white/10 pt-3">
-              <select
-                value={i18n.language}
-                onChange={(e) => void i18n.changeLanguage(e.target.value)}
-                className="rounded-md bg-white/10 px-2 py-2 text-xs font-semibold text-primary-foreground"
-                aria-label="Language"
-              >
-                {SUPPORTED_LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code} className="bg-background text-foreground">
-                    {l.native} ({l.code.toUpperCase()})
-                  </option>
-                ))}
-              </select>
-              <select
-                value={currency.code}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="rounded-md bg-white/10 px-2 py-2 text-xs font-semibold text-primary-foreground"
-                aria-label="Currency"
-              >
-                {currencies.map((c) => (
-                  <option key={c.code} value={c.code} className="bg-background text-foreground">
-                    {c.code} — {c.symbol}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               <Link to="/agents/apply" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-md border border-white/20 px-3 py-2 text-sm font-semibold text-primary-foreground">
                 <Briefcase className="h-4 w-4" /> B2B
