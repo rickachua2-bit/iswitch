@@ -177,13 +177,23 @@ function PolicyForm({ plan }: { plan: any }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookInsurance({
-        data: {
+      const { startCheckout } = await import("@/lib/checkout");
+      const res = await startCheckout({
+        vertical: "insurance",
+        provider_slug: plan.provider_slug ?? "travsify",
+        amount: Number(plan.price ?? plan.premium ?? 0),
+        currency: plan.currency ?? "USD",
+        customer_name: `${v.firstName} ${v.lastName}`.trim(),
+        customer_email: v.email,
+        customer_phone: v.phone,
+        payload: {
           plan_id: plan.id,
-          holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, born_on: v.born_on },
+          holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, born_on: v.born_on, phone: v.phone },
+          plan_name: plan.name,
         },
       });
-      setDone({ reference: res?.data?.reference, status: res?.data?.status ?? "active" });
+      if (!res.ok) { setError(res.error); return; }
+      window.location.href = res.checkoutUrl;
     } catch (err: any) {
       setError(err?.message ?? "Could not bind policy. Please try again.");
     } finally {

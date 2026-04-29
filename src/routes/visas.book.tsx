@@ -183,13 +183,24 @@ function ApplicationForm({ visa }: { visa: any }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await bookVisa({
-        data: {
+      const { startCheckout } = await import("@/lib/checkout");
+      const res = await startCheckout({
+        vertical: "visas",
+        provider_slug: visa.provider_slug ?? "travsify",
+        amount: Number(visa.price ?? visa.fee ?? 0),
+        currency: visa.currency ?? "USD",
+        customer_name: `${v.firstName} ${v.lastName}`.trim(),
+        customer_email: v.email,
+        customer_phone: v.phone,
+        payload: {
           visa_id: visa.id,
-          applicant: { firstName: v.firstName, lastName: v.lastName, email: v.email, passport: v.passport },
+          applicant: { firstName: v.firstName, lastName: v.lastName, email: v.email, passport: v.passport, dob: v.dob, phone: v.phone },
+          country: visa.country,
+          type: visa.type,
         },
       });
-      setDone({ reference: res?.data?.reference, status: res?.data?.status ?? "submitted" });
+      if (!res.ok) { setError(res.error); return; }
+      window.location.href = res.checkoutUrl;
     } catch (err: any) {
       setError(err?.message ?? "Submission failed. Please try again.");
     } finally {
