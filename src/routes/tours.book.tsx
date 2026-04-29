@@ -50,6 +50,7 @@ function pickImages(t: any): string[] {
 
 function TourBookingPage() {
   const { tour_id, destination, date, guests } = Route.useSearch();
+  const formatPrice = usePriceFormat();
   const [tour, setTour] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
