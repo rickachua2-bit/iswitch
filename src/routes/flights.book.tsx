@@ -72,6 +72,7 @@ function currencySymbol(cur: string) {
 function BookingPage() {
   const { offer_id, fare_id } = Route.useSearch();
   const navigate = useNavigate();
+  const formatPrice = usePriceFormat();
 
   const [offer, setOffer] = useState<any | null>(null);
   const [fare, setFare] = useState<any | null>(null);
