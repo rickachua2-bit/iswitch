@@ -655,6 +655,30 @@ export type Database = {
         }
         Relationships: []
       }
+      vertical_markups: {
+        Row: {
+          b2b_pct: number
+          customer_pct: number
+          updated_at: string
+          updated_by: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Insert: {
+          b2b_pct?: number
+          customer_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+          vertical: Database["public"]["Enums"]["vertical"]
+        }
+        Update: {
+          b2b_pct?: number
+          customer_pct?: number
+          updated_at?: string
+          updated_by?: string | null
+          vertical?: Database["public"]["Enums"]["vertical"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

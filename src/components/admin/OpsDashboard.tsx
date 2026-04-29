@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Loader2, Activity, Database, ListChecks, Receipt, RefreshCw, Plug, Power, ExternalLink } from "lucide-react";
+import { Loader2, Activity, Database, ListChecks, Receipt, RefreshCw, Plug, Power, ExternalLink, Percent, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { triggerCrawl } from "@/server/crawler.functions";
+import { triggerCrawl, seedAllInventory } from "@/server/crawler.functions";
+import { listMarkups, setMarkup } from "@/server/markups.functions";
+import { invalidateMarkupCache } from "@/lib/use-markup";
 
 type Provider = {
   id: string; slug: string; name: string; vertical: string; kind: "api" | "crawl";
@@ -14,21 +16,51 @@ type InventoryRow = { id: string; title: string; vertical: string; price: number
 type BookingRow = { id: string; vertical: string; status: string; amount: number; currency: string; customer_email: string; customer_name: string; created_at: string; provider_id: string | null };
 
 export function OpsDashboard() {
-  const [sub, setSub] = useState<"providers" | "inventory" | "crawls" | "bookings" | "health">("providers");
+  const [sub, setSub] = useState<"providers" | "inventory" | "crawls" | "bookings" | "health" | "markups">("providers");
+  const seedAll = useServerFn(seedAllInventory);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState<string | null>(null);
+
+  async function runSeedAll() {
+    setSeeding(true); setSeedMsg(null);
+    try {
+      const r: any = await seedAll({});
+      const lines = (r.results ?? []).map((x: any) => `${x.vertical}: ${x.items_upserted}`).join(" · ");
+      setSeedMsg(`Seeded ${r.total} items (${lines})`);
+    } catch (e: any) {
+      setSeedMsg(`Failed: ${e?.message ?? "unknown error"}`);
+    }
+    setSeeding(false);
+  }
+
   return (
     <div>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <SubTab active={sub === "providers"} onClick={() => setSub("providers")} icon={Plug}>Providers</SubTab>
         <SubTab active={sub === "inventory"} onClick={() => setSub("inventory")} icon={Database}>Inventory</SubTab>
         <SubTab active={sub === "crawls"} onClick={() => setSub("crawls")} icon={RefreshCw}>Crawl jobs</SubTab>
         <SubTab active={sub === "bookings"} onClick={() => setSub("bookings")} icon={Receipt}>Bookings</SubTab>
         <SubTab active={sub === "health"} onClick={() => setSub("health")} icon={Activity}>Health</SubTab>
+        <SubTab active={sub === "markups"} onClick={() => setSub("markups")} icon={Percent}>Markups</SubTab>
+        <div className="ml-auto flex items-center gap-2">
+          {seedMsg && <span className="text-xs text-muted-foreground">{seedMsg}</span>}
+          <button
+            disabled={seeding}
+            onClick={runSeedAll}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50"
+            title="Crawl up to 50 items per vertical (visas, insurance, tours, pickups)"
+          >
+            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            Seed all inventory
+          </button>
+        </div>
       </div>
       {sub === "providers" && <ProvidersPanel />}
       {sub === "inventory" && <InventoryPanel />}
       {sub === "crawls" && <CrawlsPanel />}
       {sub === "bookings" && <BookingsPanel />}
       {sub === "health" && <HealthPanel />}
+      {sub === "markups" && <MarkupsPanel />}
     </div>
   );
 }
@@ -289,3 +321,108 @@ function StatusBadge({ s }: { s: string }) {
   return <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${c}`}>{s}</span>;
 }
 function Loading() { return <div className="flex h-40 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div>; }
+
+type MarkupRow = { vertical: string; customer_pct: number; b2b_pct: number; updated_at: string | null };
+
+function MarkupsPanel() {
+  const [rows, setRows] = useState<MarkupRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingV, setSavingV] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const list = useServerFn(listMarkups);
+  const save = useServerFn(setMarkup);
+
+  async function load() {
+    setLoading(true);
+    const r: any = await list({});
+    setRows((r?.markups ?? []).map((m: any) => ({
+      vertical: m.vertical,
+      customer_pct: Number(m.customer_pct) || 0,
+      b2b_pct: Number(m.b2b_pct) || 0,
+      updated_at: m.updated_at,
+    })));
+    setLoading(false);
+  }
+  useEffect(() => { void load(); }, []);
+
+  async function saveRow(r: MarkupRow) {
+    setSavingV(r.vertical); setMsg(null);
+    try {
+      const res: any = await save({ data: { vertical: r.vertical as any, customer_pct: r.customer_pct, b2b_pct: r.b2b_pct } });
+      if (!res?.ok) throw new Error(res?.error ?? "Save failed");
+      invalidateMarkupCache();
+      setMsg(`Saved ${r.vertical}`);
+    } catch (e: any) {
+      setMsg(`Failed: ${e?.message ?? "unknown"}`);
+    }
+    setSavingV(null);
+  }
+
+  if (loading) return <Loading />;
+  return (
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-border bg-secondary/30 p-4 text-sm">
+        <div className="font-bold">How markups work</div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          The percentage you set here is added on top of the supplier base price before it's
+          shown to the user. <span className="font-bold text-foreground">Customer %</span> applies to
+          retail customers; <span className="font-bold text-foreground">B2B %</span> applies to
+          approved agent accounts. The difference between displayed price and supplier price is
+          your commission. Example: 5% customer / 3% B2B means you earn 5% on customer bookings
+          and 3% on agent bookings.
+        </div>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary/40 text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2 text-left">Vertical</th>
+              <th className="text-left">Customer %</th>
+              <th className="text-left">B2B %</th>
+              <th className="text-left">Updated</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.vertical} className="border-t border-border">
+                <td className="px-4 py-3 font-bold capitalize">{r.vertical}</td>
+                <td>
+                  <input
+                    type="number" step="0.1" min={0} max={100}
+                    value={r.customer_pct}
+                    onChange={(e) => {
+                      const next = [...rows]; next[i] = { ...r, customer_pct: Number(e.target.value) || 0 }; setRows(next);
+                    }}
+                    className="w-24 rounded border border-border bg-background px-2 py-1 text-sm"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number" step="0.1" min={0} max={100}
+                    value={r.b2b_pct}
+                    onChange={(e) => {
+                      const next = [...rows]; next[i] = { ...r, b2b_pct: Number(e.target.value) || 0 }; setRows(next);
+                    }}
+                    className="w-24 rounded border border-border bg-background px-2 py-1 text-sm"
+                  />
+                </td>
+                <td className="text-xs text-muted-foreground">{r.updated_at ? new Date(r.updated_at).toLocaleString() : "—"}</td>
+                <td className="px-4 py-2 text-right">
+                  <button
+                    disabled={savingV === r.vertical}
+                    onClick={() => saveRow(r)}
+                    className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-[11px] font-bold text-primary-foreground disabled:opacity-50"
+                  >
+                    {savingV === r.vertical ? <Loader2 className="h-3 w-3 animate-spin" /> : null} Save
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {msg && <div className="text-xs text-muted-foreground">{msg}</div>}
+    </div>
+  );
+}

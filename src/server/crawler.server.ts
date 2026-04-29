@@ -35,7 +35,7 @@ const SOURCES: SourceConfig[] = [
     slug: "atlys",
     vertical: "visas",
     seeds: [
-      { url: "https://www.atlys.com/en-us/visas", prompt: "Extract a list of visa products. For each: title (visa name + country), destination country code, price (USD number), duration (processing time), validity, source_url. Return JSON: { items: [{title, destination, price, duration, validity, source_url}] }" },
+      { url: "https://www.atlys.com/en-us/visas", prompt: "Extract up to 50 visa products. For each: title (visa name + country), destination country code, price (USD number), duration (processing time), validity, source_url. Return JSON: { items: [{title, destination, price, duration, validity, source_url}] }" },
     ],
   },
   {
@@ -139,10 +139,12 @@ export async function runCrawl(providerSlug: string, triggeredBy?: string): Prom
   }).select("id").single();
 
   let seen = 0, upserted = 0;
+  const MAX_ITEMS = 50; // cap per crawl run, per vertical request
   try {
-    for (const seed of cfg.seeds) {
+    outer: for (const seed of cfg.seeds) {
       const items = await firecrawlScrape(seed.url, seed.prompt);
       for (const r of items) {
+        if (upserted >= MAX_ITEMS) break outer;
         const n = normalize(r, seed.url);
         if (!n) continue;
         seen++;
@@ -180,6 +182,27 @@ export async function runCrawl(providerSlug: string, triggeredBy?: string): Prom
     }).eq("id", job!.id);
     return { jobId: job!.id, status: "failed", items_upserted: upserted, error: msg };
   }
+}
+
+/**
+ * Seed every crawled vertical: visas, insurance, tours, pickups.
+ * Picks the first provider per vertical and crawls up to 50 items each.
+ * Designed to be safe to call repeatedly — items are upserted by external_id.
+ */
+export async function runAllCrawls(triggeredBy?: string) {
+  const verticals: Vertical[] = ["visas", "insurance", "tours", "pickups"];
+  const results: Array<{ vertical: Vertical; slug: string; items_upserted: number; status: string; error?: string }> = [];
+  for (const v of verticals) {
+    const src = SOURCES.find(s => s.vertical === v);
+    if (!src) continue;
+    try {
+      const r = await runCrawl(src.slug, triggeredBy);
+      results.push({ vertical: v, slug: src.slug, ...r });
+    } catch (e: any) {
+      results.push({ vertical: v, slug: src.slug, items_upserted: 0, status: "failed", error: String(e?.message ?? e).slice(0, 300) });
+    }
+  }
+  return results;
 }
 
 export const CRAWLER_SOURCES = SOURCES.map(s => ({ slug: s.slug, vertical: s.vertical, seeds: s.seeds.length }));
