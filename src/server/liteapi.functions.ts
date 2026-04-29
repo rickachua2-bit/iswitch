@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { friendlyError, timedFetch } from "./_shared.server";
+import { getProviderKey } from "./provider-keys.server";
 
 const BASE = "https://api.liteapi.travel/v3.0";
 
-function lHeaders() {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) throw new Error("LITEAPI_KEY is not configured");
+async function lHeaders() {
+  const key = await getProviderKey("liteapi");
+  if (!key) throw new Error("LiteAPI key not configured for current mode");
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
@@ -40,7 +41,7 @@ export const searchHotels = createServerFn({ method: "POST" })
         // Resolve cityName -> hotelIds (LiteAPI v3 no longer accepts cityName on /hotels/rates)
         const parts = [`cityName=${encodeURIComponent(data.cityName)}`, "limit=50"];
         if (data.countryCode) parts.push(`countryCode=${data.countryCode}`);
-        const lookup = await timedFetch("liteapi", `${BASE}/data/hotels?${parts.join("&")}`, { method: "GET", headers: lHeaders() });
+        const lookup = await timedFetch("liteapi", `${BASE}/data/hotels?${parts.join("&")}`, { method: "GET", headers: await lHeaders() });
         if (lookup.status < 400) {
           const lj = JSON.parse(lookup.text);
           const ids = (lj?.data ?? []).map((h: any) => h?.id).filter(Boolean).slice(0, 50);
@@ -54,7 +55,7 @@ export const searchHotels = createServerFn({ method: "POST" })
       }
 
       const { status, text } = await timedFetch("liteapi", `${BASE}/hotels/rates`, {
-        method: "POST", headers: lHeaders(), body: JSON.stringify(ratesBody),
+        method: "POST", headers: await lHeaders(), body: JSON.stringify(ratesBody),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text), hotels: [] };
       const json = JSON.parse(text);
@@ -86,7 +87,7 @@ export const getHotelDetails = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const { status, text } = await timedFetch("liteapi", `${BASE}/data/hotel?hotelId=${encodeURIComponent(data.hotelId)}`, {
-        method: "GET", headers: lHeaders(),
+        method: "GET", headers: await lHeaders(),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
       return { ok: true as const, hotel: JSON.parse(text)?.data };

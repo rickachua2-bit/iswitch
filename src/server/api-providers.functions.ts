@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAuth } from "@/integrations/supabase/auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getProviderKey, getGlobalMode, isKeyConfigured, invalidateModeCache } from "./provider-keys.server";
 
 const VERTICALS = ["flights", "stays", "visas", "insurance", "tours", "pickups"] as const;
 const KINDS = ["api", "crawl"] as const;
@@ -26,7 +27,7 @@ export const getApiProviderRouting = createServerFn({ method: "GET" })
     const routing = { ...fallback, ...((data?.value as Record<string, string>) ?? {}) };
     return {
       routing,
-      travsifyConfigured: !!process.env.TRAVSIFY_API_KEY,
+      travsifyConfigured: !!(process.env.TRAVSIFY_API_KEY || process.env.TRAVSIFY_TEST_API_KEY),
       providers: {
         flights: { default: "Duffel", travsify: "Travsify" },
         stays: { default: "LiteAPI", travsify: "Travsify" },
@@ -58,7 +59,7 @@ export const listProviders = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
       .from("providers")
-      .select("id, slug, name, vertical, kind, base_url, enabled, notes, total_calls, total_errors, last_ok_at, last_error_at, last_error, created_at, updated_at")
+      .select("id, slug, name, vertical, kind, base_url, enabled, mode, notes, total_calls, total_errors, last_ok_at, last_error_at, last_error, created_at, updated_at")
       .order("vertical", { ascending: true })
       .order("name", { ascending: true });
     if (error) return { ok: false as const, error: error.message, providers: [] as any[] };
@@ -72,6 +73,7 @@ const ProviderInput = z.object({
   kind: z.enum(KINDS),
   base_url: z.string().url().optional().or(z.literal("")),
   enabled: z.boolean().default(true),
+  mode: z.enum(["test", "live"]).optional(),
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
 
@@ -202,16 +204,16 @@ export const testProvider = createServerFn({ method: "POST" })
 
     try {
       if (prov.slug === "duffel") {
-        const key = process.env.DUFFEL_API_KEY;
-        if (!key) throw new Error("DUFFEL_API_KEY not configured");
+        const key = await getProviderKey("duffel");
+        if (!key) throw new Error("Duffel key not configured for current mode");
         const r = await fetch("https://api.duffel.com/air/airlines?limit=1", {
           headers: { Authorization: `Bearer ${key}`, "Duffel-Version": "v2", Accept: "application/json" },
         });
         status = r.status; ok = r.ok;
         message = r.ok ? "Duffel API responding" : (await r.text()).slice(0, 200);
       } else if (prov.slug === "liteapi") {
-        const key = process.env.LITEAPI_KEY;
-        if (!key) throw new Error("LITEAPI_KEY not configured");
+        const key = await getProviderKey("liteapi");
+        if (!key) throw new Error("LiteAPI key not configured for current mode");
         const r = await fetch("https://api.liteapi.travel/v3.0/data/countries", {
           headers: { "X-API-Key": key, Accept: "application/json" },
         });
@@ -243,4 +245,77 @@ export const testProvider = createServerFn({ method: "POST" })
     }
 
     return { ok: true as const, healthy: ok, status, latency, message };
+  });
+
+// ============ MODE (test vs live) ============
+export const getProviderMode = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const global = await getGlobalMode();
+    return {
+      ok: true as const,
+      global,
+      keys: {
+        duffel:   { live: isKeyConfigured("duffel", "live"),   test: isKeyConfigured("duffel", "test") },
+        liteapi:  { live: isKeyConfigured("liteapi", "live"),  test: isKeyConfigured("liteapi", "test") },
+        travsify: { live: isKeyConfigured("travsify", "live"), test: isKeyConfigured("travsify", "test") },
+      },
+    };
+  });
+
+export const setGlobalProviderMode = createServerFn({ method: "POST" })
+  .middleware([supabaseAuth])
+  .inputValidator((d: unknown) => z.object({ mode: z.enum(["test", "live"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("system_settings")
+      .upsert({ key: "provider_mode", value: data.mode as any, updated_at: new Date().toISOString(), updated_by: context.userId },
+        { onConflict: "key" });
+    invalidateModeCache();
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+export const setProviderModeOverride = createServerFn({ method: "POST" })
+  .middleware([supabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), mode: z.enum(["test", "live"]) }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("providers")
+      .update({ mode: data.mode, updated_at: new Date().toISOString() }).eq("id", data.id);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+// ============ CRAWL JOBS HISTORY ============
+export const listCrawlJobs = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data: jobs, error } = await supabaseAdmin
+      .from("crawl_jobs")
+      .select("id, provider_id, status, started_at, finished_at, items_seen, items_upserted, items_deactivated, error, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) return { ok: false as const, error: error.message, jobs: [], providers: [] };
+    const { data: provs } = await supabaseAdmin
+      .from("providers").select("id, name, slug, vertical, kind");
+    return { ok: true as const, jobs: jobs ?? [], providers: provs ?? [] };
+  });
+
+export const getProviderInventoryCounts = createServerFn({ method: "GET" })
+  .middleware([supabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("inventory_items").select("provider_id");
+    if (error) return { ok: false as const, error: error.message, counts: {} as Record<string, number> };
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const id = (row as any).provider_id as string;
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return { ok: true as const, counts };
   });

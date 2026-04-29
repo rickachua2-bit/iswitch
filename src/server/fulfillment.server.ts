@@ -1,12 +1,13 @@
 // Fulfillment helpers - auto-confirm flights/hotels, mark others manual
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getProviderKey } from "./provider-keys.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
 
 async function fulfilFlight(bookingId: string, payload: any) {
-  const key = process.env.DUFFEL_API_KEY;
-  if (!key) return { ok: false, error: "DUFFEL_API_KEY missing" };
+  const key = await getProviderKey("duffel");
+  if (!key) return { ok: false, error: "Duffel key missing for current mode" };
 
   const offerId = payload?.duffel_offer_id ?? payload?.offer_id;
   const passengers = payload?.passengers ?? [];
@@ -37,8 +38,8 @@ async function fulfilFlight(bookingId: string, payload: any) {
 }
 
 async function fulfilHotel(bookingId: string, payload: any) {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) return { ok: false, error: "LITEAPI_KEY missing" };
+  const key = await getProviderKey("liteapi");
+  if (!key) return { ok: false, error: "LiteAPI key missing for current mode" };
 
   const rateId = payload?.lite_rate_id ?? payload?.rate_id;
   const guests = payload?.guests ?? [];

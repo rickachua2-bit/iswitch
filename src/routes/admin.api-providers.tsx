@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Plug, Loader2, Save, AlertTriangle, CheckCircle2, Plus, Pencil, Trash2,
   ArrowLeft, Search, Power, ExternalLink, Package, Activity, X, Zap, RefreshCw,
+  FlaskConical, Radio,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminLayout";
 import {
@@ -11,6 +12,7 @@ import {
   listProviders as listProvidersFn, createProvider as createProviderFn, updateProvider as updateProviderFn, deleteProvider as deleteProviderFn,
   listProviderInventory as listProviderInventoryFn, createInventoryItem as createInventoryItemFn, updateInventoryItem as updateInventoryItemFn, deleteInventoryItem as deleteInventoryItemFn,
   testProvider as testProviderFn,
+  getProviderMode as getProviderModeFn, setGlobalProviderMode as setGlobalProviderModeFn, setProviderModeOverride as setProviderModeOverrideFn,
 } from "@/server/api-providers.functions";
 import { triggerCrawl as triggerCrawlFn } from "@/server/crawler.functions";
 import { toast } from "sonner";
@@ -28,6 +30,7 @@ type Kind = (typeof KINDS)[number];
 type Provider = {
   id: string; slug: string; name: string; vertical: Vertical; kind: Kind;
   base_url: string | null; enabled: boolean; notes: string | null;
+  mode: "test" | "live";
   total_calls: number; total_errors: number;
   last_ok_at: string | null; last_error_at: string | null; last_error: string | null;
   created_at: string; updated_at: string;
@@ -60,6 +63,9 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   const testProvider = useServerFn(testProviderFn);
   const triggerCrawl = useServerFn(triggerCrawlFn);
   const createProvider = useServerFn(createProviderFn);
+  const getProviderMode = useServerFn(getProviderModeFn);
+  const setGlobalProviderMode = useServerFn(setGlobalProviderModeFn);
+  const setProviderModeOverride = useServerFn(setProviderModeOverrideFn);
 
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -72,14 +78,20 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
   const [search, setSearch] = useState("");
   const [filterVertical, setFilterVertical] = useState<"all" | Vertical>("all");
   const [editing, setEditing] = useState<Partial<Provider> | null>(null);
+  const [globalMode, setGlobalMode] = useState<"test" | "live">("live");
+  const [keyStatus, setKeyStatus] = useState<Record<string, { live: boolean; test: boolean }>>({});
 
   async function refresh() {
-    const [a, b] = await Promise.all([listProviders(), getApiProviderRouting()]);
+    const [a, b, c] = await Promise.all([listProviders(), getApiProviderRouting(), getProviderMode()]);
     if (a.ok) setProviders(a.providers as Provider[]);
     if (b?.routing) {
       setRouting(b.routing as any);
       setRoutingLabels(b.providers ?? {});
       setTravsifyConfigured(!!b.travsifyConfigured);
+    }
+    if (c?.ok) {
+      setGlobalMode(c.global);
+      setKeyStatus(c.keys ?? {});
     }
     setLoading(false);
   }
@@ -131,6 +143,19 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
     setBusyId(null); setBusyAction(null);
   }
 
+  async function onChangeGlobalMode(mode: "test" | "live") {
+    setGlobalMode(mode);
+    const r = await setGlobalProviderMode({ data: { mode } });
+    r.ok ? toast.success(`Switched all providers to ${mode.toUpperCase()} mode`) : toast.error(r.error);
+  }
+
+  async function onChangeProviderMode(p: Provider, mode: "test" | "live") {
+    const r = await setProviderModeOverride({ data: { id: p.id, mode } });
+    if (!r.ok) return toast.error(r.error);
+    toast.success(`${p.name} → ${mode.toUpperCase()}`);
+    refresh();
+  }
+
   const filtered = useMemo(() => providers.filter((p) => {
     if (filterVertical !== "all" && p.vertical !== filterVertical) return false;
     if (search && !`${p.name} ${p.slug} ${p.base_url ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
@@ -152,6 +177,48 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
           </button>
         }
       />
+
+      {/* Global Test/Live mode (Drafts API) */}
+      <div className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${globalMode === "test" ? "border-amber-400/50 bg-gradient-to-r from-amber-50 to-amber-100/40 dark:from-amber-500/10 dark:to-amber-500/5" : "border-success/40 bg-gradient-to-r from-success/10 to-success/5"}`}>
+        <div className="flex items-start gap-2">
+          {globalMode === "test"
+            ? <FlaskConical className="mt-0.5 h-5 w-5 text-amber-600" />
+            : <Radio className="mt-0.5 h-5 w-5 text-success" />}
+          <div>
+            <div className="text-sm font-extrabold">
+              {globalMode === "test" ? "Sandbox / Test mode" : "Live / Production mode"}
+              <span className="ml-2 rounded-full bg-background/60 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">{globalMode}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {globalMode === "test"
+                ? "All providers are using TEST keys (e.g. DUFFEL_TEST_API_KEY). Bookings won't charge real money. Edit and try drafts safely."
+                : "All providers are using LIVE keys. Real bookings and payments are processed."}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+              {(["duffel","liteapi","travsify"] as const).map((slug) => {
+                const k = keyStatus[slug];
+                if (!k) return null;
+                const has = globalMode === "test" ? k.test : k.live;
+                return (
+                  <span key={slug} className={`rounded px-1.5 py-0.5 font-bold uppercase tracking-wider ${has ? "bg-success/20 text-success" : "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"}`}>
+                    {slug} {has ? "✓" : "missing"}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
+          <button onClick={() => onChangeGlobalMode("test")}
+            className={`flex items-center gap-1 rounded px-3 py-1.5 text-xs font-extrabold transition ${globalMode === "test" ? "bg-amber-500 text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <FlaskConical className="h-3.5 w-3.5" /> Test
+          </button>
+          <button onClick={() => onChangeGlobalMode("live")}
+            className={`flex items-center gap-1 rounded px-3 py-1.5 text-xs font-extrabold transition ${globalMode === "live" ? "bg-success text-success-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <Radio className="h-3.5 w-3.5" /> Live
+          </button>
+        </div>
+      </div>
 
       {/* Travsify status */}
       <div className={`mb-5 flex items-start gap-2 rounded-xl border p-3 text-sm ${travsifyConfigured ? "border-success/40 bg-success/5" : "border-amber-400/40 bg-amber-50 dark:bg-amber-500/10"}`}>
@@ -227,6 +294,14 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${p.enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
                       {p.enabled ? "Live" : "Off"}
                     </span>
+                    <button
+                      onClick={() => onChangeProviderMode(p, p.mode === "test" ? "live" : "test")}
+                      title="Toggle test/live mode for this provider"
+                      className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider transition hover:scale-105 ${p.mode === "test" ? "bg-amber-500/20 text-amber-700 dark:text-amber-400" : "bg-success/15 text-success"}`}
+                    >
+                      {p.mode === "test" ? <FlaskConical className="h-2.5 w-2.5" /> : <Radio className="h-2.5 w-2.5" />}
+                      {p.mode}
+                    </button>
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span className="rounded bg-gradient-primary px-1.5 py-0.5 text-primary-foreground shadow-sm">{p.vertical}</span>

@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { friendlyError, timedFetch } from "./_shared.server";
+import { getProviderKey } from "./provider-keys.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 
-function dHeaders() {
-  const key = process.env.DUFFEL_API_KEY;
-  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+async function dHeaders() {
+  const key = await getProviderKey("duffel");
+  if (!key) throw new Error("Duffel key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Duffel-Version": "v2",
@@ -47,7 +48,7 @@ export const searchFlights = createServerFn({ method: "POST" })
 
       const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offer_requests?return_offers=true`, {
         method: "POST",
-        headers: dHeaders(),
+        headers: await dHeaders(),
         body: JSON.stringify({ data: { slices, passengers, cabin_class: data.cabin } }),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text), offers: [] };
@@ -84,7 +85,7 @@ export const getFlightOffer = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offers/${data.offer_id}?return_available_services=true`, {
-        method: "GET", headers: dHeaders(),
+        method: "GET", headers: await dHeaders(),
       });
       if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
       return { ok: true as const, offer: JSON.parse(text)?.data };

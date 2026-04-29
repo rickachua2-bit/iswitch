@@ -43,9 +43,10 @@ async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "defa
   }
 }
 
-function travsifyHeaders() {
-  const key = process.env.TRAVSIFY_API_KEY;
-  if (!key) throw new Error("TRAVSIFY_API_KEY is not configured");
+async function travsifyHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("travsify");
+  if (!key) throw new Error("Travsify key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Content-Type": "application/json",
@@ -60,7 +61,7 @@ async function travsifySearch(path: string, body: unknown) {
   try {
     const { status, text } = await timedFetch("travsify", `${TRAVSIFY_BASE}${path}`, {
       method: "POST",
-      headers: travsifyHeaders(),
+      headers: await travsifyHeaders(),
       body: JSON.stringify(body),
     });
     if (status >= 400) return { ok: false as const, error: friendlyError(status, text), data: null as any };
@@ -104,9 +105,10 @@ async function timedFetch(_providerSlug: string, url: string, init: RequestInit)
   }
 }
 
-function duffelHeaders() {
-  const key = process.env.DUFFEL_API_KEY;
-  if (!key) throw new Error("DUFFEL_API_KEY is not configured");
+async function duffelHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("duffel");
+  if (!key) throw new Error("Duffel key not configured for current mode");
   return {
     Authorization: `Bearer ${key}`,
     "Duffel-Version": "v2",
@@ -115,9 +117,10 @@ function duffelHeaders() {
   } as Record<string, string>;
 }
 
-function liteApiHeaders() {
-  const key = process.env.LITEAPI_KEY;
-  if (!key) throw new Error("LITEAPI_KEY is not configured");
+async function liteApiHeaders() {
+  const { getProviderKey } = await import("./provider-keys.server");
+  const key = await getProviderKey("liteapi");
+  if (!key) throw new Error("LiteAPI key not configured for current mode");
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
 }
 
@@ -133,7 +136,7 @@ async function getCountryList() {
   if (_countryCache) return _countryCache;
   try {
     const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/data/countries`, {
-      method: "GET", headers: liteApiHeaders(),
+      method: "GET", headers: await liteApiHeaders(),
     });
     if (status >= 400) return [];
     const json = JSON.parse(text);
@@ -206,7 +209,7 @@ async function searchDuffelOffers(input: {
 
     const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offer_requests?return_offers=true`, {
       method: "POST",
-      headers: duffelHeaders(),
+      headers: await duffelHeaders(),
       body: JSON.stringify({ data: { slices, passengers, cabin_class: input.cabin ?? "economy" } }),
     });
     if (status >= 400) return { ok: false as const, error: friendlyError(status, text), offers: [] };
@@ -242,7 +245,7 @@ async function getDuffelOffer(offer_id: string) {
   try {
     const { status, text } = await timedFetch("duffel", `${DUFFEL_BASE}/air/offers/${offer_id}?return_available_services=true`, {
       method: "GET",
-      headers: duffelHeaders(),
+      headers: await duffelHeaders(),
     });
     if (status >= 400) return { ok: false as const, error: friendlyError(status, text) };
     return { ok: true as const, offer: JSON.parse(text)?.data };
@@ -263,7 +266,7 @@ async function fetchLiteHotelMeta(hotelIds: string[]): Promise<Map<string, any>>
       const { status, text } = await timedFetch(
         "liteapi",
         `${LITEAPI_BASE}/data/hotels?hotelIds=${encodeURIComponent(ids)}&limit=${CHUNK}`,
-        { method: "GET", headers: liteApiHeaders() },
+        { method: "GET", headers: await liteApiHeaders() },
       );
       if (status >= 400) continue;
       const json = JSON.parse(text);
@@ -306,7 +309,7 @@ async function searchLiteHotels(input: {
         const { status: ls, text: lt } = await timedFetch(
           "liteapi",
           `${LITEAPI_BASE}/data/hotels?${lookupParts.join("&")}`,
-          { method: "GET", headers: liteApiHeaders() },
+          { method: "GET", headers: await liteApiHeaders() },
         );
         if (ls < 400) {
           const lj = JSON.parse(lt);
@@ -322,7 +325,7 @@ async function searchLiteHotels(input: {
 
     const { status, text } = await timedFetch("liteapi", `${LITEAPI_BASE}/hotels/rates`, {
       method: "POST",
-      headers: liteApiHeaders(),
+      headers: await liteApiHeaders(),
       body: JSON.stringify(ratesBody),
     });
     if (status >= 400) return { ok: false as const, error: friendlyError(status, text), hotels: [] };
