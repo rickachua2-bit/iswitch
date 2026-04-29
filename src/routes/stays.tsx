@@ -139,6 +139,7 @@ function StaysPage() {
     navigate({
       to: "/stays/book",
       search: {
+        destination: query.destination,
         offer_id: String(id),
         checkIn: query.checkIn,
         checkOut: query.checkOut,
