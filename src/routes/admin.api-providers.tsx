@@ -30,6 +30,7 @@ type Kind = (typeof KINDS)[number];
 type Provider = {
   id: string; slug: string; name: string; vertical: Vertical; kind: Kind;
   base_url: string | null; enabled: boolean; notes: string | null;
+  mode: "test" | "live";
   total_calls: number; total_errors: number;
   last_ok_at: string | null; last_error_at: string | null; last_error: string | null;
   created_at: string; updated_at: string;
