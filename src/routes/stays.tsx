@@ -121,21 +121,15 @@ function StaysPage() {
   const hasSearched = !!(query.checkIn && query.checkOut);
 
   async function goToBooking(h: any) {
-    const id = h.offer_id ?? h.id;
-    try {
-      sessionStorage.setItem(`hotel:${id}`, JSON.stringify(h));
-    } catch {}
-    // Persist server-side so booking survives refresh / payment redirect
-    try {
-      const { saveOffer } = await import("@/server/offer-cache.functions");
-      await saveOffer({
-        data: {
-          id: `hotel:${id}`,
-          vertical: "stays",
-          payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests },
-        },
-      });
-    } catch {}
+    const id = h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId;
+    const { persistSelectedOffer } = await import("@/lib/select-offer");
+    await persistSelectedOffer({
+      vertical: "stays",
+      sessionPrefix: "hotel",
+      cachePrefix: "hotel",
+      id: String(id),
+      payload: { ...h, checkIn: query.checkIn, checkOut: query.checkOut, guests: query.guests, destination: query.destination },
+    });
     navigate({
       to: "/stays/book",
       search: {
