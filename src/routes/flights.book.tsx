@@ -4,12 +4,15 @@ import { z } from "zod";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import {
-  ArrowLeft, Plane, ShieldCheck, CreditCard, Lock, CheckCircle2,
-  Briefcase, Luggage, Loader2, Clock,
+  ArrowLeft, Plane, ShieldCheck, CreditCard, Lock,
+  Briefcase, Luggage, Loader2, Clock, Calendar as CalendarIcon, Users,
 } from "lucide-react";
 import { bookFlight } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { FareAndTransitRules } from "@/components/flights/FareAndTransitRules";
+import {
+  BookingShell, SectionCard, Field, ConfirmButton, type BookingHeroProps,
+} from "@/components/booking/BookingShell";
 
 const bookSchema = z.object({
   offer_id: z.string(),
