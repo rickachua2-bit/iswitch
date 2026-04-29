@@ -330,6 +330,10 @@ function useFlightSearch(search: any): SearchState & { query: any } {
 function FlightsPage() {
   const childMatches = useChildMatches();
   if (childMatches.length > 0) return <Outlet />;
+  return <FlightsSearchPage />;
+}
+
+function FlightsSearchPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 

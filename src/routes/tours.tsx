@@ -42,6 +42,10 @@ export const Route = createFileRoute("/tours")({
 function ToursPage() {
   const childMatches = useChildMatches();
   if (childMatches.length > 0) return <Outlet />;
+  return <ToursSearchPage />;
+}
+
+function ToursSearchPage() {
   const { tours, query, error } = Route.useLoaderData() as any;
   const hasSearched = !!query.date;
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();

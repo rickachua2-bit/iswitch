@@ -45,6 +45,10 @@ export const Route = createFileRoute("/pickups")({
 function PickupsPage() {
   const childMatches = useChildMatches();
   if (childMatches.length > 0) return <Outlet />;
+  return <PickupsSearchPage />;
+}
+
+function PickupsSearchPage() {
   const { vehicles, query, error } = Route.useLoaderData() as any;
   const hasSearched = !!query.date;
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();

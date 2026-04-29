@@ -125,6 +125,10 @@ function nightsBetween(a?: string, b?: string) {
 function StaysPage() {
   const childMatches = useChildMatches();
   if (childMatches.length > 0) return <Outlet />;
+  return <StaysSearchPage />;
+}
+
+function StaysSearchPage() {
   const { hotels, query, error } = Route.useLoaderData() as any;
   const formatPrice = usePriceFormat();
   const hasSearched = !!(query.checkIn && query.checkOut);
