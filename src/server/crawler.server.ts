@@ -35,7 +35,7 @@ const SOURCES: SourceConfig[] = [
     slug: "atlys",
     vertical: "visas",
     seeds: [
-      { url: "https://www.atlys.com/en-us/visas", prompt: "Extract a list of visa products. For each: title (visa name + country), destination country code, price (USD number), duration (processing time), validity, source_url. Return JSON: { items: [{title, destination, price, duration, validity, source_url}] }" },
+      { url: "https://www.atlys.com/en-us/visas", prompt: "Extract up to 50 visa products. For each: title (visa name + country), destination country code, price (USD number), duration (processing time), validity, source_url. Return JSON: { items: [{title, destination, price, duration, validity, source_url}] }" },
     ],
   },
   {
