@@ -135,6 +135,29 @@ function AgentApplyPage() {
     setMode("status");
   }
 
+  // Agent signup gets the two-pane split layout (marketing + form).
+  // KYB & status remain in the standard page chrome so the upload area and
+  // status detail can breathe.
+  if (mode === "signup") {
+    return (
+      <AuthSplitLayout
+        variant="agent"
+        formTitle="Create your agent account"
+        formSubtitle="Step 1 of 2 — we'll verify your business in step 2 (KYB)."
+        showGuestExit={false}
+      >
+        <SignupStep
+          displayName={displayName} setDisplayName={setDisplayName}
+          email={email} setEmail={setEmail}
+          password={password} setPassword={setPassword}
+          phone={phone} setPhone={setPhone}
+          loading={loading} error={error} onSubmit={handleSignup}
+        />
+        <style>{`.input{width:100%;border-radius:.5rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.625rem .75rem;font-size:.875rem;transition:border-color 120ms,box-shadow 120ms}.input:focus{outline:none;border-color:hsl(var(--primary));box-shadow:0 0 0 3px color-mix(in oklab,hsl(var(--primary)) 18%,transparent)}`}</style>
+      </AuthSplitLayout>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
@@ -144,26 +167,18 @@ function AgentApplyPage() {
             B2B · Travel agents & businesses
           </span>
           <h1 className="mt-3 font-display text-3xl font-extrabold text-primary-foreground md:text-4xl">
-            Earn with iSwitch
+            {mode === "kyb" ? "Verify your business" : "Application status"}
           </h1>
           <p className="mt-2 text-sm text-primary-foreground/85">
-            Apply as an agent. Get approved. Earn commission on every flight, stay, visa & consultation you book for clients.
+            {mode === "kyb"
+              ? "Step 2 of 2 — upload your business documents so our team can approve your agent account."
+              : "We've received your application. Track its status below."}
           </p>
         </div>
       </section>
 
       <section className="mx-auto -mt-8 max-w-2xl px-4 pb-16">
         <div className="rounded-2xl border border-border bg-card p-6 shadow-elevated md:p-8">
-          {mode === "signup" && (
-            <SignupStep
-              displayName={displayName} setDisplayName={setDisplayName}
-              email={email} setEmail={setEmail}
-              password={password} setPassword={setPassword}
-              phone={phone} setPhone={setPhone}
-              loading={loading} error={error} onSubmit={handleSignup}
-            />
-          )}
-
           {mode === "kyb" && (
             <KybStep
               businessName={businessName} setBusinessName={setBusinessName}
