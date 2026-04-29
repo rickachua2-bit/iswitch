@@ -27,9 +27,10 @@ import { useState } from "react";
 import { z } from "zod";
 
 const searchSchema = z.object({
-  nationality: z.coerce.string().optional().default("Nigeria"),
-  destination: z.coerce.string().optional().default("United Kingdom"),
-  visaType: z.coerce.string().optional().default("Tourist"),
+  nationality: z.coerce.string().optional(),
+  destination: z.coerce.string().optional(),
+  visaType: z.coerce.string().optional(),
+  submitted: z.coerce.string().optional(),
 });
 
 function toPurpose(v: string): "tourism" | "business" | "transit" {
