@@ -257,23 +257,23 @@ function PolicyForm({ plan }: { plan: any }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <BookingSectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase.">
+    <form onSubmit={submit} className="booking-form space-y-4">
+      <BookingSectionCard title="Policyholder details" subtitle="The lead traveller's details. Add additional travellers after purchase." icon={User}>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <Field label="First name" required>
-            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputCls} />
+          <Field label="First name" required icon={User}>
+            <input required value={v.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </Field>
-          <Field label="Last name" required>
-            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} className={inputCls} />
+          <Field label="Last name" required icon={User}>
+            <input required value={v.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </Field>
-          <Field label="Email" required>
-            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} className={inputCls} />
+          <Field label="Email" required icon={Mail}>
+            <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Phone" required>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls} placeholder="+234…" />
+          <Field label="Phone" required icon={Phone}>
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
           </Field>
-          <Field label="Date of birth" required>
-            <input required type="date" value={v.born_on} onChange={(e) => set("born_on", e.target.value)} className={inputCls} />
+          <Field label="Date of birth" required icon={CalendarIcon}>
+            <input required type="date" value={v.born_on} onChange={(e) => set("born_on", e.target.value)} />
           </Field>
         </div>
       </BookingSectionCard>
