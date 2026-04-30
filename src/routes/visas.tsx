@@ -265,6 +265,18 @@ function VisasPage() {
             {annotated.map((v: any) => {
               const kinds: VisaKind[] = v._kinds;
               const primary = kinds[0];
+              const bookable = !kinds.includes("visa-free");
+              const hasPrice = v.price != null && v.price !== "" && Number(v.price) > 0;
+              const ctaLabel =
+                kinds.includes("visa-free") ? "No visa needed"
+                : kinds.includes("voa") ? "Prepare for arrival"
+                : kinds.includes("evisa") ? "Apply for e-Visa"
+                : "Start application";
+              const helper =
+                kinds.includes("visa-free") ? "Your passport allows visa-free entry. Just travel with a valid passport."
+                : kinds.includes("voa") ? "Visa is issued on arrival at the border. We can prep your documents."
+                : kinds.includes("evisa") ? "Apply online — we submit and follow up until your e-Visa is issued."
+                : "We collect your documents, review and submit to the embassy / VAC.";
               return (
                 <article
                   key={v.id}
@@ -288,6 +300,8 @@ function VisasPage() {
                     </div>
                   )}
 
+                  <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{helper}</p>
+
                   <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                     <div className="rounded-lg bg-secondary/60 p-2.5">
                       <dt className="flex items-center gap-1 text-muted-foreground">
@@ -309,17 +323,25 @@ function VisasPage() {
 
                   <div className="mt-5 flex items-end justify-between border-t border-border pt-4">
                     <div>
-                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Total fee</div>
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {bookable ? "Total fee" : "Visa fee"}
+                      </div>
                       <div className="text-2xl font-extrabold text-primary">
-                        {v.currency ?? "USD"} {v.price ?? "—"}
+                        {kinds.includes("visa-free") ? "Free" : hasPrice ? `${v.currency ?? "USD"} ${v.price}` : "On request"}
                       </div>
                     </div>
-                    <button
-                      onClick={() => goToBooking(v)}
-                      className="rounded-lg bg-gradient-accent px-4 py-2.5 text-xs font-bold text-accent-foreground shadow-sm transition hover:opacity-90"
-                    >
-                      Apply now
-                    </button>
+                    {bookable ? (
+                      <button
+                        onClick={() => goToBooking(v)}
+                        className="rounded-lg bg-gradient-accent px-4 py-2.5 text-xs font-bold text-accent-foreground shadow-sm transition hover:opacity-90"
+                      >
+                        {ctaLabel}
+                      </button>
+                    ) : (
+                      <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">
+                        {ctaLabel}
+                      </span>
+                    )}
                   </div>
                 </article>
               );
