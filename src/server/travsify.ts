@@ -603,20 +603,25 @@ export const startFlightSearch = createServerFn({ method: "POST" })
       : [];
 
     // Sort each provider group ascending by price; invalid prices sink to bottom.
+    // Tie-break by id so two equal-priced offers always render in the same order.
     const byPriceAsc = (a: any, b: any) => {
       const pa = Number(a?.total_amount);
       const pb = Number(b?.total_amount);
       const aBad = !Number.isFinite(pa) || pa <= 0;
       const bBad = !Number.isFinite(pb) || pb <= 0;
-      if (aBad && bBad) return 0;
+      if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
       if (aBad) return 1;
       if (bBad) return -1;
-      return pa - pb;
+      if (pa !== pb) return pa - pb;
+      return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
     };
     const sortedBooking = [...bookingOffers].sort(byPriceAsc);
     const sortedDuffel = [...duffelOffers].sort(byPriceAsc);
-    // Booking.com first, Duffel second.
-    const merged = [...sortedBooking, ...sortedDuffel];
+    // Booking.com first, Duffel second; then dedupe across providers and stamp
+    // every offer with provenance so the UI can prove it was just fetched.
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const fetchedAt = new Date().toISOString();
+    const merged = stampOffers(dedupeFlightOffers([...sortedBooking, ...sortedDuffel]), requestId, fetchedAt);
 
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
