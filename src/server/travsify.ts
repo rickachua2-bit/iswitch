@@ -784,6 +784,45 @@ export const searchTours = createServerFn({ method: "POST" })
     return ok({ tours: r.items });
   });
 
+/**
+ * Booking.com-backed destination autocomplete for tours.
+ * Returns up to 10 suggestions; never throws — degrades to [] so the UI
+ * can fall back to free-text input.
+ */
+export const autocompleteTourDestinations = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ query: z.string().min(1).max(80) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (!process.env.RAPIDAPI_BOOKING_KEY) return ok({ suggestions: [] });
+    try {
+      const url = `https://booking-com15.p.rapidapi.com/api/v1/attraction/searchLocation?query=${encodeURIComponent(data.query)}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "x-rapidapi-host": "booking-com15.p.rapidapi.com",
+          "x-rapidapi-key": process.env.RAPIDAPI_BOOKING_KEY!,
+          Accept: "application/json",
+        },
+      });
+      if (!res.ok) return ok({ suggestions: [] });
+      const json: any = await res.json();
+      const raw: any[] = json?.data?.destinations ?? json?.data?.products ?? json?.data ?? [];
+      const suggestions = raw
+        .slice(0, 10)
+        .map((r: any) => ({
+          id: String(r?.id ?? r?.productId ?? r?.ufi ?? r?.b_ufi ?? ""),
+          label: String(r?.cityName ?? r?.name ?? r?.bCityName ?? r?.title ?? "").trim(),
+          country: r?.country ?? r?.countryName ?? r?.cc ?? null,
+          type: String(r?.productType ?? r?.type ?? r?.searchType ?? "destination").toLowerCase(),
+        }))
+        .filter((s: any) => s.label);
+      return ok({ suggestions });
+    } catch {
+      return ok({ suggestions: [] });
+    }
+  });
+
 export const bookTour = createServerFn({ method: "POST" })
   .inputValidator(
     (d: unknown) =>
