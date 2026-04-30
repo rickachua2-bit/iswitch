@@ -552,7 +552,7 @@ export const startFlightSearch = createServerFn({ method: "POST" })
         return_date: data.return_date,
         adults: data.adults,
         children: data.children,
-        cabin: data.cabin,
+        cabin: normalizeCabin(data.cabin),
       }),
     ]);
 
@@ -596,7 +596,7 @@ export const searchFlights = createServerFn({ method: "POST" })
         return_date: data.return_date,
         adults: data.adults,
         children: data.children,
-        cabin: data.cabin,
+        cabin: normalizeCabin(data.cabin),
       }),
     ]);
     const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
