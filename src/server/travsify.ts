@@ -15,6 +15,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import {
+  bookingSearchFlights,
+  bookingSearchHotels,
+  bookingSearchTours,
+  bookingSearchCars,
+} from "./booking.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
@@ -535,9 +541,39 @@ export const startFlightSearch = createServerFn({ method: "POST" })
       const offers = t.data?.offers ?? t.data?.data?.offers ?? [];
       return { search_id: null, data: { offers }, error: null };
     }
-    const r = await runDuffelSearch(data);
-    if (r.error) return { search_id: null, data: { offers: [] }, error: r.error };
-    return { search_id: null, data: { offers: r.offers }, error: null };
+    // Run Duffel + Booking.com in parallel; either one failing is non-fatal
+    // as long as the other returns offers.
+    const [duffelRes, bookingRes] = await Promise.allSettled([
+      runDuffelSearch(data),
+      bookingSearchFlights({
+        origin: data.origin ?? data.segments?.[0]?.origin ?? "",
+        destination: data.destination ?? data.segments?.[0]?.destination ?? "",
+        departure_date: data.departure_date ?? data.segments?.[0]?.departure_date ?? "",
+        return_date: data.return_date,
+        adults: data.adults,
+        children: data.children,
+        cabin: normalizeCabin(data.cabin),
+      }),
+    ]);
+
+    const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
+      ? (duffelRes.value.offers ?? []).map((o: any) => ({ ...o, source: "duffel" as const }))
+      : [];
+    const bookingOffers = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.offers
+      : [];
+
+    const merged = [...duffelOffers, ...bookingOffers].sort(
+      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
+    );
+
+    if (merged.length === 0) {
+      const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
+                  "No flights found.";
+      return { search_id: null, data: { offers: [] }, error: err };
+    }
+    return { search_id: null, data: { offers: merged }, error: null };
   });
 
 export const pollFlightSearch = createServerFn({ method: "POST" })
@@ -551,9 +587,32 @@ export const pollFlightSearch = createServerFn({ method: "POST" })
 export const searchFlights = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => FlightSearchInput.parse(d))
   .handler(async ({ data }) => {
-    const r = await runDuffelSearch(data);
-    if (r.error) return fail(r.error, { offers: [] });
-    return ok({ offers: r.offers });
+    const [duffelRes, bookingRes] = await Promise.allSettled([
+      runDuffelSearch(data),
+      bookingSearchFlights({
+        origin: data.origin ?? "",
+        destination: data.destination ?? "",
+        departure_date: data.departure_date ?? "",
+        return_date: data.return_date,
+        adults: data.adults,
+        children: data.children,
+        cabin: normalizeCabin(data.cabin),
+      }),
+    ]);
+    const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
+      ? (duffelRes.value.offers ?? []).map((o: any) => ({ ...o, source: "duffel" as const }))
+      : [];
+    const bookingOffers = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.offers : [];
+    const merged = [...duffelOffers, ...bookingOffers].sort(
+      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
+    );
+    if (merged.length === 0) {
+      const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) || "No flights found.";
+      return fail(err, { offers: [] });
+    }
+    return ok({ offers: merged });
   });
 
 export const bookFlight = createServerFn({ method: "POST" })
@@ -623,17 +682,38 @@ export const searchHotels = createServerFn({ method: "POST" })
       cityName = cityName ?? r.cityName;
       countryCode = countryCode ?? r.countryCode;
     }
-    const res = await searchLiteHotels({
-      cityName,
-      countryCode,
-      checkin: data.checkin,
-      checkout: data.checkout,
-      adults: Math.max(1, Number(data.adults) || 1),
-      rooms: Math.max(1, Number(data.rooms) || 1),
-      currency: data.currency || "USD",
-    });
-    if (!res?.ok) return fail(res?.error || "Hotels unavailable.", { hotels: [] });
-    return ok({ hotels: res.hotels ?? [] });
+    const [liteRes, bookingRes] = await Promise.allSettled([
+      searchLiteHotels({
+        cityName,
+        countryCode,
+        checkin: data.checkin,
+        checkout: data.checkout,
+        adults: Math.max(1, Number(data.adults) || 1),
+        rooms: Math.max(1, Number(data.rooms) || 1),
+        currency: data.currency || "USD",
+      }),
+      bookingSearchHotels({
+        destination: data.destination || data.city || cityName || countryCode || "",
+        checkin: data.checkin,
+        checkout: data.checkout,
+        adults: Math.max(1, Number(data.adults) || 1),
+        rooms: Math.max(1, Number(data.rooms) || 1),
+        currency: data.currency || "USD",
+      }),
+    ]);
+    const liteHotels = liteRes.status === "fulfilled" && liteRes.value?.ok
+      ? (liteRes.value.hotels ?? []).map((h: any) => ({ ...h, source: h.source ?? "liteapi" }))
+      : [];
+    const bookingHotels = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.hotels : [];
+    const merged = [...liteHotels, ...bookingHotels];
+    if (merged.length === 0) {
+      const err = (liteRes.status === "fulfilled" && !liteRes.value?.ok && liteRes.value?.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
+                  "Hotels unavailable.";
+      return fail(err, { hotels: [] });
+    }
+    return ok({ hotels: merged });
   });
 
 export const bookHotel = createServerFn({ method: "POST" })
@@ -691,8 +771,16 @@ export const searchTours = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { tours: [] });
       return ok({ tours: t.data?.tours ?? t.data?.data?.tours ?? [] });
     }
+    // Booking.com first; fall back to crawled inventory if it returns nothing.
+    const b = await bookingSearchTours({
+      destination: data.destination,
+      date: data.date,
+      participants: data.participants,
+    });
+    if (b.ok && b.tours.length > 0) return ok({ tours: b.tours });
     const r = await fetchInventory("tours", { destination: data.destination });
-    if (r.error) return fail(r.error, { tours: [] });
+    if (r.error && !b.error) return fail(r.error, { tours: [] });
+    if (r.items.length === 0 && b.error) return fail(b.error, { tours: [] });
     return ok({ tours: r.items });
   });
 
@@ -872,8 +960,17 @@ export const searchTransfers = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { vehicles: [] });
       return ok({ vehicles: t.data?.vehicles ?? t.data?.data?.vehicles ?? [] });
     }
+    // Booking.com first; fall back to crawled inventory if it returns nothing.
+    const b = await bookingSearchCars({
+      pickup: data.pickup,
+      drop: data.drop,
+      date: data.date,
+      time: data.time,
+    });
+    if (b.ok && b.vehicles.length > 0) return ok({ vehicles: b.vehicles });
     const r = await fetchInventory("pickups", { origin: data.pickup, destination: data.drop });
-    if (r.error) return fail(r.error, { vehicles: [] });
+    if (r.error && !b.error) return fail(r.error, { vehicles: [] });
+    if (r.items.length === 0 && b.error) return fail(b.error, { vehicles: [] });
     return ok({ vehicles: r.items });
   });
 
