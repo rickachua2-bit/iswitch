@@ -30,6 +30,7 @@ import { Route as ToursBookRouteImport } from './routes/tours.book'
 import { Route as StaysBookRouteImport } from './routes/stays.book'
 import { Route as PickupsBookRouteImport } from './routes/pickups.book'
 import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
+import { Route as FlightsSearchRouteImport } from './routes/flights.search'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as DashboardWalletRouteImport } from './routes/dashboard.wallet'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
@@ -156,6 +157,11 @@ const InsuranceBookRoute = InsuranceBookRouteImport.update({
   id: '/book',
   path: '/book',
   getParentRoute: () => InsuranceRoute,
+} as any)
+const FlightsSearchRoute = FlightsSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => FlightsRoute,
 } as any)
 const FlightsBookRoute = FlightsBookRouteImport.update({
   id: '/book',
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
+  '/flights/search': typeof FlightsSearchRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
+  '/flights/search': typeof FlightsSearchRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
+  '/flights/search': typeof FlightsSearchRoute
   '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
+    | '/flights/search'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
@@ -474,6 +484,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
+    | '/flights/search'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
@@ -518,6 +529,7 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/wallet'
     | '/flights/book'
+    | '/flights/search'
     | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
@@ -696,6 +708,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/insurance/book'
       preLoaderRoute: typeof InsuranceBookRouteImport
       parentRoute: typeof InsuranceRoute
+    }
+    '/flights/search': {
+      id: '/flights/search'
+      path: '/search'
+      fullPath: '/flights/search'
+      preLoaderRoute: typeof FlightsSearchRouteImport
+      parentRoute: typeof FlightsRoute
     }
     '/flights/book': {
       id: '/flights/book'
@@ -905,10 +924,12 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface FlightsRouteChildren {
   FlightsBookRoute: typeof FlightsBookRoute
+  FlightsSearchRoute: typeof FlightsSearchRoute
 }
 
 const FlightsRouteChildren: FlightsRouteChildren = {
   FlightsBookRoute: FlightsBookRoute,
+  FlightsSearchRoute: FlightsSearchRoute,
 }
 
 const FlightsRouteWithChildren =
@@ -989,12 +1010,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
