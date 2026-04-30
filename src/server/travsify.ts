@@ -682,17 +682,38 @@ export const searchHotels = createServerFn({ method: "POST" })
       cityName = cityName ?? r.cityName;
       countryCode = countryCode ?? r.countryCode;
     }
-    const res = await searchLiteHotels({
-      cityName,
-      countryCode,
-      checkin: data.checkin,
-      checkout: data.checkout,
-      adults: Math.max(1, Number(data.adults) || 1),
-      rooms: Math.max(1, Number(data.rooms) || 1),
-      currency: data.currency || "USD",
-    });
-    if (!res?.ok) return fail(res?.error || "Hotels unavailable.", { hotels: [] });
-    return ok({ hotels: res.hotels ?? [] });
+    const [liteRes, bookingRes] = await Promise.allSettled([
+      searchLiteHotels({
+        cityName,
+        countryCode,
+        checkin: data.checkin,
+        checkout: data.checkout,
+        adults: Math.max(1, Number(data.adults) || 1),
+        rooms: Math.max(1, Number(data.rooms) || 1),
+        currency: data.currency || "USD",
+      }),
+      bookingSearchHotels({
+        destination: data.destination || data.city || cityName || countryCode || "",
+        checkin: data.checkin,
+        checkout: data.checkout,
+        adults: Math.max(1, Number(data.adults) || 1),
+        rooms: Math.max(1, Number(data.rooms) || 1),
+        currency: data.currency || "USD",
+      }),
+    ]);
+    const liteHotels = liteRes.status === "fulfilled" && liteRes.value?.ok
+      ? (liteRes.value.hotels ?? []).map((h: any) => ({ ...h, source: h.source ?? "liteapi" }))
+      : [];
+    const bookingHotels = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.hotels : [];
+    const merged = [...liteHotels, ...bookingHotels];
+    if (merged.length === 0) {
+      const err = (liteRes.status === "fulfilled" && !liteRes.value?.ok && liteRes.value?.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
+                  "Hotels unavailable.";
+      return fail(err, { hotels: [] });
+    }
+    return ok({ hotels: merged });
   });
 
 export const bookHotel = createServerFn({ method: "POST" })
