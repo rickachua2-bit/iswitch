@@ -27,6 +27,43 @@ const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
 const TRAVSIFY_BASE = "https://api.travsify.com";
 const REQ_TIMEOUT_MS = 25_000;
 
+/**
+ * Build a stable signature for a flight offer so we can dedupe across
+ * providers (Booking.com vs Duffel) when they return the same physical flight.
+ * Two offers with the same signature are considered duplicates and only the
+ * first occurrence (Booking.com is concatenated first) is kept.
+ */
+function flightSignature(o: any): string {
+  const firstSlice = o?.slices?.[0];
+  const lastSlice = o?.slices?.[o?.slices?.length - 1];
+  const firstSeg = firstSlice?.segments?.[0];
+  const lastSeg = lastSlice?.segments?.[lastSlice?.segments?.length - 1];
+  const carrier = (o?.owner_iata ?? firstSeg?.marketing_carrier_iata ?? o?.owner ?? "?").toString().toUpperCase();
+  const flightNo = firstSeg?.flight_number ?? "?";
+  const dep = firstSeg?.departing_at ?? firstSeg?.origin ?? "?";
+  const arr = lastSeg?.arriving_at ?? lastSeg?.destination ?? "?";
+  const route = (o?.slices ?? [])
+    .map((s: any) => (s?.segments ?? []).map((sg: any) => `${sg?.origin ?? "?"}-${sg?.destination ?? "?"}@${sg?.departing_at ?? "?"}`).join(">"))
+    .join("|");
+  return `${carrier}|${flightNo}|${dep}|${arr}|${route}|${o?.total_amount ?? "?"}|${o?.total_currency ?? "?"}`;
+}
+
+function dedupeFlightOffers(offers: any[]): any[] {
+  const seen = new Set<string>();
+  const out: any[] = [];
+  for (const o of offers) {
+    const sig = flightSignature(o);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    out.push(o);
+  }
+  return out;
+}
+
+function stampOffers<T extends { id?: string }>(offers: T[], requestId: string, fetchedAt: string): T[] {
+  return offers.map((o) => ({ ...o, fetched_at: fetchedAt, provider_request_id: requestId }));
+}
+
 type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
 /**
@@ -566,20 +603,25 @@ export const startFlightSearch = createServerFn({ method: "POST" })
       : [];
 
     // Sort each provider group ascending by price; invalid prices sink to bottom.
+    // Tie-break by id so two equal-priced offers always render in the same order.
     const byPriceAsc = (a: any, b: any) => {
       const pa = Number(a?.total_amount);
       const pb = Number(b?.total_amount);
       const aBad = !Number.isFinite(pa) || pa <= 0;
       const bBad = !Number.isFinite(pb) || pb <= 0;
-      if (aBad && bBad) return 0;
+      if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
       if (aBad) return 1;
       if (bBad) return -1;
-      return pa - pb;
+      if (pa !== pb) return pa - pb;
+      return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
     };
     const sortedBooking = [...bookingOffers].sort(byPriceAsc);
     const sortedDuffel = [...duffelOffers].sort(byPriceAsc);
-    // Booking.com first, Duffel second.
-    const merged = [...sortedBooking, ...sortedDuffel];
+    // Booking.com first, Duffel second; then dedupe across providers and stamp
+    // every offer with provenance so the UI can prove it was just fetched.
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const fetchedAt = new Date().toISOString();
+    const merged = stampOffers(dedupeFlightOffers([...sortedBooking, ...sortedDuffel]), requestId, fetchedAt);
 
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
@@ -624,12 +666,19 @@ export const searchFlights = createServerFn({ method: "POST" })
       const pb = Number(b?.total_amount);
       const aBad = !Number.isFinite(pa) || pa <= 0;
       const bBad = !Number.isFinite(pb) || pb <= 0;
-      if (aBad && bBad) return 0;
+      if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
       if (aBad) return 1;
       if (bBad) return -1;
-      return pa - pb;
+      if (pa !== pb) return pa - pb;
+      return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
     };
-    const merged = [...[...bookingOffers].sort(byPriceAsc), ...[...duffelOffers].sort(byPriceAsc)];
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const fetchedAt = new Date().toISOString();
+    const merged = stampOffers(
+      dedupeFlightOffers([...[...bookingOffers].sort(byPriceAsc), ...[...duffelOffers].sort(byPriceAsc)]),
+      requestId,
+      fetchedAt,
+    );
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
                   (bookingRes.status === "fulfilled" && bookingRes.value.error) || "No flights found.";

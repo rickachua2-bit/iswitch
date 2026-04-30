@@ -30,9 +30,13 @@ async function bFetch(slug: string, url: string): Promise<{ status: number; text
   const timer = setTimeout(() => ctrl.abort(), REQ_TIMEOUT_MS);
   const t0 = Date.now();
   try {
-    const headers = bHeaders();
-    if (!headers) throw new Error("RAPIDAPI_BOOKING_KEY not configured");
-    const res = await fetch(url, { method: "GET", headers, signal: ctrl.signal });
+    const baseHeaders = bHeaders();
+    if (!baseHeaders) throw new Error("RAPIDAPI_BOOKING_KEY not configured");
+    // Add a per-request id and disable runtime caching so identical searches
+    // still hit the upstream API rather than serving stale bytes.
+    const reqId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const headers = { ...baseHeaders, "x-request-id": reqId, "cache-control": "no-cache" };
+    const res = await fetch(url, { method: "GET", headers, signal: ctrl.signal, cache: "no-store" });
     const text = await res.text();
     const ms = Date.now() - t0;
     // best-effort health log
@@ -122,18 +126,21 @@ export async function bookingSearchFlights(input: {
     if (status >= 400) return { ok: false, offers: [], error: `Booking.com flights: HTTP ${status}` };
     const json = safeJson(text);
     const flightOffers = json?.data?.flightOffers ?? [];
-    const offers = flightOffers.slice(0, 50).map((o: any, idx: number) => normalizeBookingFlight(o, idx));
+    const requestedCurrency = (input.currency ?? "USD").toUpperCase();
+    const offers = flightOffers.slice(0, 50).map((o: any, idx: number) => normalizeBookingFlight(o, idx, requestedCurrency));
     return { ok: true, offers };
   } catch (e: any) {
     return { ok: false, offers: [], error: String(e?.message ?? e) };
   }
 }
 
-function normalizeBookingFlight(o: any, idx: number) {
+function normalizeBookingFlight(o: any, idx: number, requestedCurrency = "USD") {
   // Booking.com offer shape (abbreviated): { token, segments: [{ legs: [...] }], priceBreakdown: { total: { units, currencyCode } } }
   const total = o?.priceBreakdown?.total ?? {};
   const totalAmount = (Number(total?.units ?? 0) + Number(total?.nanos ?? 0) / 1e9).toFixed(2);
-  const currency = total?.currencyCode ?? "USD";
+  // Never silently fall back to USD: prefer Booking's currency, then the
+  // currency the user actually requested, then USD as last resort.
+  const currency = total?.currencyCode ?? requestedCurrency ?? "USD";
 
   const carrierLogos = new Set<string>();
 
@@ -168,10 +175,26 @@ function normalizeBookingFlight(o: any, idx: number) {
   });
 
   const firstCarrier = o?.segments?.[0]?.legs?.[0]?.carriersData?.[0];
+
+  // Stable id: prefer Booking's token; otherwise build a content fingerprint
+  // so two physically different offers never collide on key.
+  let id: string = o?.token ?? "";
+  if (!id) {
+    const fingerprint = JSON.stringify({
+      p: totalAmount,
+      c: currency,
+      s: slices.map((sl: any) => sl.segments?.map((sg: any) => `${sg.marketing_carrier_iata}${sg.flight_number}@${sg.departing_at}->${sg.arriving_at}`)),
+    });
+    let h = 0;
+    for (let i = 0; i < fingerprint.length; i++) h = ((h << 5) - h + fingerprint.charCodeAt(i)) | 0;
+    id = `booking-${idx}-${(h >>> 0).toString(36)}`;
+  }
+
   return {
-    id: o?.token ?? `booking-${idx}`,
+    id,
     total_amount: totalAmount,
     total_currency: currency,
+    requested_currency: requestedCurrency,
     owner: firstCarrier?.name ?? "Booking.com",
     owner_logo: firstCarrier?.logo ?? null,
     owner_iata: firstCarrier?.code ?? null,
