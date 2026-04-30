@@ -959,14 +959,25 @@ export const searchVisas = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
+    // Primary provider: Visa Requirement RapidAPI (TravelBuddyAI)
+    const { checkVisaRequirement, normalizeVisaResponse, toCountryCode } =
+      await import("./visa-rapidapi.server");
+    const passportCC = toCountryCode(data.nationality);
+    const destCC = toCountryCode(data.destination);
+    const r = await checkVisaRequirement(passportCC, destCC);
+    if (r.ok) {
+      const visas = normalizeVisaResponse(r.raw, passportCC, destCC);
+      if (visas.length > 0) return ok({ visas });
+    }
+    // Fallback to Travsify if configured
     if ((await getActiveProvider("visas")) === "travsify") {
       const t = await travsifySearch("/visas/search", data);
-      if (!t.ok) return fail(t.error, { visas: [] });
-      return ok({ visas: t.data?.visas ?? t.data?.data?.visas ?? [] });
+      if (t.ok) return ok({ visas: t.data?.visas ?? t.data?.data?.visas ?? [] });
     }
-    const r = await fetchInventory("visas", { destination: data.destination, origin: data.nationality });
-    if (r.error) return fail(r.error, { visas: [] });
-    return ok({ visas: r.items });
+    // Last resort: crawled inventory
+    const inv = await fetchInventory("visas", { destination: data.destination, origin: data.nationality });
+    if (inv.error && !r.ok) return fail(r.error ?? inv.error, { visas: [] });
+    return ok({ visas: inv.items ?? [] });
   });
 
 export const bookVisa = createServerFn({ method: "POST" })
