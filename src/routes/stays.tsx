@@ -720,7 +720,7 @@ function HotelResultCard({
           {score > 0 && (
             <div className="flex items-center gap-2 self-end">
               <div className="text-right">
-                <div className="text-xs font-extrabold text-foreground">{scoreLabel(score)}</div>
+                <div className="text-xs font-extrabold text-foreground">{h.review_score_word ?? scoreLabel(score)}</div>
                 <div className="text-[10px] text-muted-foreground">
                   {h.review_count ? `${Number(h.review_count).toLocaleString()} reviews` : "Verified reviews"}
                 </div>
