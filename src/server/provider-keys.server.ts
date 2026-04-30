@@ -18,9 +18,10 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export type ProviderMode = "test" | "live";
 
 const KEY_MAP: Record<string, { live: string; test: string }> = {
-  duffel:   { live: "DUFFEL_API_KEY",   test: "DUFFEL_TEST_API_KEY" },
-  liteapi:  { live: "LITEAPI_KEY",      test: "LITEAPI_TEST_KEY" },
-  travsify: { live: "TRAVSIFY_API_KEY", test: "TRAVSIFY_TEST_API_KEY" },
+  duffel:   { live: "DUFFEL_API_KEY",        test: "DUFFEL_TEST_API_KEY" },
+  liteapi:  { live: "LITEAPI_KEY",           test: "LITEAPI_TEST_KEY" },
+  travsify: { live: "TRAVSIFY_API_KEY",      test: "TRAVSIFY_TEST_API_KEY" },
+  booking:  { live: "RAPIDAPI_BOOKING_KEY",  test: "RAPIDAPI_BOOKING_KEY" },
 };
 
 let cachedGlobal: { mode: ProviderMode; at: number } | null = null;
