@@ -5,7 +5,8 @@
  * to a hybrid stack:
  *  - Flights -> Duffel (live API)
  *  - Hotels  -> LiteAPI (live API)
- *  - Visas / Insurance / Tours / Pickups -> crawled inventory in `inventory_items`
+ *  - Visas / Tours / Pickups -> crawled inventory in `inventory_items`
+ *  - Car Rentals -> Priceline RapidAPI
  *  - All bookings -> lead capture in `bookings_unified` (manual fulfillment)
  *
  * To avoid touching ~17 UI files, this module keeps the exact same export
@@ -64,7 +65,7 @@ function stampOffers<T extends { id?: string }>(offers: T[], requestId: string, 
   return offers.map((o) => ({ ...o, fetched_at: fetchedAt, provider_request_id: requestId }));
 }
 
-type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+type Vertical = "flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups";
 
 /**
  * Reads admin-controlled per-vertical provider routing from system_settings.
@@ -424,7 +425,7 @@ async function searchLiteHotels(input: {
 }
 
 async function fetchInventory(
-  vertical: "visas" | "insurance" | "tours" | "pickups",
+  vertical: "visas" | "tours" | "pickups",
   opts: { destination?: string; origin?: string; limit?: number } = {},
 ) {
   let q = supabaseAdmin
@@ -444,7 +445,7 @@ async function fetchInventory(
 }
 
 async function createLead(input: {
-  vertical: "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+  vertical: "flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups";
   provider_slug: string;
   inventory_item_id?: string;
   external_reference?: string;

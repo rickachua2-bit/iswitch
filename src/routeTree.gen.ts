@@ -16,7 +16,6 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PickupsRouteImport } from './routes/pickups'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlightsRouteImport } from './routes/flights'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -29,7 +28,6 @@ import { Route as VisasBookRouteImport } from './routes/visas.book'
 import { Route as ToursBookRouteImport } from './routes/tours.book'
 import { Route as StaysBookRouteImport } from './routes/stays.book'
 import { Route as PickupsBookRouteImport } from './routes/pickups.book'
-import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
 import { Route as FlightsSearchRouteImport } from './routes/flights.search'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as DashboardWalletRouteImport } from './routes/dashboard.wallet'
@@ -86,11 +84,6 @@ const PickupsRoute = PickupsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InsuranceRoute = InsuranceRouteImport.update({
-  id: '/insurance',
-  path: '/insurance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -152,11 +145,6 @@ const PickupsBookRoute = PickupsBookRouteImport.update({
   id: '/book',
   path: '/book',
   getParentRoute: () => PickupsRoute,
-} as any)
-const InsuranceBookRoute = InsuranceBookRouteImport.update({
-  id: '/book',
-  path: '/book',
-  getParentRoute: () => InsuranceRoute,
 } as any)
 const FlightsSearchRoute = FlightsSearchRouteImport.update({
   id: '/search',
@@ -277,7 +265,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -306,7 +293,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -320,7 +306,6 @@ export interface FileRoutesByTo {
   '/consultations': typeof ConsultationsRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -349,7 +334,6 @@ export interface FileRoutesByTo {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -366,7 +350,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -395,7 +378,6 @@ export interface FileRoutesById {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -413,7 +395,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -442,7 +423,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -456,7 +436,6 @@ export interface FileRouteTypes {
     | '/consultations'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -485,7 +464,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -501,7 +479,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -530,7 +507,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -547,7 +523,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   FlightsRoute: typeof FlightsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  InsuranceRoute: typeof InsuranceRouteWithChildren
   LoginRoute: typeof LoginRoute
   PickupsRoute: typeof PickupsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -609,13 +584,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/insurance': {
-      id: '/insurance'
-      path: '/insurance'
-      fullPath: '/insurance'
-      preLoaderRoute: typeof InsuranceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -701,13 +669,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/pickups/book'
       preLoaderRoute: typeof PickupsBookRouteImport
       parentRoute: typeof PickupsRoute
-    }
-    '/insurance/book': {
-      id: '/insurance/book'
-      path: '/book'
-      fullPath: '/insurance/book'
-      preLoaderRoute: typeof InsuranceBookRouteImport
-      parentRoute: typeof InsuranceRoute
     }
     '/flights/search': {
       id: '/flights/search'
@@ -935,18 +896,6 @@ const FlightsRouteChildren: FlightsRouteChildren = {
 const FlightsRouteWithChildren =
   FlightsRoute._addFileChildren(FlightsRouteChildren)
 
-interface InsuranceRouteChildren {
-  InsuranceBookRoute: typeof InsuranceBookRoute
-}
-
-const InsuranceRouteChildren: InsuranceRouteChildren = {
-  InsuranceBookRoute: InsuranceBookRoute,
-}
-
-const InsuranceRouteWithChildren = InsuranceRoute._addFileChildren(
-  InsuranceRouteChildren,
-)
-
 interface PickupsRouteChildren {
   PickupsBookRoute: typeof PickupsBookRoute
 }
@@ -995,7 +944,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   FlightsRoute: FlightsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  InsuranceRoute: InsuranceRouteWithChildren,
   LoginRoute: LoginRoute,
   PickupsRoute: PickupsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
