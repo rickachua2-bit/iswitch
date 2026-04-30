@@ -28,18 +28,42 @@ export const createPayment = createServerFn({ method: "POST" })
     const host = getRequestHost();
     const proto = host.includes("localhost") ? "http" : "https";
     const origin = `${proto}://${host}`;
-    const reference = `bk_${booking.id.replace(/-/g, "").slice(0, 16)}_${Date.now()}`;
+    // Korapay reference: alphanumeric + hyphens only (no underscores)
+    const reference = `bk-${booking.id.replace(/-/g, "").slice(0, 16)}-${Date.now()}`;
+
+    // Korapay live merchants only accept a limited set of currencies.
+    // Convert unsupported currencies (e.g. EUR, GBP) to NGN using rate_to_usd.
+    const KORAPAY_SUPPORTED = new Set(["NGN", "KES", "GHS", "USD"]);
+    let chargeAmount = Number(booking.amount);
+    let chargeCurrency = String(booking.currency || "USD").toUpperCase();
+
+    if (!KORAPAY_SUPPORTED.has(chargeCurrency)) {
+      // Look up FX: source currency -> USD -> NGN
+      const { data: rates } = await supabaseAdmin
+        .from("currencies")
+        .select("code, rate_to_usd")
+        .in("code", [chargeCurrency, "NGN"]);
+      const src = rates?.find((r) => r.code === chargeCurrency)?.rate_to_usd;
+      const ngn = rates?.find((r) => r.code === "NGN")?.rate_to_usd;
+      if (src && ngn) {
+        const usd = chargeAmount / Number(src);
+        chargeAmount = Math.round(usd * Number(ngn) * 100) / 100;
+        chargeCurrency = "NGN";
+      } else {
+        return { ok: false as const, error: `Currency ${chargeCurrency} not supported by Korapay and FX rate unavailable.` };
+      }
+    }
 
     try {
       const charge = await initiateKorapayCharge({
-        amount: Number(booking.amount),
-        currency: booking.currency,
+        amount: chargeAmount,
+        currency: chargeCurrency,
         reference,
         customerName: booking.customer_name,
         customerEmail: booking.customer_email,
         redirectUrl: `${origin}/checkout/return?booking=${booking.id}&ref=${reference}`,
         notificationUrl: `${origin}/api/public/webhooks/korapay`,
-        metadata: { booking_id: booking.id, vertical: booking.vertical },
+        metadata: { booking_id: booking.id, vertical: booking.vertical, original_amount: booking.amount, original_currency: booking.currency },
       });
 
       await supabaseAdmin.from("bookings_unified").update({
