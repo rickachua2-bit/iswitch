@@ -324,6 +324,7 @@ export async function bookingSearchTours(input: {
   destination: string;
   date?: string;
   participants?: number;
+  currency?: string;
 }): Promise<{ ok: boolean; tours: any[]; error?: string }> {
   if (!process.env.RAPIDAPI_BOOKING_KEY) return { ok: true, tours: [] };
   try {
@@ -342,7 +343,7 @@ export async function bookingSearchTours(input: {
       id: String(id),
       sortBy: "trending",
       page: "1",
-      currency_code: "USD",
+      currency_code: (input.currency ?? "USD").toUpperCase(),
       languagecode: "en-us",
     });
     if (input.date) params.set("startDate", input.date);
