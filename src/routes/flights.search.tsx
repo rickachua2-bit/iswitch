@@ -347,24 +347,34 @@ function FlightSearchResultsPage() {
                     {query.destination?.split(" ")[0] ?? toIata(query.destination)}
                   </span>
                 </div>
-                <div className="flex gap-1 rounded-full bg-secondary p-1">
-                  {(["best", "cheapest", "fastest"] as const).map((t) => {
-                    const active = sort === t;
-                    return (
-                      <button
-                        key={t}
-                        onClick={() => setSearch({ sort: t })}
-                        className={
-                          "rounded-full px-3 py-1.5 text-xs font-bold capitalize transition " +
-                          (active
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground")
-                        }
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1 rounded-full bg-secondary p-1">
+                    {(["best", "cheapest", "fastest"] as const).map((t) => {
+                      const active = sort === t;
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setSearch({ sort: t })}
+                          className={
+                            "rounded-full px-3 py-1.5 text-xs font-bold capitalize transition " +
+                            (active
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground")
+                          }
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => setSearch({ _r: String(Date.now()) })}
+                    disabled={isSearching}
+                    className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-bold text-muted-foreground transition hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                    title="Re-fetch live prices from all providers"
+                  >
+                    {isSearching ? "Refreshing…" : "Refresh"}
+                  </button>
                 </div>
               </div>
 
