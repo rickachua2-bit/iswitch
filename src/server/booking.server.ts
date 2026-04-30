@@ -220,36 +220,97 @@ async function bookingResolveStayDest(query: string): Promise<{ dest_id: string;
   }
 }
 
+const ACCOMMODATION_TYPE_MAP: Record<string, string> = {
+  "204": "Hotel", "201": "Apartment", "203": "Guest house", "208": "Bed and breakfast",
+  "206": "Hostel", "213": "Villa", "216": "Resort", "220": "Holiday home",
+  "224": "Chalet", "226": "Country house", "227": "Lodge", "228": "Boat",
+  "229": "Riad", "231": "Holiday park", "232": "Aparthotel", "233": "Cruise",
+};
+
 function normalizeBookingHotel(h: any, fallbackCurrency: string) {
   const prop = h?.property ?? h;
-  const price = prop?.priceBreakdown?.grossPrice ?? prop?.priceBreakdown?.strikethroughPrice;
-  const amount = price?.value != null ? Number(price.value) : (prop?.minTotalPrice ?? null);
-  const currency = price?.currency ?? fallbackCurrency;
-  const photos: string[] = [];
-  if (Array.isArray(prop?.photoUrls)) photos.push(...prop.photoUrls.filter(Boolean));
-  if (prop?.mainPhotoUrl && !photos.includes(prop.mainPhotoUrl)) photos.unshift(prop.mainPhotoUrl);
+  const breakdown = prop?.priceBreakdown ?? {};
+  const gross = breakdown?.grossPrice ?? null;
+  const strike = breakdown?.strikethroughPrice ?? null;
+  const benefit = breakdown?.benefitBadges ?? [];
+  const excluded = breakdown?.excludedPrice ?? null;
+
+  const amount = gross?.value != null ? Number(gross.value) : (prop?.minTotalPrice ?? null);
+  const original = strike?.value != null ? Number(strike.value) : null;
+  const currency = gross?.currency ?? strike?.currency ?? fallbackCurrency;
+  const discountPct = original && amount && original > amount
+    ? Math.round(((original - amount) / original) * 100) : 0;
+
+  // Photos: dedupe + prefer high-res when available
+  const photoSet = new Set<string>();
+  if (prop?.mainPhotoUrl) photoSet.add(prop.mainPhotoUrl);
+  if (Array.isArray(prop?.photoUrls)) {
+    for (const url of prop.photoUrls) if (url) photoSet.add(url);
+  }
+  const photos = Array.from(photoSet);
+
+  // Badges: combine ribbon + benefit chips + custom badges
+  const badges: string[] = [];
+  if (Array.isArray(benefit)) {
+    for (const b of benefit) {
+      const text = typeof b === "string" ? b : (b?.text ?? b?.identifier ?? null);
+      if (text) badges.push(String(text));
+    }
+  }
+  if (Array.isArray(prop?.badges)) {
+    for (const b of prop.badges) {
+      const text = typeof b === "string" ? b : (b?.text ?? b?.title ?? null);
+      if (text) badges.push(String(text));
+    }
+  }
+  if (prop?.ribbonText) badges.push(String(prop.ribbonText));
+  if (prop?.isFreeCancellable) badges.push("Free cancellation");
 
   const id = String(prop?.id ?? h?.hotel_id ?? prop?.hotel_id ?? "");
+  const accomKey = String(prop?.accommodationTypeId ?? prop?.accommodationType ?? "");
+  const accommodationType = ACCOMMODATION_TYPE_MAP[accomKey] ?? null;
+  const stars = prop?.accuratePropertyClass ?? prop?.propertyClass ?? 0;
+  const district = prop?.wishlistName ?? prop?.districtName ?? prop?.district ?? null;
+  const city = prop?.cityName ?? prop?.wishlistName ?? null;
+  const country = prop?.countryCode ?? prop?.country ?? null;
+  const address = [district, city, country].filter(Boolean).join(", ") || null;
+
   return {
     id: `booking-${id}`,
     offer_id: `booking-${id}`,
     price: amount,
+    original_price: original,
+    discount_pct: discountPct,
     currency,
+    taxes_included: excluded ? false : true,
+    excluded_price: excluded?.value != null ? Number(excluded.value) : null,
     name: prop?.name ?? `Hotel ${id}`,
+    accommodation_type: accommodationType,
     image: photos[0] ?? null,
     thumbnail: photos[0] ?? null,
     images: photos.length ? photos : undefined,
-    address: prop?.wishlistName ?? null,
-    location: [prop?.wishlistName, prop?.countryCode?.toUpperCase?.()].filter(Boolean).join(", ") || null,
-    city: prop?.wishlistName ?? null,
-    country: prop?.countryCode ?? null,
-    stars: prop?.propertyClass ?? prop?.accuratePropertyClass ?? 0,
+    address,
+    district,
+    location: address,
+    city,
+    country,
+    country_code: prop?.countryCode ?? null,
+    stars,
     review_score: prop?.reviewScore ?? null,
+    review_score_word: prop?.reviewScoreWord ?? null,
     review_count: prop?.reviewCount ?? null,
+    ranking_score: prop?.rankingScore ?? null,
     latitude: prop?.latitude ?? null,
     longitude: prop?.longitude ?? null,
+    distance_to_center: prop?.distanceToCenter ?? prop?.distance ?? null,
     description: null,
     refundable: prop?.isFreeCancellable ?? false,
+    checkin_from: prop?.checkin?.fromTime ?? prop?.checkinFrom ?? null,
+    checkin_until: prop?.checkin?.untilTime ?? null,
+    checkout_until: prop?.checkout?.untilTime ?? prop?.checkoutUntil ?? null,
+    checkin_date: prop?.checkinDate ?? null,
+    checkout_date: prop?.checkoutDate ?? null,
+    badges,
     room_name: null,
     board: null,
     source: "booking" as const,

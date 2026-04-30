@@ -653,21 +653,38 @@ function HotelResultCard({
             -{discount}% Hot deal
           </span>
         )}
+        {h.source && (
+          <span className="absolute bottom-3 left-3 rounded-md bg-card/95 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-foreground shadow">
+            {h.source === "booking" ? "Booking.com" : h.source === "liteapi" ? "LiteAPI" : h.source}
+          </span>
+        )}
       </div>
 
       {/* Body */}
       <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-[1fr_200px]">
         {/* Left: name, location, room */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-1 text-[11px] text-accent-foreground">
-            {Array.from({ length: h.stars ?? 0 }).map((_, i) => (
-              <Star key={i} className="h-3 w-3 fill-accent text-accent" />
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-[11px] text-accent-foreground">
+              {Array.from({ length: h.stars ?? 0 }).map((_, i) => (
+                <Star key={i} className="h-3 w-3 fill-accent text-accent" />
+              ))}
+            </div>
+            {h.accommodation_type && (
+              <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                {h.accommodation_type}
+              </span>
+            )}
           </div>
           <h3 className="text-base font-extrabold text-foreground hover:text-primary">{h.name}</h3>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" /> {h.location ?? h.address ?? "City center"}
+            <MapPin className="h-3 w-3" /> {h.address ?? h.location ?? "City center"}
           </div>
+          {h.distance_to_center && (
+            <div className="text-[11px] text-muted-foreground">
+              {Number(h.distance_to_center).toFixed(1)} km from city center
+            </div>
+          )}
 
           {/* Room info row */}
           <div className="mt-1 rounded-lg bg-secondary/60 p-2 text-xs">
@@ -678,18 +695,22 @@ function HotelResultCard({
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><Users className="h-3 w-3" /> 2 adults</span>
               <span className="flex items-center gap-1"><Wifi className="h-3 w-3" /> Free Wi-Fi</span>
-              <span className="flex items-center gap-1 text-primary"><ShieldCheck className="h-3 w-3" /> Free cancellation</span>
+              {h.refundable && (
+                <span className="flex items-center gap-1 text-primary"><ShieldCheck className="h-3 w-3" /> Free cancellation</span>
+              )}
             </div>
           </div>
 
-          {/* Promo line — prepay only */}
+          {/* Promo line + dynamic badges */}
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
             <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 font-bold text-primary">
               <ShieldCheck className="h-3 w-3" /> Prepay · instant confirmation
             </span>
-            <span className="rounded bg-accent/20 px-1.5 py-0.5 font-bold text-accent-foreground">
-              Breakfast included
-            </span>
+            {Array.isArray(h.badges) && h.badges.slice(0, 3).map((b: string) => (
+              <span key={b} className="rounded bg-accent/20 px-1.5 py-0.5 font-bold text-accent-foreground">
+                {b}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -699,7 +720,7 @@ function HotelResultCard({
           {score > 0 && (
             <div className="flex items-center gap-2 self-end">
               <div className="text-right">
-                <div className="text-xs font-extrabold text-foreground">{scoreLabel(score)}</div>
+                <div className="text-xs font-extrabold text-foreground">{h.review_score_word ?? scoreLabel(score)}</div>
                 <div className="text-[10px] text-muted-foreground">
                   {h.review_count ? `${Number(h.review_count).toLocaleString()} reviews` : "Verified reviews"}
                 </div>

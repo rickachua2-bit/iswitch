@@ -706,7 +706,23 @@ export const searchHotels = createServerFn({ method: "POST" })
       : [];
     const bookingHotels = bookingRes.status === "fulfilled" && bookingRes.value.ok
       ? bookingRes.value.hotels : [];
-    const merged = [...liteHotels, ...bookingHotels];
+
+    // Sort each group ascending by price; null/0 prices go to the bottom.
+    const byPriceAsc = (a: any, b: any) => {
+      const pa = Number(a?.price);
+      const pb = Number(b?.price);
+      const aBad = !Number.isFinite(pa) || pa <= 0;
+      const bBad = !Number.isFinite(pb) || pb <= 0;
+      if (aBad && bBad) return 0;
+      if (aBad) return 1;
+      if (bBad) return -1;
+      return pa - pb;
+    };
+    const sortedBooking = [...bookingHotels].sort(byPriceAsc);
+    const sortedLite = [...liteHotels].sort(byPriceAsc);
+
+    // Booking.com first, LiteAPI second.
+    const merged = [...sortedBooking, ...sortedLite];
     if (merged.length === 0) {
       const err = (liteRes.status === "fulfilled" && !liteRes.value?.ok && liteRes.value?.error) ||
                   (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
