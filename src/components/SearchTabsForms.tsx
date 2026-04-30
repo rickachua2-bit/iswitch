@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   MapPin, Calendar, Users, Search, Globe, FileCheck,
 } from "lucide-react";
