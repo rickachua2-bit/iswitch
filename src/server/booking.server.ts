@@ -126,7 +126,8 @@ export async function bookingSearchFlights(input: {
     if (status >= 400) return { ok: false, offers: [], error: `Booking.com flights: HTTP ${status}` };
     const json = safeJson(text);
     const flightOffers = json?.data?.flightOffers ?? [];
-    const offers = flightOffers.slice(0, 50).map((o: any, idx: number) => normalizeBookingFlight(o, idx));
+    const requestedCurrency = (input.currency ?? "USD").toUpperCase();
+    const offers = flightOffers.slice(0, 50).map((o: any, idx: number) => normalizeBookingFlight(o, idx, requestedCurrency));
     return { ok: true, offers };
   } catch (e: any) {
     return { ok: false, offers: [], error: String(e?.message ?? e) };
