@@ -229,27 +229,10 @@ function HotelBookingPage() {
     <BookingShell backTo="/stays" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
-          {/* Header card with gallery */}
+          {/* Header card with full gallery */}
+          <HotelGallery images={allImages} hotelName={hotel.name} />
+
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-            <div className="grid grid-cols-1 gap-1 md:grid-cols-4">
-              <div className="md:col-span-3 aspect-[16/10] bg-secondary md:aspect-auto md:h-80">
-                {cover ? (
-                  <img src={cover} alt={hotel.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-primary">
-                    <HotelIcon className="h-14 w-14 text-primary-foreground/70" />
-                  </div>
-                )}
-              </div>
-              <div className="hidden grid-rows-3 gap-1 md:grid">
-                {images.slice(1, 4).map((src, i) => (
-                  <img key={i} src={src} alt={`${hotel.name} ${i + 2}`} className="h-full w-full object-cover" />
-                ))}
-                {Array.from({ length: Math.max(0, 3 - Math.max(0, images.length - 1)) }).map((_, i) => (
-                  <div key={`ph-${i}`} className="bg-secondary" />
-                ))}
-              </div>
-            </div>
             <div className="p-5">
               <div className="flex items-center gap-1 text-accent-foreground">
                 {Array.from({ length: Number(hotel.stars) || 0 }).map((_, i) => (
@@ -282,7 +265,7 @@ function HotelBookingPage() {
             <div className="mt-4 rounded-lg bg-secondary/60 p-3">
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <BedDouble className="h-4 w-4 text-primary" />
-                {hotel.room_name ?? "Standard double room"}
+                {effRoomName}
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Wifi className="h-3 w-3" /> Free Wi-Fi</span>
@@ -291,6 +274,23 @@ function HotelBookingPage() {
               </div>
             </div>
           </BookingSectionCard>
+
+          {/* Available rooms (Booking.com only) */}
+          {hotel.source === "booking" && (
+            <BookingSectionCard
+              title="Available rooms"
+              subtitle="Every option Booking.com lists for your dates · cheapest first"
+              icon={BedDouble}
+            >
+              <RoomList
+                rooms={rooms}
+                selectedId={selectedRoomId}
+                onSelect={(r) => setSelectedRoomId(r.id)}
+                loading={roomsLoading}
+                fallbackCurrency={currency}
+              />
+            </BookingSectionCard>
+          )}
 
           {/* Amenities */}
           <BookingSectionCard title="What this property offers">
