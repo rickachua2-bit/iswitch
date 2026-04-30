@@ -1015,47 +1015,65 @@ export const bookVisa = createServerFn({ method: "POST" })
     return ok({ booking: r.booking, message: "Lead captured. Our visa specialist will reach out shortly." });
   });
 
-/* --------------------------- INSURANCE (crawled) ------------------- */
+/* --------------------------- CAR RENTALS (Priceline) ------------------- */
 
-export const searchInsurance = createServerFn({ method: "POST" })
+export const searchCarRentalsFn = createServerFn({ method: "POST" })
   .inputValidator(
     (d: unknown) =>
       z
         .object({
-          nationality: z.string(),
-          destination: z.string(),
-          start_date: z.string().optional(),
-          end_date: z.string().optional(),
-          travelers: z.number().optional(),
-          ages: z.array(z.number()).optional(),
+          pickup_location_id: z.string(),
+          dropoff_location_id: z.string().optional(),
+          pickup_date_time: z.string(),
+          dropoff_date_time: z.string(),
+          driver_age: z.coerce.number().int().min(18).max(99).optional(),
+          currency: z.string().optional(),
         })
         .passthrough()
         .parse(d),
   )
   .handler(async ({ data }) => {
-    if ((await getActiveProvider("insurance")) === "travsify") {
-      const t = await travsifySearch("/insurance/search", data);
-      if (!t.ok) return fail(t.error, { plans: [] });
-      return ok({ plans: t.data?.plans ?? t.data?.data?.plans ?? [] });
-    }
-    const r = await fetchInventory("insurance", { destination: data.destination });
-    if (r.error) return fail(r.error, { plans: [] });
-    return ok({ plans: r.items });
+    const { searchCarRentals } = await import("./priceline.server");
+    const r = await searchCarRentals({
+      pickup_location_id: data.pickup_location_id,
+      dropoff_location_id: data.dropoff_location_id ?? data.pickup_location_id,
+      pickup_date_time: data.pickup_date_time,
+      dropoff_date_time: data.dropoff_date_time,
+      driver_age: data.driver_age ?? 30,
+      currency: data.currency ?? "USD",
+    });
+    if (!r.ok) return fail(r.error ?? "Car rental search failed", { cars: [] });
+    return ok({ cars: r.cars });
   });
 
-export const bookInsurance = createServerFn({ method: "POST" })
+export const searchCarRentalLocations = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: unknown) => z.object({ query: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { searchPickupLocations } = await import("./priceline.server");
+    const r = await searchPickupLocations(data.query);
+    if (!r.ok) return fail(r.error ?? "Location search failed", { locations: [] });
+    return ok({ locations: r.locations });
+  });
+
+export const bookCarRental = createServerFn({ method: "POST" })
   .inputValidator(
     (d: unknown) =>
       z
         .object({
-          plan_id: z.string(),
-          holder: z.object({
+          car_id: z.string(),
+          driver: z.object({
             firstName: z.string(),
             lastName: z.string(),
             email: z.string().email(),
-            born_on: z.string(),
             phone: z.string().optional(),
+            age: z.coerce.number().int().min(18).max(99).optional(),
           }),
+          pickup_location: z.string().optional(),
+          dropoff_location: z.string().optional(),
+          pickup_date_time: z.string().optional(),
+          dropoff_date_time: z.string().optional(),
           amount: z.number().optional(),
           currency: z.string().optional(),
         })
@@ -1064,18 +1082,25 @@ export const bookInsurance = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const r = await createLead({
-      vertical: "insurance",
-      provider_slug: "safetywing",
-      inventory_item_id: data.plan_id,
+      vertical: "car_rentals",
+      provider_slug: "priceline",
+      external_reference: data.car_id,
       amount: Number(data.amount ?? 0),
       currency: data.currency ?? "USD",
-      customer_name: `${data.holder.firstName} ${data.holder.lastName}`.trim(),
-      customer_email: data.holder.email,
-      customer_phone: data.holder.phone,
-      payload: { plan_id: data.plan_id, holder: data.holder },
+      customer_name: `${data.driver.firstName} ${data.driver.lastName}`.trim(),
+      customer_email: data.driver.email,
+      customer_phone: data.driver.phone,
+      payload: {
+        car_id: data.car_id,
+        driver: data.driver,
+        pickup_location: data.pickup_location,
+        dropoff_location: data.dropoff_location,
+        pickup_date_time: data.pickup_date_time,
+        dropoff_date_time: data.dropoff_date_time,
+      },
     });
     if (!r.ok) return fail(r.error);
-    return ok({ booking: r.booking, message: "Lead captured. We'll send the policy details shortly." });
+    return ok({ booking: r.booking, message: "Lead captured. Our car-rental specialist will confirm shortly." });
   });
 
 /* ---------------------------- TRANSFERS (crawled) ------------------ */
