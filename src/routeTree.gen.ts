@@ -20,6 +20,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlightsRouteImport } from './routes/flights'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
+import { Route as CarRentalsRouteImport } from './routes/car-rentals'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
@@ -36,6 +37,7 @@ import { Route as DashboardConsultationsRouteImport } from './routes/dashboard.c
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CarRentalsBookRouteImport } from './routes/car-rentals.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -104,6 +106,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ConsultationsRoute = ConsultationsRouteImport.update({
   id: '/consultations',
   path: '/consultations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarRentalsRoute = CarRentalsRouteImport.update({
+  id: '/car-rentals',
+  path: '/car-rentals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -186,6 +193,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CarRentalsBookRoute = CarRentalsBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => CarRentalsRoute,
+} as any)
 const AgentsApplyRoute = AgentsApplyRouteImport.update({
   id: '/agents/apply',
   path: '/agents/apply',
@@ -261,6 +273,7 @@ const ApiPublicWebhooksKorapayRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
@@ -285,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -303,6 +317,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
@@ -326,6 +341,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -346,6 +362,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
@@ -370,6 +387,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -391,6 +409,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/car-rentals'
     | '/consultations'
     | '/dashboard'
     | '/flights'
@@ -415,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -433,6 +453,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/car-rentals'
     | '/consultations'
     | '/flights'
     | '/forgot-password'
@@ -456,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -475,6 +497,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/car-rentals'
     | '/consultations'
     | '/dashboard'
     | '/flights'
@@ -499,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -519,6 +543,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CarRentalsRoute: typeof CarRentalsRouteWithChildren
   ConsultationsRoute: typeof ConsultationsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   FlightsRoute: typeof FlightsRouteWithChildren
@@ -612,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/consultations'
       fullPath: '/consultations'
       preLoaderRoute: typeof ConsultationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/car-rentals': {
+      id: '/car-rentals'
+      path: '/car-rentals'
+      fullPath: '/car-rentals'
+      preLoaderRoute: typeof CarRentalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -725,6 +757,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/car-rentals/book': {
+      id: '/car-rentals/book'
+      path: '/book'
+      fullPath: '/car-rentals/book'
+      preLoaderRoute: typeof CarRentalsBookRouteImport
+      parentRoute: typeof CarRentalsRoute
     }
     '/agents/apply': {
       id: '/agents/apply'
@@ -861,6 +900,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface CarRentalsRouteChildren {
+  CarRentalsBookRoute: typeof CarRentalsBookRoute
+}
+
+const CarRentalsRouteChildren: CarRentalsRouteChildren = {
+  CarRentalsBookRoute: CarRentalsBookRoute,
+}
+
+const CarRentalsRouteWithChildren = CarRentalsRoute._addFileChildren(
+  CarRentalsRouteChildren,
+)
+
 interface DashboardRouteChildren {
   DashboardBookRoute: typeof DashboardBookRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
@@ -940,6 +991,7 @@ const VisasRouteWithChildren = VisasRoute._addFileChildren(VisasRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  CarRentalsRoute: CarRentalsRouteWithChildren,
   ConsultationsRoute: ConsultationsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   FlightsRoute: FlightsRouteWithChildren,
