@@ -55,7 +55,7 @@ function parseSegments(s: string | undefined): Segment[] {
   return [];
 }
 
-export const Route = createFileRoute("/flights/search")({
+export const Route = createFileRoute("/flights/search" as any)({
   head: () => ({
     meta: [
       { title: "Flight results — iSwitch" },
