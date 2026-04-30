@@ -7,6 +7,7 @@ import { FlightFilters } from "@/components/flights/FlightFilters";
 import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
 import { TravelTip } from "@/components/SearchingOverlay";
 import { toIata } from "@/lib/airports";
+import { getUserCurrencyCode } from "@/lib/user-currency";
 import { Plane, Loader2, ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -154,6 +155,7 @@ function useFlightSearch(search: any): SearchState & { query: any } {
           cabin: search.cabin || undefined,
           children: search.children ? Number(search.children) : undefined,
           infants: search.infants ? Number(search.infants) : undefined,
+          currency: getUserCurrencyCode(),
         }
       : {
           origin: toIata(search.origin),
@@ -164,6 +166,7 @@ function useFlightSearch(search: any): SearchState & { query: any } {
           cabin: search.cabin || undefined,
           children: search.children ? Number(search.children) : undefined,
           infants: search.infants ? Number(search.infants) : undefined,
+          currency: getUserCurrencyCode(),
         };
 
     const isStale = () => cancelled || activeSig.current !== sig;
