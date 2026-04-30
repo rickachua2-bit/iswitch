@@ -79,7 +79,7 @@ export function UnifiedSearchBar({
             <FlightForm
               pending={pending}
               onSearch={(q) =>
-                navigate({ to: "/flights/search" as any, search: { ...q } as never })
+                navigate({ to: "/flights/search", search: { ...q } as never })
               }
             />
           )}
