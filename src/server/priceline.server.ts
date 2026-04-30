@@ -194,13 +194,13 @@ function normalizeCarRentals(raw: any, defaultCurrency: string): NormalizedCar[]
         partner?.partner_code ??
         `priceline-${i}`;
 
+      const fallbackName = `${veh?.make ?? "Car"} ${veh?.model ?? ""}`.trim() || "Car";
       const name =
         veh?.car_name ??
         veh?.name ??
         veh?.vehicle_name ??
         veh?.car ??
-        `${veh?.make ?? "Car"} ${veh?.model ?? ""}`.trim() ||
-        "Car";
+        fallbackName;
 
       const total = num(pricing?.total_price ?? pricing?.totalPrice ?? pricing?.total ?? c?.total_price);
       const daily = num(pricing?.daily_rate ?? pricing?.dailyRate ?? pricing?.daily ?? pricing?.per_day);
