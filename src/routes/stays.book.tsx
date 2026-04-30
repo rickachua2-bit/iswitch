@@ -6,12 +6,29 @@ import {
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookHotel } from "@/server/travsify";
+import { getBookingHotelFull } from "@/server/booking.functions";
+import type { BookingNormalizedRoom } from "@/server/booking.server";
+import { getUserCurrencyCode } from "@/lib/user-currency";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { HotelGallery } from "@/components/stays/HotelGallery";
+import { RoomList } from "@/components/stays/RoomList";
 import {
   Star, MapPin, Hotel as HotelIcon, BedDouble, Wifi, Coffee, Waves, Dumbbell,
   Utensils, ParkingCircle, Sparkles, ShieldCheck, Calendar as CalendarIcon, Users,
   CheckCircle2, Tag, User, Mail, Phone, MessageSquare,
 } from "lucide-react";
+
+function parseGuests(guests: string): { adults: number; rooms: number } {
+  const adults = Number((guests.match(/(\d+)\s*Guest/i) || [])[1]) || 2;
+  const rooms = Number((guests.match(/(\d+)\s*Room/i) || [])[1]) || 1;
+  return { adults, rooms };
+}
+
+function bookingHotelId(hotel: any): string | null {
+  const raw = String(hotel?.hotelId ?? hotel?.id ?? hotel?.offer_id ?? "");
+  const stripped = raw.startsWith("booking-") ? raw.slice("booking-".length) : raw;
+  return stripped || null;
+}
 
 const searchSchema = z.object({
   offer_id: z.coerce.string(),
