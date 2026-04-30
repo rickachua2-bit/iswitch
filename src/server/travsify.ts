@@ -493,6 +493,7 @@ const FlightSearchInput = z
     children: z.number().int().min(0).max(9).optional(),
     infants: z.number().int().min(0).max(9).optional(),
     cabin: z.string().optional(),
+    currency: z.string().optional(),
   })
   .passthrough();
 
@@ -553,6 +554,7 @@ export const startFlightSearch = createServerFn({ method: "POST" })
         adults: data.adults,
         children: data.children,
         cabin: normalizeCabin(data.cabin),
+        currency: data.currency,
       }),
     ]);
 
@@ -563,9 +565,21 @@ export const startFlightSearch = createServerFn({ method: "POST" })
       ? bookingRes.value.offers
       : [];
 
-    const merged = [...duffelOffers, ...bookingOffers].sort(
-      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
-    );
+    // Sort each provider group ascending by price; invalid prices sink to bottom.
+    const byPriceAsc = (a: any, b: any) => {
+      const pa = Number(a?.total_amount);
+      const pb = Number(b?.total_amount);
+      const aBad = !Number.isFinite(pa) || pa <= 0;
+      const bBad = !Number.isFinite(pb) || pb <= 0;
+      if (aBad && bBad) return 0;
+      if (aBad) return 1;
+      if (bBad) return -1;
+      return pa - pb;
+    };
+    const sortedBooking = [...bookingOffers].sort(byPriceAsc);
+    const sortedDuffel = [...duffelOffers].sort(byPriceAsc);
+    // Booking.com first, Duffel second.
+    const merged = [...sortedBooking, ...sortedDuffel];
 
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
@@ -597,6 +611,7 @@ export const searchFlights = createServerFn({ method: "POST" })
         adults: data.adults,
         children: data.children,
         cabin: normalizeCabin(data.cabin),
+        currency: data.currency,
       }),
     ]);
     const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
@@ -604,9 +619,17 @@ export const searchFlights = createServerFn({ method: "POST" })
       : [];
     const bookingOffers = bookingRes.status === "fulfilled" && bookingRes.value.ok
       ? bookingRes.value.offers : [];
-    const merged = [...duffelOffers, ...bookingOffers].sort(
-      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
-    );
+    const byPriceAsc = (a: any, b: any) => {
+      const pa = Number(a?.total_amount);
+      const pb = Number(b?.total_amount);
+      const aBad = !Number.isFinite(pa) || pa <= 0;
+      const bBad = !Number.isFinite(pb) || pb <= 0;
+      if (aBad && bBad) return 0;
+      if (aBad) return 1;
+      if (bBad) return -1;
+      return pa - pb;
+    };
+    const merged = [...[...bookingOffers].sort(byPriceAsc), ...[...duffelOffers].sort(byPriceAsc)];
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
                   (bookingRes.status === "fulfilled" && bookingRes.value.error) || "No flights found.";

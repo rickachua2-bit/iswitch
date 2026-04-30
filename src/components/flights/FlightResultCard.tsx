@@ -82,12 +82,22 @@ export function FlightResultCard({ offer }: { offer: any }) {
   }
   const fareLoadingId = isSelecting(String(offer.id)) ? "active" : null;
 
+  const sourceLabel =
+    offer?.source === "booking" ? "Booking.com" :
+    offer?.source === "duffel"  ? "Duffel" : null;
+  const ownerLogo = typeof offer?.owner_logo === "string" ? offer.owner_logo : null;
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition hover:shadow-elevated">
       {/* baggage tag strip */}
       <div className="flex items-center gap-2 border-b border-border/60 bg-secondary/40 px-4 py-1.5 text-[11px] font-semibold text-primary">
         <Briefcase className="h-3 w-3" />
         Checked baggage included
+        {sourceLabel && (
+          <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+            {sourceLabel}
+          </span>
+        )}
         <span className="ml-auto text-muted-foreground">
           {offer?.owner?.name || carrier.name}
         </span>
@@ -98,7 +108,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
         <div className="space-y-3">
           {slices.length ? (
             slices.map((slice: any, i: number) => (
-              <SliceRow key={i} slice={slice} carrier={carrier} />
+              <SliceRow key={i} slice={slice} carrier={carrier} ownerLogo={ownerLogo} />
             ))
           ) : (
             <div className="text-sm text-muted-foreground">
@@ -171,7 +181,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
         <div className="border-t border-border bg-background">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/30 px-4 py-2 text-xs font-semibold text-muted-foreground">
             <span className="flex items-center gap-2">
-              <CarrierBadge code={carrier.code} name={carrier.name} />
+              <CarrierBadge code={carrier.code} name={carrier.name} logoUrl={ownerLogo} />
               <span className="text-foreground">{carrier.name}</span>
               <span className="text-muted-foreground">· Full itinerary</span>
             </span>
@@ -195,7 +205,7 @@ export function FlightResultCard({ offer }: { offer: any }) {
 
 /* ---------------- subcomponents ---------------- */
 
-function SliceRow({ slice, carrier }: { slice: any; carrier: { name: string; code: string } }) {
+function SliceRow({ slice, carrier, ownerLogo }: { slice: any; carrier: { name: string; code: string }; ownerLogo?: string | null }) {
   const segs = slice.segments ?? [];
   const first = segs[0];
   const last = segs[segs.length - 1];
@@ -211,7 +221,7 @@ function SliceRow({ slice, carrier }: { slice: any; carrier: { name: string; cod
     <div className="grid grid-cols-[auto_1fr] items-center gap-4">
       {/* airline mark */}
       <div className="flex w-24 flex-col items-start gap-1">
-        <CarrierBadge code={carrier.code} name={carrier.name} />
+        <CarrierBadge code={carrier.code} name={carrier.name} logoUrl={(first?.marketing_carrier_logo as string | null) ?? ownerLogo ?? null} />
         <div className="truncate text-[11px] font-semibold text-muted-foreground">
           {carrier.name}
         </div>
@@ -474,23 +484,27 @@ function Amenity({ icon: Icon, label }: { icon: any; label: string }) {
   );
 }
 
-function CarrierBadge({ code, name }: { code: string; name?: string }) {
+function CarrierBadge({ code, name, logoUrl }: { code: string; name?: string; logoUrl?: string | null }) {
   const [idx, setIdx] = useState(0);
   const valid = !!code && code !== "??" && /^[A-Z0-9]{2,3}$/.test(code);
-  const sources = valid
-    ? [
-        `https://content.airhex.com/content/logos/airlines_${code}_100_40_r.png`,
-        `https://images.kiwi.com/airlines/64/${code}.png`,
-        `https://pics.avs.io/120/40/${code}.png`,
-      ]
-    : [];
+  // Booking.com supplies an authoritative carrier logo; prefer it when present,
+  // then fall back to public CDN logos derived from the IATA code.
+  const sources: string[] = [];
+  if (typeof logoUrl === "string" && logoUrl) sources.push(logoUrl);
+  if (valid) {
+    sources.push(
+      `https://content.airhex.com/content/logos/airlines_${code}_100_40_r.png`,
+      `https://images.kiwi.com/airlines/64/${code}.png`,
+      `https://pics.avs.io/120/40/${code}.png`,
+    );
+  }
   const src = sources[idx];
   return (
     <div
       className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md border border-border bg-white p-1 shadow-sm"
       title={name || code}
     >
-      {valid && src ? (
+      {src ? (
         <img
           src={src}
           alt={`${name || code} logo`}
