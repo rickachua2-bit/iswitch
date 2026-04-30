@@ -97,7 +97,7 @@ export function TourDestinationAutocomplete({
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching destinations…
             </div>
           )}
-          {!loading && items.length === 0 && value.trim().length >= 2 && (
+          {!loading && items.length === 0 && value.trim().length >= 1 && (
             <div className="px-3 py-2.5 text-xs text-muted-foreground">No matches — keep typing or press Enter to search.</div>
           )}
           {items.map((s, i) => (
