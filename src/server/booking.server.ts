@@ -30,9 +30,13 @@ async function bFetch(slug: string, url: string): Promise<{ status: number; text
   const timer = setTimeout(() => ctrl.abort(), REQ_TIMEOUT_MS);
   const t0 = Date.now();
   try {
-    const headers = bHeaders();
-    if (!headers) throw new Error("RAPIDAPI_BOOKING_KEY not configured");
-    const res = await fetch(url, { method: "GET", headers, signal: ctrl.signal });
+    const baseHeaders = bHeaders();
+    if (!baseHeaders) throw new Error("RAPIDAPI_BOOKING_KEY not configured");
+    // Add a per-request id and disable runtime caching so identical searches
+    // still hit the upstream API rather than serving stale bytes.
+    const reqId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const headers = { ...baseHeaders, "x-request-id": reqId, "cache-control": "no-cache" };
+    const res = await fetch(url, { method: "GET", headers, signal: ctrl.signal, cache: "no-store" });
     const text = await res.text();
     const ms = Date.now() - t0;
     // best-effort health log
