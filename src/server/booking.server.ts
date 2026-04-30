@@ -135,21 +135,35 @@ function normalizeBookingFlight(o: any, idx: number) {
   const totalAmount = (Number(total?.units ?? 0) + Number(total?.nanos ?? 0) / 1e9).toFixed(2);
   const currency = total?.currencyCode ?? "USD";
 
+  const carrierLogos = new Set<string>();
+
   const slices = (o?.segments ?? []).map((seg: any) => {
     const legs = seg?.legs ?? [];
     return {
       origin: seg?.departureAirport?.code,
       destination: seg?.arrivalAirport?.code,
       duration: seg?.totalTime ? `PT${Math.floor(seg.totalTime / 60)}M` : undefined,
-      segments: legs.map((leg: any) => ({
-        marketing_carrier: leg?.carriersData?.[0]?.name ?? leg?.carriers?.[0],
-        marketing_carrier_iata: leg?.carriersData?.[0]?.code ?? leg?.carriers?.[0],
-        flight_number: leg?.flightInfo?.flightNumber,
-        departing_at: leg?.departureTime,
-        arriving_at: leg?.arrivalTime,
-        origin: leg?.departureAirport?.code,
-        destination: leg?.arrivalAirport?.code,
-      })),
+      segments: legs.map((leg: any) => {
+        const marketing = leg?.carriersData?.[0] ?? {};
+        const operating = leg?.carriersData?.[1] ?? null;
+        if (typeof marketing?.logo === "string" && marketing.logo) carrierLogos.add(marketing.logo);
+        if (operating && typeof operating?.logo === "string" && operating.logo) carrierLogos.add(operating.logo);
+        return {
+          marketing_carrier: marketing?.name ?? leg?.carriers?.[0],
+          marketing_carrier_iata: marketing?.code ?? leg?.carriers?.[0],
+          marketing_carrier_logo: marketing?.logo ?? null,
+          operating_carrier: operating?.name ?? null,
+          operating_carrier_iata: operating?.code ?? null,
+          operating_carrier_logo: operating?.logo ?? null,
+          flight_number: leg?.flightInfo?.flightNumber,
+          aircraft: leg?.flightInfo?.planeType ?? leg?.flightInfo?.aircraft ?? null,
+          cabin_class: leg?.cabinClass ?? null,
+          departing_at: leg?.departureTime,
+          arriving_at: leg?.arrivalTime,
+          origin: leg?.departureAirport?.code,
+          destination: leg?.arrivalAirport?.code,
+        };
+      }),
     };
   });
 
@@ -159,7 +173,9 @@ function normalizeBookingFlight(o: any, idx: number) {
     total_amount: totalAmount,
     total_currency: currency,
     owner: firstCarrier?.name ?? "Booking.com",
-    owner_logo: firstCarrier?.logo,
+    owner_logo: firstCarrier?.logo ?? null,
+    owner_iata: firstCarrier?.code ?? null,
+    carrier_logos: Array.from(carrierLogos),
     source: "booking" as const,
     slices,
     raw: o,
