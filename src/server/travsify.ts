@@ -15,6 +15,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import {
+  bookingSearchFlights,
+  bookingSearchHotels,
+  bookingSearchTours,
+  bookingSearchCars,
+} from "./booking.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
