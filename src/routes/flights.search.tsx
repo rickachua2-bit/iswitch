@@ -38,6 +38,7 @@ const searchSchema = z.object({
   sort: z.enum(["best", "cheapest", "fastest"]).optional(),
   baggage: z.coerce.string().optional(),
   recommended: z.coerce.string().optional(),
+  _r: z.coerce.string().optional(),
 });
 
 function adultsFromTravelers(s: string | undefined) {
