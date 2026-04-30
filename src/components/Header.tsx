@@ -38,7 +38,7 @@ export function Header({ transparent = false }: { transparent?: boolean }) {
     { label: t("nav.flights"), to: "/flights" as const },
     { label: t("nav.hotels"), to: "/stays" as const },
     { label: t("nav.visas"), to: "/visas" as const },
-    { label: t("nav.insurance"), to: "/insurance" as const },
+    { label: t("nav.carRentals"), to: "/car-rentals" as const },
     { label: t("nav.tours"), to: "/tours" as const },
     { label: t("nav.transfers"), to: "/pickups" as const },
   ];

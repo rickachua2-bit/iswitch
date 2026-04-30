@@ -18,12 +18,12 @@ import {
  */
 
 const VERTICALS = [
-  { to: "/flights",   label: "Flights",   Icon: Plane,        grad: "from-sky-500 to-blue-600"        },
-  { to: "/stays",     label: "Stays",     Icon: Hotel,        grad: "from-emerald-500 to-teal-600"    },
-  { to: "/visas",     label: "Visas",     Icon: FileCheck2,   grad: "from-violet-500 to-purple-600"   },
-  { to: "/insurance", label: "Insurance", Icon: ShieldCheck,  grad: "from-rose-500 to-pink-600"       },
-  { to: "/tours",     label: "Tours",     Icon: Compass,      grad: "from-amber-500 to-orange-600"    },
-  { to: "/pickups",   label: "Transfers", Icon: Car,          grad: "from-cyan-500 to-sky-600"        },
+  { to: "/flights",     label: "Flights",     Icon: Plane,        grad: "from-sky-500 to-blue-600"        },
+  { to: "/stays",       label: "Stays",       Icon: Hotel,        grad: "from-emerald-500 to-teal-600"    },
+  { to: "/visas",       label: "Visas",       Icon: FileCheck2,   grad: "from-violet-500 to-purple-600"   },
+  { to: "/car-rentals", label: "Car Rentals", Icon: Car,          grad: "from-rose-500 to-pink-600"       },
+  { to: "/tours",       label: "Tours",       Icon: Compass,      grad: "from-amber-500 to-orange-600"    },
+  { to: "/pickups",     label: "Transfers",   Icon: Car,          grad: "from-cyan-500 to-sky-600"        },
 ] as const;
 
 const HIDDEN_PREFIXES = ["/login", "/signup", "/forgot-password", "/reset-password", "/agents/apply", "/admin"];

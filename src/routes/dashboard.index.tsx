@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plane, Hotel, FileCheck, Shield, Map, Car, Search, ListChecks, Wallet, ArrowRight, GraduationCap, Sparkles } from "lucide-react";
+import { Plane, Hotel, FileCheck, Key, Map, Car, Search, ListChecks, Wallet, ArrowRight, GraduationCap, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -12,9 +12,9 @@ const VERTICALS = [
   { id: "flights",  label: "Flights",   icon: Plane,     to: "/flights"   as const, tint: "from-sky-500 to-blue-600" },
   { id: "stays",    label: "Hotels",    icon: Hotel,     to: "/stays"     as const, tint: "from-fuchsia-500 to-purple-600" },
   { id: "visas",    label: "Visas",     icon: FileCheck, to: "/visas"     as const, tint: "from-emerald-500 to-teal-600" },
-  { id: "insurance",label: "Insurance", icon: Shield,    to: "/insurance" as const, tint: "from-amber-500 to-orange-600" },
+  { id: "car_rentals", label: "Car Rentals", icon: Key, to: "/car-rentals" as const, tint: "from-amber-500 to-orange-600" },
   { id: "tours",    label: "Tours",     icon: Map,       to: "/tours"     as const, tint: "from-rose-500 to-pink-600" },
-  { id: "pickups",  label: "Transfers", icon: Car,       to: "/pickups"   as const, tint: "from-indigo-500 to-violet-600" },
+  { id: "pickups",  label: "Airport Transfers", icon: Car, to: "/pickups" as const, tint: "from-indigo-500 to-violet-600" },
 ];
 
 function OverviewPage() {
@@ -51,7 +51,7 @@ function OverviewPage() {
             Hey {name} 👋
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed opacity-90 md:text-base">
-            Search flights, hotels, visas, insurance, tours and transfers — and manage every booking from this dashboard. No tabs, no friction.
+            Search flights, hotels, visas, car rentals, tours and airport transfers — and manage every booking from this dashboard. No tabs, no friction.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/dashboard/book" className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-extrabold text-accent-foreground shadow-lg shadow-accent/30 transition hover:scale-[1.03]">

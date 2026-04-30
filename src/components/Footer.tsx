@@ -16,7 +16,7 @@ export function Footer() {
               />
             </Link>
             <p className="mt-3 max-w-sm text-sm text-primary-foreground/75">
-              The global mobility super app. Flights, stays, visas, insurance, tours, pickups and expert paid consultations — all in one place.
+              The global mobility super app. Flights, stays, visas, car rentals, tours and airport transfers — all in one place.
             </p>
             <div className="mt-4 flex gap-2">
               {[Globe, Send, Camera, Briefcase].map((Icon, i) => (
@@ -28,8 +28,8 @@ export function Footer() {
           </div>
 
           <FooterCol title="Services" links={[
-            ["Flights", "/flights"], ["Stays", "/stays"], ["Visas", "/visas"], ["Insurance", "/insurance"],
-            ["Tours", "/tours"], ["Pickups", "/pickups"],
+            ["Flights", "/flights"], ["Stays", "/stays"], ["Visas", "/visas"], ["Car Rentals", "/car-rentals"],
+            ["Tours", "/tours"], ["Airport Transfers", "/pickups"],
           ]} />
 
           <FooterCol title="Consultations" links={[
