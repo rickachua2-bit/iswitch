@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { TourDestinationAutocomplete } from "@/components/TourDestinationAutocomplete";
 import { getCatalog } from "@/server/travsify";
 import {
   GuestsRoomsPopover,
@@ -163,7 +164,9 @@ export function ToursInlineForm({ onSearch, initial }: { onSearch: OnSearch; ini
       onSubmit={(e) => { e.preventDefault(); onSearch({ destination, date, guests }); }}
       className="grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr_0.8fr_auto]"
     >
-      <Field icon={MapPin} label="Where"><TextInput value={destination} onChange={(e) => setDestination(e.target.value)} /></Field>
+      <Field icon={MapPin} label="Where">
+        <TourDestinationAutocomplete value={destination} onChange={(v) => setDestination(v)} />
+      </Field>
       <Field icon={Calendar} label="Date"><TextInput type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
       <Field icon={Users} label="Guests"><TextInput type="number" min={1} value={guests} onChange={(e) => setGuests(e.target.value)} /></Field>
       <SubmitBtn />

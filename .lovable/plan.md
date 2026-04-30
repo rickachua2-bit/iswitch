@@ -1,69 +1,51 @@
-## API status (verified just now)
+## Goal
 
-Direct check against the provider health table:
+Make the Tours destination input autocomplete from Booking.com so users see real, bookable destinations as they type — and the search returns the richest possible results.
 
-- `booking-tours` — last successful call **HTTP 200**, latency ~1.3–2.8s. Working.
-- `booking-flights`, `booking-hotels`, `booking-cars` — `total_calls = 0`. Not yet exercised in production (no user has searched these verticals since the integration shipped), but they share the same key/host/auth layer as tours, so the credential is good. They'll record their first health events on first real search.
+## What's there now
 
-So: the RapidAPI key works and the Tours endpoint is live.
+- `src/components/SearchTabsForms.tsx` → `ToursInlineForm` uses a plain `<TextInput>` for "Where". No suggestions. Defaults to "Paris".
+- `src/server/booking.server.ts` already calls `attraction/searchLocation` inside `bookingSearchTours` (verified working — HTTP 200).
+- The Tours card was just enriched with image + rating + duration, so once a real destination ID is selected, the result grid is already meaningful.
 
-## The real problem
+## Plan
 
-`src/routes/tours.tsx` only renders **title + price** on the result cards. The Booking.com normaliser already pulls `images`, `description`, `subtitle`, `duration`, and `currency`, plus we have access to review score and "from price" via `raw`, but none of it reaches the UI. The user sees a sparse card and has to click "View & book" before seeing what the tour actually looks like.
+### 1. New server function `autocompleteTourDestinations`
+File: `src/server/travsify.ts` (added next to `searchTours`).
 
-## What I'll change
+- POST, input `{ query: string (1–80 chars) }`.
+- Calls `https://booking-com15.p.rapidapi.com/api/v1/attraction/searchLocation?query=…` with the existing `RAPIDAPI_BOOKING_KEY`.
+- Normalises each hit to `{ id, label, country, type }` (city / region / attraction).
+- Returns up to 10 suggestions. Returns `{ suggestions: [] }` (never throws) when the key is missing or the call fails — UI degrades to free-text.
+- Uses the existing `timedFetch` helper so latency / errors land in the provider health log under `booking-tours`.
 
-### 1. Enrich the Booking.com tour normaliser (`src/server/booking.server.ts`)
+### 2. New component `TourDestinationAutocomplete`
+File: `src/components/TourDestinationAutocomplete.tsx`.
 
-`normalizeBookingTour` currently only grabs `primaryPhoto.small`. Pull a proper image set and the rating fields:
+- Controlled `value` / `onChange(label, suggestion?)` API matching the existing `Field` primitive.
+- Debounced 250ms; aborts in-flight requests when the user keeps typing.
+- Skips fetching for queries shorter than 2 characters.
+- Dropdown renders `MapPin` icon + city name + country (e.g. "Paris · France"), with a small chip for `type` when it's not "city" (e.g. "attraction", "region").
+- Keyboard navigation: ↑ / ↓ / Enter / Esc.
+- Click outside closes; selection writes the full "City, Country" label back so the existing `searchTours` query (which takes free-form text) keeps working.
+- Shows a subtle "Searching…" row while a request is in flight so the user sees the system is working ("as many punches as possible emanating from that search").
 
-- `images`: collect `primaryPhoto.large` / `medium` / `small` (largest first) plus any `photos[]` URLs, dedupe.
-- `rating`: `reviewsStats.combinedNumericStats.average` (number, 0–5).
-- `review_count`: `reviewsStats.allReviewsCount`.
-- `duration_text`: human-readable from `representativeDuration` or `duration`.
-- `categories`: `primaryCategory.name` for a quick "Food tour", "Day trip" tag.
-- Keep `from_price` distinct from `price` so the card can show "From $X".
+### 3. Wire the autocomplete into the Tours form
+File: `src/components/SearchTabsForms.tsx` — replace the destination `TextInput` inside `ToursInlineForm` with `<TourDestinationAutocomplete>`. No other forms change.
 
-### 2. Redesign the Tours card (`src/routes/tours.tsx`)
+### 4. Pass the picked destination ID through (optional, low-risk)
+When the user picks a suggestion we have the canonical Booking.com `id`. Currently `searchTours` re-resolves the destination on every search. If a user picks a suggestion we'll also stash the id on the URL as `destId` (validated via Zod, optional). `bookingSearchTours` already accepts a string destination, so no change to the search path is required — the id is purely an optimisation hook for a future round.
 
-Replace the current text-only card with an image-led card:
-
-```text
-┌────────────────────────────────┐
-│   [hero image, 16:9, lazy]     │
-│                                │
-├────────────────────────────────┤
-│ ★ 4.7 (1,284)   • 3 hours      │
-│ Burj Khalifa: At the Top       │
-│ Skip-the-line · Levels 124–125 │
-│                                │
-│ From  USD 49     [View & book] │
-└────────────────────────────────┘
-```
-
-Details:
-- Image: `t.images?.[0]` with `loading="lazy"`, `decoding="async"`, fallback to a neutral gradient placeholder when missing.
-- Rating row: stars icon + score + count (only when `rating` present).
-- Duration chip when available.
-- 2-line clamped subtitle/description (`line-clamp-2`).
-- "From {currency} {price}" wording so it's clear it's the lead-in price.
-- Click anywhere on the card (not just the button) routes to `/tours/book`.
-
-### 3. Pass the enriched payload through to the booking page
-
-`goToBooking` already spreads `t` into `payload`, so `/tours/book` will automatically receive `images`, `rating`, `description`, etc. No change needed there beyond confirming `tours.book.tsx` shows the hero image and gallery — I'll add a simple image header + description block on the booking page if it isn't already there.
-
-### 4. Light validation pass on the other verticals
-
-While I'm in there:
-- Trigger one warm-up call each for `booking-flights`, `booking-hotels`, `booking-cars` from the existing admin "Provider Health" probe so we can confirm 200s on all four endpoints (no UI change — just verifies the key works across hosts).
-- Hotels already render images via the `images[]` array on the unified hotel shape, so no UI change needed there — Booking.com hotels will slot in.
+For this change I'll keep the URL contract the same (`destination`, `date`, `guests`) and skip the `destId` plumbing to avoid scope creep.
 
 ## Files touched
 
-- `src/server/booking.server.ts` — enrich `normalizeBookingTour`.
-- `src/routes/tours.tsx` — image-led card layout.
-- `src/routes/tours.book.tsx` — add hero image + description block (only if missing).
-- `src/server/api-providers.functions.ts` — fire warm-up probes for flights/hotels/cars (optional, behind the existing admin probe).
+- `src/server/travsify.ts` — add `autocompleteTourDestinations` server function (~35 lines).
+- `src/components/TourDestinationAutocomplete.tsx` — new component (~110 lines).
+- `src/components/SearchTabsForms.tsx` — swap one input inside `ToursInlineForm`.
 
-No DB migration, no new secrets.
+No DB migration. No new secrets. No change to the existing search/booking flow.
+
+## Out of scope (call out)
+
+- Not adding autocomplete to Stays / Pickups / Flights yet — same pattern can extend there later (Booking.com has equivalent `hotels/searchDestination` and `flights/searchDestination` endpoints we already use server-side). Easy to follow up with once you've sanity-checked the Tours version.
