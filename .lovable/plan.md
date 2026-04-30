@@ -1,37 +1,81 @@
-Booking.com flight results already merge with Duffel and sort by price ascending, but two things are wrong vs. the user's requirements:
+## Goal
 
-1. **Order**: Today the merge puts Duffel first (`[...duffelOffers, ...bookingOffers].sort(...)`). The sort makes price the primary key, but ties favor Duffel because it appears first. The user wants Booking.com first as the primary list, with Duffel coming after.
-2. **Images**: `normalizeBookingFlight` drops the airline logo URL Booking.com returns at `legs[0].carriersData[0].logo`, and never collects per-leg logos for connecting flights. The card currently renders airline marks via Airhex/Kiwi/avs.io URLs derived from IATA codes, ignoring the Booking-supplied logo entirely. We also drop other media Booking.com sends (operating carrier logos, flag emojis on segments).
+On the hotel "review your stay" page (`/stays/book`), when the selected hotel is from the Booking.com RapidAPI source, fetch and display the **full** photo gallery and **all available rooms** exactly as Booking.com exposes them — not just the cached thumbnails and a single placeholder room.
 
-### Changes
+## What's wrong today
 
-**1. `src/server/booking.server.ts` — capture all flight imagery**
-- In `normalizeBookingFlight`, build for each leg:
-  - `marketing_carrier_logo` from `leg.carriersData[0].logo`
-  - `operating_carrier`, `operating_carrier_iata`, `operating_carrier_logo` from `leg.carriersData[1]` (often the operator) when present
-  - `cabin_class`, `flight_stops`, `aircraft` (from `leg.flightInfo`) so the existing card details surface real Booking.com data
-- At offer level, expose `owner_logo` (already there) plus a new `carrier_logos: string[]` aggregating every distinct airline logo URL across all legs, and `source: "booking"` (already there).
+- `src/routes/stays.book.tsx` only renders up to 6 images from the cached search payload (`pickAllImages` slices to 6) and shows a single hardcoded room block (`hotel.room_name ?? "Standard double room"`).
+- `src/server/booking.server.ts` only normalizes the search-result fields. It never calls Booking.com's detail endpoints, so room lists, full photo galleries and descriptions are not available.
 
-**2. `src/components/flights/FlightResultCard.tsx` — render real airline images**
-- Update `CarrierBadge` to accept an optional `logoUrl` prop. When `logoUrl` is provided, render it as the first image source ahead of the Airhex/Kiwi/avs.io fallbacks. This way Booking.com images show first, with the existing IATA-based fallbacks if the URL fails to load.
-- Wherever `CarrierBadge` is used (in slice headers and segment rows), pass the leg's `marketing_carrier_logo` (and `operating_carrier_logo` when shown).
-- Add a small "Booking.com" / "Duffel" source pill in the header strip so users see provenance, mirroring the Stays card.
+## Plan
 
-**3. `src/server/travsify.ts` — Booking.com first, then Duffel, each sorted ascending**
-- In both `startFlightSearch` and the deprecated `searchFlights`, replace the single combined sort with:
+### 1. New server functions for Booking.com hotel details
 
-  ```
-  const bookingSorted = [...bookingOffers].sort(byPriceAsc);
-  const duffelSorted  = [...duffelOffers].sort(byPriceAsc);
-  const merged = [...bookingSorted, ...duffelSorted];
-  ```
+Add three helpers in `src/server/booking.server.ts` (RapidAPI host `booking-com15.p.rapidapi.com`):
 
-  using a `byPriceAsc` helper that pushes invalid/zero prices to the end (same pattern we just applied to hotels in `searchHotels`). This guarantees the cheapest Booking.com result is at position 0, all Booking.com offers come before any Duffel offer, and within each group prices ascend.
+- `bookingGetHotelDetails(hotelId, { checkin, checkout, adults, rooms, currency })` → `GET /api/v1/hotels/getHotelDetails`. Returns description, address, facilities, policies, score breakdown.
+- `bookingGetHotelPhotos(hotelId)` → `GET /api/v1/hotels/getHotelPhotos`. Returns the **complete** photo array (not just the 5–6 in search results).
+- `bookingGetRoomList(hotelId, { checkin, checkout, adults, rooms, currency, units, languagecode })` → `GET /api/v1/hotels/getRoomList`. Returns every available room with name, bed config, photos, max occupancy, board, refundable flag, price.
 
-**4. Pass user currency through (consistency with hotels/tours)**
-- `src/routes/flights.search.tsx` loader (or wherever `startFlightSearch` is called) — forward `getUserCurrencyCode()` from `src/lib/user-currency.ts` as `data.currency` so Booking.com returns prices in the user's selected display currency natively. The card already runs amounts through `usePriceFormat`, so display will stay correct even if a provider returns a different currency.
+Each helper uses the existing `bFetch`/`safeJson`/`recordHealth` infrastructure, returns `{ ok, … }` shapes, and gracefully degrades to empty arrays on error so the page still renders.
 
-### Verification
-- Search LOS → DXB, confirm the first result on the page is a Booking.com offer (source pill = "Booking.com") and prices ascend within Booking.com block, then Duffel block restarts ascending.
-- Confirm carrier badges on Booking.com offers show the real airline logo from `carriersData[0].logo` (Network tab: image URL hosted on `r-xx.bstatic.com` or similar).
-- Switch currency to NGN, search again — Booking.com pill prices show in ₦.
+Expose a single combined server function via `createServerFn` in a new `src/server/booking.functions.ts`:
+
+```
+getBookingHotelFull({ hotelId, checkin, checkout, adults, rooms, currency })
+  -> { ok, details, photos: string[], rooms: NormalizedRoom[] }
+```
+
+`NormalizedRoom` shape (built once, used by the UI):
+```
+{ id, name, bed_configuration, max_occupancy, photos: string[],
+  board, refundable, cancellation_until, price, currency, badges, description }
+```
+
+The function calls the three RapidAPI endpoints in parallel and normalizes the result. Photos are deduped; rooms are sorted by price ascending to match the rest of the app's sort order.
+
+### 2. Wire it into `/stays/book`
+
+Update `src/routes/stays.book.tsx`:
+
+- Detect Booking.com offers via `hotel.source === "booking"` (or `id`/`offer_id` prefix `booking-`).
+- After the cached `hotel` is recovered, fire `getBookingHotelFull` (using `hotel.hotelId` / numeric id stripped from the `booking-<id>` prefix and the search dates / currency from URL or cached payload).
+- Merge the response back into local state: replace `images` with the full deduped gallery, set `rooms` from the room list, fall back to cached values while loading or on failure.
+
+### 3. Full-gallery UI
+
+Replace the existing 4-tile collage with a real gallery:
+
+- Hero: large cover (clickable) + a 2×2 grid of next 4 thumbnails + a "Show all N photos" pill in the corner.
+- Clicking any photo opens a modal lightbox that supports keyboard ←/→ and shows the entire photo set with index counter (`3 / 47`).
+- On mobile, render a horizontal swipeable strip plus the "Show all N photos" CTA that opens the same lightbox.
+- Use the existing `Dialog` primitive from shadcn (already in the project) — no new dependency required.
+
+### 4. Available-rooms section
+
+Add a new `BookingSectionCard` titled "Available rooms" between "Your stay" and "What this property offers":
+
+- Render every room returned by Booking.com (cheapest first), each as a card with:
+  - Room photo carousel (uses the room's own photo array)
+  - Name, bed configuration, max occupancy, board, refundable badge, cancellation deadline
+  - Price per night formatted via `usePriceFormat` in the user's selected currency
+  - "Select this room" button → updates the booked room (sets `hotel.room_name`, `hotel.price`, `hotel.rate_id`) and re-renders the right-hand price summary
+- Highlight the currently selected room with a primary border and a "Selected" pill.
+- Empty/loading states: skeleton list while loading; if Booking.com returns no rooms, fall back to today's single-row block.
+
+### 5. Currency consistency
+
+`getBookingHotelFull` always forwards the user's selected currency code (resolved via `getUserCurrencyCode()` on the client and passed in the input) so room prices display in NGN/USD/EUR etc. — matching the behavior already shipped for search results.
+
+### 6. Provider scope
+
+LiteAPI hotels keep their existing flow unchanged. The new gallery + rooms enhancements only run when `hotel.source === "booking"`. LiteAPI offers continue to use the cached `images`/`room_name` fields.
+
+## Files to touch
+
+- `src/server/booking.server.ts` — add `bookingGetHotelDetails`, `bookingGetHotelPhotos`, `bookingGetRoomList` helpers.
+- `src/server/booking.functions.ts` *(new)* — `createServerFn` wrapper `getBookingHotelFull`.
+- `src/routes/stays.book.tsx` — fetch full data, render full-photo gallery + lightbox, render rooms list with selection, wire selected room into price summary and `startCheckout` payload.
+- (Optional small extraction) `src/components/stays/HotelGallery.tsx` and `src/components/stays/RoomList.tsx` to keep `stays.book.tsx` readable.
+
+No database, no migrations, no new env vars (uses existing `RAPIDAPI_BOOKING_KEY`).
