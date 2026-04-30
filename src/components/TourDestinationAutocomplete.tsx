@@ -28,7 +28,7 @@ export function TourDestinationAutocomplete({
   // Debounced fetch
   useEffect(() => {
     const q = value.trim();
-    if (q.length < 2) {
+    if (q.length < 1) {
       setItems([]);
       setLoading(false);
       return;
@@ -41,7 +41,8 @@ export function TourDestinationAutocomplete({
       try {
         const res: any = await autocompleteTourDestinations({ data: { query: q } });
         if (ctrl.signal.aborted) return;
-        const list: Suggestion[] = res?.suggestions ?? [];
+        const list: Suggestion[] =
+          res?.data?.suggestions ?? res?.suggestions ?? [];
         setItems(list);
         setActive(0);
       } catch {
@@ -49,7 +50,7 @@ export function TourDestinationAutocomplete({
       } finally {
         if (!ctrl.signal.aborted) setLoading(false);
       }
-    }, 250);
+    }, 200);
     return () => clearTimeout(handle);
   }, [value]);
 
@@ -96,7 +97,7 @@ export function TourDestinationAutocomplete({
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching destinations…
             </div>
           )}
-          {!loading && items.length === 0 && value.trim().length >= 2 && (
+          {!loading && items.length === 0 && value.trim().length >= 1 && (
             <div className="px-3 py-2.5 text-xs text-muted-foreground">No matches — keep typing or press Enter to search.</div>
           )}
           {items.map((s, i) => (

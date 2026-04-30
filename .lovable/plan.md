@@ -1,51 +1,25 @@
-## Goal
+I found that the Booking.com autocomplete server call is working and returning suggestions, but the client component is reading the response from the wrong level. It currently looks at `res.suggestions`, while the project’s server functions return `{ data: { suggestions }, error }`, so the dropdown receives an empty list even after a successful API response.
 
-Make the Tours destination input autocomplete from Booking.com so users see real, bookable destinations as they type — and the search returns the richest possible results.
+Plan:
 
-## What's there now
+1. Fix the response handling in `TourDestinationAutocomplete`
+   - Read suggestions from `res.data.suggestions` first, with a fallback to `res.suggestions` for safety.
+   - Show the dropdown whenever the user is typing/searching, including a clear “No matches” message if Booking.com returns none.
 
-- `src/components/SearchTabsForms.tsx` → `ToursInlineForm` uses a plain `<TextInput>` for "Where". No suggestions. Defaults to "Paris".
-- `src/server/booking.server.ts` already calls `attraction/searchLocation` inside `bookingSearchTours` (verified working — HTTP 200).
-- The Tours card was just enriched with image + rating + duration, so once a real destination ID is selected, the result grid is already meaningful.
+2. Enable autocomplete from 1 letter
+   - Lower the client-side threshold from 2 letters to 1 letter.
+   - Update the server function validator from `min(1)` already allowed, so only the UI threshold needs adjustment.
+   - Keep debounce behavior to avoid excessive API calls while typing.
 
-## Plan
+3. Return more places per search
+   - Increase normalized suggestions from 10 to a larger practical limit, e.g. 20, so users see more cities, locations, and places around the typed search.
+   - Normalize multiple Booking.com response shapes (`destinations`, `products`, direct arrays) and filter invalid labels.
 
-### 1. New server function `autocompleteTourDestinations`
-File: `src/server/travsify.ts` (added next to `searchTours`).
+4. Improve the dropdown UX
+   - Keep keyboard navigation and click selection.
+   - Ensure the input opens suggestions on focus when there is at least one character.
+   - Display city/place name, country, and type badge where available.
 
-- POST, input `{ query: string (1–80 chars) }`.
-- Calls `https://booking-com15.p.rapidapi.com/api/v1/attraction/searchLocation?query=…` with the existing `RAPIDAPI_BOOKING_KEY`.
-- Normalises each hit to `{ id, label, country, type }` (city / region / attraction).
-- Returns up to 10 suggestions. Returns `{ suggestions: [] }` (never throws) when the key is missing or the call fails — UI degrades to free-text.
-- Uses the existing `timedFetch` helper so latency / errors land in the provider health log under `booking-tours`.
-
-### 2. New component `TourDestinationAutocomplete`
-File: `src/components/TourDestinationAutocomplete.tsx`.
-
-- Controlled `value` / `onChange(label, suggestion?)` API matching the existing `Field` primitive.
-- Debounced 250ms; aborts in-flight requests when the user keeps typing.
-- Skips fetching for queries shorter than 2 characters.
-- Dropdown renders `MapPin` icon + city name + country (e.g. "Paris · France"), with a small chip for `type` when it's not "city" (e.g. "attraction", "region").
-- Keyboard navigation: ↑ / ↓ / Enter / Esc.
-- Click outside closes; selection writes the full "City, Country" label back so the existing `searchTours` query (which takes free-form text) keeps working.
-- Shows a subtle "Searching…" row while a request is in flight so the user sees the system is working ("as many punches as possible emanating from that search").
-
-### 3. Wire the autocomplete into the Tours form
-File: `src/components/SearchTabsForms.tsx` — replace the destination `TextInput` inside `ToursInlineForm` with `<TourDestinationAutocomplete>`. No other forms change.
-
-### 4. Pass the picked destination ID through (optional, low-risk)
-When the user picks a suggestion we have the canonical Booking.com `id`. Currently `searchTours` re-resolves the destination on every search. If a user picks a suggestion we'll also stash the id on the URL as `destId` (validated via Zod, optional). `bookingSearchTours` already accepts a string destination, so no change to the search path is required — the id is purely an optimisation hook for a future round.
-
-For this change I'll keep the URL contract the same (`destination`, `date`, `guests`) and skip the `destId` plumbing to avoid scope creep.
-
-## Files touched
-
-- `src/server/travsify.ts` — add `autocompleteTourDestinations` server function (~35 lines).
-- `src/components/TourDestinationAutocomplete.tsx` — new component (~110 lines).
-- `src/components/SearchTabsForms.tsx` — swap one input inside `ToursInlineForm`.
-
-No DB migration. No new secrets. No change to the existing search/booking flow.
-
-## Out of scope (call out)
-
-- Not adding autocomplete to Stays / Pickups / Flights yet — same pattern can extend there later (Booking.com has equivalent `hotels/searchDestination` and `flights/searchDestination` endpoints we already use server-side). Easy to follow up with once you've sanity-checked the Tours version.
+5. Verify in browser
+   - Test typing one letter like `L`, then two letters like `La`.
+   - Confirm the network request returns suggestions and the UI visibly lists them under the tours destination input.
