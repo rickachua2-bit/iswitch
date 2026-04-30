@@ -474,23 +474,27 @@ function Amenity({ icon: Icon, label }: { icon: any; label: string }) {
   );
 }
 
-function CarrierBadge({ code, name }: { code: string; name?: string }) {
+function CarrierBadge({ code, name, logoUrl }: { code: string; name?: string; logoUrl?: string | null }) {
   const [idx, setIdx] = useState(0);
   const valid = !!code && code !== "??" && /^[A-Z0-9]{2,3}$/.test(code);
-  const sources = valid
-    ? [
-        `https://content.airhex.com/content/logos/airlines_${code}_100_40_r.png`,
-        `https://images.kiwi.com/airlines/64/${code}.png`,
-        `https://pics.avs.io/120/40/${code}.png`,
-      ]
-    : [];
+  // Booking.com supplies an authoritative carrier logo; prefer it when present,
+  // then fall back to public CDN logos derived from the IATA code.
+  const sources: string[] = [];
+  if (typeof logoUrl === "string" && logoUrl) sources.push(logoUrl);
+  if (valid) {
+    sources.push(
+      `https://content.airhex.com/content/logos/airlines_${code}_100_40_r.png`,
+      `https://images.kiwi.com/airlines/64/${code}.png`,
+      `https://pics.avs.io/120/40/${code}.png`,
+    );
+  }
   const src = sources[idx];
   return (
     <div
       className="flex h-9 w-14 items-center justify-center overflow-hidden rounded-md border border-border bg-white p-1 shadow-sm"
       title={name || code}
     >
-      {valid && src ? (
+      {src ? (
         <img
           src={src}
           alt={`${name || code} logo`}
