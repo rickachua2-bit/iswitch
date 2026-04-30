@@ -82,12 +82,22 @@ export function FlightResultCard({ offer }: { offer: any }) {
   }
   const fareLoadingId = isSelecting(String(offer.id)) ? "active" : null;
 
+  const sourceLabel =
+    offer?.source === "booking" ? "Booking.com" :
+    offer?.source === "duffel"  ? "Duffel" : null;
+  const ownerLogo = typeof offer?.owner_logo === "string" ? offer.owner_logo : null;
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card transition hover:shadow-elevated">
       {/* baggage tag strip */}
       <div className="flex items-center gap-2 border-b border-border/60 bg-secondary/40 px-4 py-1.5 text-[11px] font-semibold text-primary">
         <Briefcase className="h-3 w-3" />
         Checked baggage included
+        {sourceLabel && (
+          <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+            {sourceLabel}
+          </span>
+        )}
         <span className="ml-auto text-muted-foreground">
           {offer?.owner?.name || carrier.name}
         </span>
