@@ -666,12 +666,19 @@ export const searchFlights = createServerFn({ method: "POST" })
       const pb = Number(b?.total_amount);
       const aBad = !Number.isFinite(pa) || pa <= 0;
       const bBad = !Number.isFinite(pb) || pb <= 0;
-      if (aBad && bBad) return 0;
+      if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
       if (aBad) return 1;
       if (bBad) return -1;
-      return pa - pb;
+      if (pa !== pb) return pa - pb;
+      return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
     };
-    const merged = [...[...bookingOffers].sort(byPriceAsc), ...[...duffelOffers].sort(byPriceAsc)];
+    const requestId = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+    const fetchedAt = new Date().toISOString();
+    const merged = stampOffers(
+      dedupeFlightOffers([...[...bookingOffers].sort(byPriceAsc), ...[...duffelOffers].sort(byPriceAsc)]),
+      requestId,
+      fetchedAt,
+    );
     if (merged.length === 0) {
       const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
                   (bookingRes.status === "fulfilled" && bookingRes.value.error) || "No flights found.";
