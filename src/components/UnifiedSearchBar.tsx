@@ -77,7 +77,7 @@ export function UnifiedSearchBar({
             <VisaInlineForm initial={initial} onSearch={(q) => navigate({ to: "/visas", search: { ...q, submitted: "1" } as never })} />
           )}
           {active === "car_rentals" && (
-            <CarRentalInlineForm initial={initial} onSearch={(q) => navigate({ to: "/car-rentals", search: q as never })} />
+            <CarRentalInlineForm initial={initial} onSearch={(q: Record<string, string>) => navigate({ to: "/car-rentals", search: q as never })} />
           )}
           {active === "tours" && (
             <ToursInlineForm initial={initial} onSearch={(q) => navigate({ to: "/tours", search: q as never })} />

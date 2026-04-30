@@ -3,7 +3,7 @@
 // the booking page can recover the offer even after refresh / cross-tab /
 // payment redirect. Falls back gracefully if the backend save fails.
 
-export type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+export type Vertical = "flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups";
 
 export type PersistResult =
   | { ok: true; via: "session+server" | "session-only" | "server-only" }
