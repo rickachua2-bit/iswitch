@@ -521,3 +521,244 @@ function normalizeBookingCar(v: any) {
     raw: v,
   };
 }
+
+/* ===================== HOTEL DETAIL EXPANSION ====================== */
+/**
+ * Helpers used by /stays/book to surface the FULL Booking.com photo gallery
+ * and the FULL list of available rooms for a single property.
+ *
+ * - getHotelDetails: rich property metadata (description, address, facilities…)
+ * - getHotelPhotos:  every photo Booking.com exposes for the hotel
+ * - getRoomList:     every available room with its own photos and price
+ *
+ * All three degrade gracefully — on failure we return empty arrays so the
+ * /stays/book page can still render the cached search payload.
+ */
+
+export async function bookingGetHotelDetails(input: {
+  hotelId: string;
+  checkin: string;
+  checkout: string;
+  adults: number;
+  rooms: number;
+  currency?: string;
+}): Promise<{ ok: boolean; details: any | null; error?: string }> {
+  if (!process.env.RAPIDAPI_BOOKING_KEY) return { ok: true, details: null };
+  try {
+    const params = new URLSearchParams({
+      hotel_id: String(input.hotelId),
+      arrival_date: input.checkin,
+      departure_date: input.checkout,
+      adults: String(Math.max(1, input.adults)),
+      room_qty: String(Math.max(1, input.rooms)),
+      units: "metric",
+      temperature_unit: "c",
+      languagecode: "en-us",
+      currency_code: (input.currency ?? "USD").toUpperCase(),
+    });
+    const { status, text } = await bFetch(
+      "booking-hotels",
+      `${BASE}/api/v1/hotels/getHotelDetails?${params.toString()}`,
+    );
+    if (status >= 400) return { ok: false, details: null, error: `HTTP ${status}` };
+    const json = safeJson(text);
+    return { ok: true, details: json?.data ?? null };
+  } catch (e: any) {
+    return { ok: false, details: null, error: String(e?.message ?? e) };
+  }
+}
+
+export async function bookingGetHotelPhotos(hotelId: string): Promise<{ ok: boolean; photos: string[]; error?: string }> {
+  if (!process.env.RAPIDAPI_BOOKING_KEY) return { ok: true, photos: [] };
+  try {
+    const params = new URLSearchParams({
+      hotel_id: String(hotelId),
+      languagecode: "en-us",
+    });
+    const { status, text } = await bFetch(
+      "booking-hotels",
+      `${BASE}/api/v1/hotels/getHotelPhotos?${params.toString()}`,
+    );
+    if (status >= 400) return { ok: false, photos: [], error: `HTTP ${status}` };
+    const json = safeJson(text);
+    const photos = extractPhotoUrls(json?.data);
+    return { ok: true, photos };
+  } catch (e: any) {
+    return { ok: false, photos: [], error: String(e?.message ?? e) };
+  }
+}
+
+export type BookingNormalizedRoom = {
+  id: string;
+  name: string;
+  bed_configuration: string | null;
+  max_occupancy: number | null;
+  photos: string[];
+  board: string | null;
+  refundable: boolean;
+  cancellation_until: string | null;
+  price: number | null;
+  currency: string;
+  badges: string[];
+  description: string | null;
+  highlights: string[];
+};
+
+export async function bookingGetRoomList(input: {
+  hotelId: string;
+  checkin: string;
+  checkout: string;
+  adults: number;
+  rooms: number;
+  currency?: string;
+}): Promise<{ ok: boolean; rooms: BookingNormalizedRoom[]; error?: string }> {
+  if (!process.env.RAPIDAPI_BOOKING_KEY) return { ok: true, rooms: [] };
+  try {
+    const fallbackCurrency = (input.currency ?? "USD").toUpperCase();
+    const params = new URLSearchParams({
+      hotel_id: String(input.hotelId),
+      arrival_date: input.checkin,
+      departure_date: input.checkout,
+      adults: String(Math.max(1, input.adults)),
+      room_qty: String(Math.max(1, input.rooms)),
+      units: "metric",
+      temperature_unit: "c",
+      languagecode: "en-us",
+      currency_code: fallbackCurrency,
+    });
+    const { status, text } = await bFetch(
+      "booking-hotels",
+      `${BASE}/api/v1/hotels/getRoomList?${params.toString()}`,
+    );
+    if (status >= 400) return { ok: false, rooms: [], error: `HTTP ${status}` };
+    const json = safeJson(text);
+    const rooms = extractRoomList(json?.data, fallbackCurrency);
+    rooms.sort((a, b) => {
+      const pa = a.price ?? Number.POSITIVE_INFINITY;
+      const pb = b.price ?? Number.POSITIVE_INFINITY;
+      return pa - pb;
+    });
+    return { ok: true, rooms };
+  } catch (e: any) {
+    return { ok: false, rooms: [], error: String(e?.message ?? e) };
+  }
+}
+
+/* ----- internal extractors (Booking.com payloads are deeply nested) ----- */
+
+function extractPhotoUrls(data: any): string[] {
+  const out = new Set<string>();
+  const visit = (val: any) => {
+    if (!val) return;
+    if (typeof val === "string") {
+      if (/^https?:\/\//.test(val) && /\.(jpe?g|png|webp|avif)(\?|$)/i.test(val)) out.add(val);
+      return;
+    }
+    if (Array.isArray(val)) { for (const v of val) visit(v); return; }
+    if (typeof val === "object") {
+      // Common keys returned by the booking-com15 photos endpoint
+      const direct = val.url ?? val.url_max ?? val.url_original ?? val.url_max1280 ?? val.url_max750
+        ?? val.url_1440 ?? val.url_640x200 ?? val.photo_url ?? val.src ?? val.large ?? val.image;
+      if (typeof direct === "string") visit(direct);
+      for (const v of Object.values(val)) visit(v);
+    }
+  };
+  visit(data);
+  // Prefer the largest variant when both small/large exist for the same id by
+  // keeping URLs that look like /max1280/ or /original/ first.
+  const all = Array.from(out);
+  return all.sort((a, b) => weight(b) - weight(a));
+}
+
+function weight(u: string): number {
+  if (/original/i.test(u)) return 5;
+  if (/max1440|max1280/i.test(u)) return 4;
+  if (/max750|max1024/i.test(u)) return 3;
+  if (/max500|640x|square480/i.test(u)) return 2;
+  return 1;
+}
+
+function extractRoomList(data: any, fallbackCurrency: string): BookingNormalizedRoom[] {
+  // The booking-com15 payload exposes:
+  //   data.rooms = { "<roomId>": { name, photos: [{ url_max, ...}], facilities, bed_configurations, ... } }
+  //   data.block = [ { room_id, name, refundable, mealplan, room_count, min_price, ... } ]
+  if (!data) return [];
+  const roomsMap: Record<string, any> = data.rooms ?? {};
+  const blocks: any[] = Array.isArray(data.block) ? data.block : [];
+
+  // Pick the cheapest block per room_id so each room appears once.
+  const byRoomId = new Map<string, any>();
+  for (const b of blocks) {
+    const rid = String(b?.room_id ?? "");
+    if (!rid) continue;
+    const price = pickBlockPrice(b);
+    const existing = byRoomId.get(rid);
+    if (!existing || (price != null && (existing.__price == null || price < existing.__price))) {
+      byRoomId.set(rid, { ...b, __price: price });
+    }
+  }
+
+  const out: BookingNormalizedRoom[] = [];
+  for (const [rid, info] of Object.entries(roomsMap)) {
+    const block = byRoomId.get(rid) ?? null;
+    const photos = extractPhotoUrls(info?.photos ?? info?.images ?? []);
+    const beds = pickBedConfig(info?.bed_configurations);
+    const maxOccupancy = Number(block?.nr_adults ?? info?.max_occupancy ?? 0) || null;
+    const board = block?.mealplan ?? block?.board ?? null;
+    const refundable = !!(block?.refundable ?? block?.refundable_until ?? false);
+    const cancellationUntil = block?.refundable_until ?? block?.paymenttiming_details?.deadline_datetime ?? null;
+    const price = block?.__price ?? null;
+    const currency = block?.price_breakdown?.currency
+      ?? block?.product_price_breakdown?.gross_amount?.currency
+      ?? fallbackCurrency;
+    const badges: string[] = [];
+    if (refundable) badges.push("Free cancellation");
+    if (block?.breakfast_included) badges.push("Breakfast included");
+    if (block?.is_no_prepayment_block) badges.push("No prepayment");
+    out.push({
+      id: rid,
+      name: String(info?.name ?? block?.name_without_policy ?? block?.room_name ?? `Room ${rid}`),
+      bed_configuration: beds,
+      max_occupancy: maxOccupancy,
+      photos,
+      board: board ? String(board) : null,
+      refundable,
+      cancellation_until: cancellationUntil ? String(cancellationUntil) : null,
+      price,
+      currency: String(currency),
+      badges,
+      description: typeof info?.description === "string" ? info.description : null,
+      highlights: extractHighlights(info?.highlights),
+    });
+  }
+  return out;
+}
+
+function pickBlockPrice(b: any): number | null {
+  const candidates = [
+    b?.product_price_breakdown?.gross_amount_per_night?.value,
+    b?.product_price_breakdown?.gross_amount?.value,
+    b?.price_breakdown?.gross_price,
+    b?.min_price?.price,
+    b?.gross_price,
+  ];
+  for (const c of candidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+function pickBedConfig(beds: any): string | null {
+  if (!Array.isArray(beds) || !beds.length) return null;
+  const cfg = beds[0];
+  if (!cfg) return null;
+  if (typeof cfg === "string") return cfg;
+  const types: any[] = cfg.bed_types ?? [];
+  return types.map((t) => `${t?.count ?? 1} × ${t?.name ?? t?.bed_type ?? "bed"}`).join(", ") || null;
+}
+
+function extractHighlights(h: any): string[] {
+  if (!Array.isArray(h)) return [];
+  return h.map((x: any) => (typeof x === "string" ? x : x?.translated_name ?? x?.name)).filter(Boolean).slice(0, 8);
+}

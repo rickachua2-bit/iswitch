@@ -6,12 +6,29 @@ import {
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
 import { bookHotel } from "@/server/travsify";
+import { getBookingHotelFull } from "@/server/booking.functions";
+import type { BookingNormalizedRoom } from "@/server/booking.server";
+import { getUserCurrencyCode } from "@/lib/user-currency";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { HotelGallery } from "@/components/stays/HotelGallery";
+import { RoomList } from "@/components/stays/RoomList";
 import {
   Star, MapPin, Hotel as HotelIcon, BedDouble, Wifi, Coffee, Waves, Dumbbell,
   Utensils, ParkingCircle, Sparkles, ShieldCheck, Calendar as CalendarIcon, Users,
   CheckCircle2, Tag, User, Mail, Phone, MessageSquare,
 } from "lucide-react";
+
+function parseGuests(guests: string): { adults: number; rooms: number } {
+  const adults = Number((guests.match(/(\d+)\s*Guest/i) || [])[1]) || 2;
+  const rooms = Number((guests.match(/(\d+)\s*Room/i) || [])[1]) || 1;
+  return { adults, rooms };
+}
+
+function bookingHotelId(hotel: any): string | null {
+  const raw = String(hotel?.hotelId ?? hotel?.id ?? hotel?.offer_id ?? "");
+  const stripped = raw.startsWith("booking-") ? raw.slice("booking-".length) : raw;
+  return stripped || null;
+}
 
 const searchSchema = z.object({
   offer_id: z.coerce.string(),
@@ -89,6 +106,10 @@ function HotelBookingPage() {
 
   const [hotel, setHotel] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [extraPhotos, setExtraPhotos] = useState<string[]>([]);
+  const [rooms, setRooms] = useState<BookingNormalizedRoom[]>([]);
+  const [roomsLoading, setRoomsLoading] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +129,32 @@ function HotelBookingPage() {
     })();
     return () => { cancelled = true; };
   }, [offer_id]);
+
+  // For Booking.com hotels, pull the FULL gallery + every available room
+  // directly from the RapidAPI detail endpoints.
+  useEffect(() => {
+    if (!hotel) return;
+    if (hotel.source !== "booking") return;
+    const id = bookingHotelId(hotel);
+    const ci = checkIn || hotel.checkIn || "";
+    const co = checkOut || hotel.checkOut || "";
+    if (!id || !ci || !co) return;
+    const { adults, rooms: roomQty } = parseGuests(guests || hotel.guests || "2 Guests, 1 Room");
+    const currency = (hotel.currency || getUserCurrencyCode() || "USD").toUpperCase();
+    let cancelled = false;
+    setRoomsLoading(true);
+    getBookingHotelFull({
+      data: { hotelId: id, checkin: ci, checkout: co, adults, rooms: roomQty, currency },
+    })
+      .then((res) => {
+        if (cancelled) return;
+        if (res.photos?.length) setExtraPhotos(res.photos);
+        if (res.rooms?.length) setRooms(res.rooms);
+      })
+      .catch(() => { /* graceful fallback to cached payload */ })
+      .finally(() => { if (!cancelled) setRoomsLoading(false); });
+    return () => { cancelled = true; };
+  }, [hotel, checkIn, checkOut, guests]);
 
   if (loading) {
     return (
@@ -134,18 +181,32 @@ function HotelBookingPage() {
     );
   }
 
-  const images = pickAllImages(hotel);
-  const cover = images[0];
+  // Merge cached search photos with the FULL Booking.com gallery (deduped, full set first).
+  const cachedImages = pickAllImages(hotel);
+  const allImages = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const src of [...extraPhotos, ...cachedImages]) {
+      if (src && !seen.has(src)) { seen.add(src); out.push(src); }
+    }
+    return out;
+  })();
+  const cover = allImages[0];
+
+  // Selected room (if user picked one from the available-rooms list).
+  const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null;
+
   // Fall back to values stored inside the cached hotel payload when URL params are missing
   const effCheckIn = checkIn || hotel.checkIn || "";
   const effCheckOut = checkOut || hotel.checkOut || "";
   const effGuests = guests || hotel.guests || "2 Guests, 1 Room";
   const nights = nightsBetween(effCheckIn, effCheckOut);
-  const pricePerNight = Number(hotel.price ?? 0);
+  const effRoomName = selectedRoom?.name ?? hotel.room_name ?? "Standard double room";
+  const pricePerNight = Number(selectedRoom?.price ?? hotel.price ?? 0);
   const subtotal = pricePerNight * nights;
   const taxes = Math.round(subtotal * 0.1 * 100) / 100;
   const total = subtotal + taxes;
-  const currency = hotel.currency ?? "USD";
+  const currency = selectedRoom?.currency ?? hotel.currency ?? "USD";
   const score = Number(hotel.review_score ?? hotel.score ?? 8.6);
 
   const hero: BookingHeroProps = {
@@ -168,27 +229,10 @@ function HotelBookingPage() {
     <BookingShell backTo="/stays" hero={hero}>
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
-          {/* Header card with gallery */}
+          {/* Header card with full gallery */}
+          <HotelGallery images={allImages} hotelName={hotel.name} />
+
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-            <div className="grid grid-cols-1 gap-1 md:grid-cols-4">
-              <div className="md:col-span-3 aspect-[16/10] bg-secondary md:aspect-auto md:h-80">
-                {cover ? (
-                  <img src={cover} alt={hotel.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-primary">
-                    <HotelIcon className="h-14 w-14 text-primary-foreground/70" />
-                  </div>
-                )}
-              </div>
-              <div className="hidden grid-rows-3 gap-1 md:grid">
-                {images.slice(1, 4).map((src, i) => (
-                  <img key={i} src={src} alt={`${hotel.name} ${i + 2}`} className="h-full w-full object-cover" />
-                ))}
-                {Array.from({ length: Math.max(0, 3 - Math.max(0, images.length - 1)) }).map((_, i) => (
-                  <div key={`ph-${i}`} className="bg-secondary" />
-                ))}
-              </div>
-            </div>
             <div className="p-5">
               <div className="flex items-center gap-1 text-accent-foreground">
                 {Array.from({ length: Number(hotel.stars) || 0 }).map((_, i) => (
@@ -221,7 +265,7 @@ function HotelBookingPage() {
             <div className="mt-4 rounded-lg bg-secondary/60 p-3">
               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <BedDouble className="h-4 w-4 text-primary" />
-                {hotel.room_name ?? "Standard double room"}
+                {effRoomName}
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><Wifi className="h-3 w-3" /> Free Wi-Fi</span>
@@ -230,6 +274,23 @@ function HotelBookingPage() {
               </div>
             </div>
           </BookingSectionCard>
+
+          {/* Available rooms (Booking.com only) */}
+          {hotel.source === "booking" && (
+            <BookingSectionCard
+              title="Available rooms"
+              subtitle="Every option Booking.com lists for your dates · cheapest first"
+              icon={BedDouble}
+            >
+              <RoomList
+                rooms={rooms}
+                selectedId={selectedRoomId}
+                onSelect={(r) => setSelectedRoomId(r.id)}
+                loading={roomsLoading}
+                fallbackCurrency={currency}
+              />
+            </BookingSectionCard>
+          )}
 
           {/* Amenities */}
           <BookingSectionCard title="What this property offers">
@@ -254,7 +315,19 @@ function HotelBookingPage() {
           </BookingSectionCard>
 
           {/* Form */}
-          <BookingForm hotel={{ ...hotel, checkIn: effCheckIn, checkOut: effCheckOut, guests: effGuests }} navigate={navigate} />
+          <BookingForm
+            hotel={{
+              ...hotel,
+              checkIn: effCheckIn,
+              checkOut: effCheckOut,
+              guests: effGuests,
+              room_name: effRoomName,
+              price: pricePerNight,
+              currency,
+              selected_room_id: selectedRoom?.id ?? hotel.selected_room_id ?? null,
+            }}
+            navigate={navigate}
+          />
         </div>
 
         {/* Right: sticky price summary */}
