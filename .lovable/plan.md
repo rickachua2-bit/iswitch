@@ -1,39 +1,30 @@
-Make Booking.com hotel results take priority and sort cheapest first, plus pull every useful field out of the Booking.com property payload so the cards can show full property data.
+All Booking.com data is already converted at display time via `usePriceFormat` (it converts provider currency → user's selected currency using the `currencies.rate_to_usd` table). The remaining gaps:
 
-### 1. Reorder hotel results (server)
-File: `src/server/travsify.ts` — `searchHotels` handler.
-- After fetching from both providers, build the final list as: **Booking.com first, then LiteAPI**.
-- Sort each group **ascending by price** before concatenating, so the cheapest Booking.com hotel is at the very top, followed by the rest of Booking, then the cheapest LiteAPI, etc.
-- Hotels with no price get pushed to the bottom of their group instead of being treated as `0`.
-- Tag each hotel with `source: "booking" | "liteapi"` (already done) so the UI can show a badge.
+1. Booking.com's API is queried with a hardcoded `"USD"` for hotels and tours, so prices come back in USD then get re-converted client-side. We should ask Booking.com directly for the user's selected currency — fewer rounding errors and more accurate Booking.com merchant pricing.
+2. The "Your budget per night" slider on the hotels page labels its max with `formatPrice(maxPrice, "USD")` (correct) but the slider's `min`/`max` values are fixed in USD. The label converts, so users in NGN see e.g. "₦750,000" max — that part already works.
+3. A few helper price displays (search summary, footnotes) should also go through `usePriceFormat` so they always show the user's currency.
 
-### 2. Enrich Booking.com property normalization (server)
-File: `src/server/booking.server.ts` — `normalizeBookingHotel`.
-Pull every useful field exposed by Booking.com's `searchHotels` payload:
+### Changes
 
-- **Pricing**: `price`, `original_price` (strikethrough), `currency`, `taxes_included` flag, `discount_pct`, `price_breakdown` (gross/net/excluded charges), benefit badges (e.g. "Genius discount").
-- **Identity**: `id`, `name`, `accommodation_type` (Hotel / Apartment / Resort / Villa / Hostel / Guest house — mapped from `accommodationTypeId`).
-- **Location**: `address`, `district`, `city`, `country`, `country_code`, `latitude`, `longitude`, `distance_to_center` if present.
-- **Quality signals**: `stars` (`accuratePropertyClass` preferred, then `propertyClass`), `review_score`, `review_score_word`, `review_count`, `ranking_score`.
-- **Policies**: `refundable` (`isFreeCancellable`), `checkin_from`, `checkin_until`, `checkout_until`, `checkin_date`, `checkout_date`.
-- **Media**: `image` (main), `thumbnail`, `images` (every URL from `photoUrls` plus `mainPhotoUrl`, deduped).
-- **Badges & offers**: collect badge text from `badges`, `ribbon`, `priceBreakdown.benefitBadges` into a `badges: string[]` array (e.g. "Hot deal", "Genius", "Breakfast included").
+**1. Pass user currency into hotel/tour search**
+- `src/hooks/use-currency.tsx` — already exposes `currency.code`. No change.
+- `src/routes/stays.tsx` loader — read currency from a small client-side helper and pass it instead of hardcoded `"USD"`. Loaders run on both client and server, so we read `localStorage.getItem("iswitch.currency")` (with `"USD"` fallback) and pass it as `data.currency`.
+- `src/routes/tours.tsx` loader — same approach: pass user currency to `searchTours`.
 
-All new fields are additive — existing `id`, `offer_id`, `price`, `name`, `image`, `stars`, `review_score`, `review_count`, `latitude`, `longitude`, `refundable`, `source` keep their current names so the UI keeps working.
+**2. Forward the currency to Booking.com**
+- `src/server/travsify.ts` `searchHotels` — already forwards `data.currency` to `bookingSearchHotels`. No change needed beyond confirming.
+- `src/server/travsify.ts` `searchTours` — extend the input schema to accept `currency`, and forward to `bookingSearchTours`.
+- `src/server/booking.server.ts` `bookingSearchTours` — accept `currency`, use it for `currency_code` instead of hardcoded `"USD"`.
 
-### 3. UI surfaces the new data (already mostly compatible)
-File: `src/routes/stays.tsx` — `HotelResultCard`.
-- Show `accommodation_type` next to stars when present.
-- Show `district` / full `address` instead of just city when available.
-- Show `distance_to_center` line if present.
-- Render badges from `h.badges` as small chips alongside the existing "Prepay" / "Breakfast included" chips.
-- Score word: prefer `h.review_score_word` over the local `scoreLabel(score)` fallback.
-- Source ribbon: small "Booking.com" / "LiteAPI" tag in the corner so users can tell where the rate came from.
+**3. Hotels page price displays**
+- `src/routes/stays.tsx` "Your budget per night" label — keep `formatPrice(maxPrice, "USD")`; that's already correct because `formatPrice` converts USD → user currency.
+- `src/routes/stays.tsx` `HotelResultCard` — already calls `formatPrice(nightly, currency)` for the nightly rate, total, and strikethrough. Confirm no raw amounts are emitted.
+- The `excluded_price` (taxes excluded) field added in the previous step isn't shown on the card; if we want users to see it in their currency, render `formatPrice(h.excluded_price, currency)` in a small "+ taxes" footnote below the price.
 
-### 4. Sort UI
-- Default sort tab stays "Best match" but the underlying list is already Booking-first + ascending price, so it visually matches the request.
-- "Lowest price" sort still works across both sources.
+**4. Tour cards**
+- `src/routes/tours.tsx` cards — they currently show prices via local helpers. Verify they go through `usePriceFormat`; if any spot uses raw `tour.price` + `tour.currency` directly, route it through `formatPrice` so it shows in the user's local currency.
 
 ### Verification
-- Run a hotel search (e.g. Dubai check-in/out) in the preview.
-- Confirm: Booking.com cards appear at the top of the list, prices ascend within each provider group, and richer fields (address, badges, full image, score word) render.
+- Switch the currency in the header to NGN, then run a hotels search for Dubai. Confirm prices on each card show "₦…" not "$…".
+- Switch to EUR, GBP, USD — same result, just the symbol/values change.
+- Open the network tab: the Booking.com `searchHotels` call should send the chosen currency in `currency_code`.

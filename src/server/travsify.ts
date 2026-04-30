@@ -777,6 +777,7 @@ export const searchTours = createServerFn({ method: "POST" })
           destination: z.string(),
           date: z.string().optional(),
           participants: z.number().optional(),
+          currency: z.string().optional(),
         })
         .passthrough()
         .parse(d),
@@ -792,6 +793,7 @@ export const searchTours = createServerFn({ method: "POST" })
       destination: data.destination,
       date: data.date,
       participants: data.participants,
+      currency: data.currency,
     });
     if (b.ok && b.tours.length > 0) return ok({ tours: b.tours });
     const r = await fetchInventory("tours", { destination: data.destination });
