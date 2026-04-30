@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { Plane, Hotel, FileCheck, Shield, Map, Car, GraduationCap, ArrowRight } from "lucide-react";
+import { Plane, Hotel, FileCheck, Key, Map, Car, GraduationCap, ArrowRight } from "lucide-react";
 
 const SERVICES = [
   { icon: Plane, label: "Flights", desc: "500+ airlines, lowest fares", to: "/flights", color: "bg-sky-100 text-sky-700" },
   { icon: Hotel, label: "Hotels", desc: "Hotels, apartments & villas", to: "/stays", color: "bg-amber-100 text-amber-700" },
   { icon: FileCheck, label: "Visas", desc: "Fast-track visa processing", to: "/visas", color: "bg-emerald-100 text-emerald-700" },
-  { icon: Shield, label: "Insurance", desc: "Travel & medical insurance", to: "/insurance", color: "bg-rose-100 text-rose-700" },
+  { icon: Key, label: "Car Rentals", desc: "Hertz, Avis, Budget & more", to: "/car-rentals", color: "bg-rose-100 text-rose-700" },
   { icon: Map, label: "Tours", desc: "Curated tours & experiences", to: "/tours", color: "bg-violet-100 text-violet-700" },
-  { icon: Car, label: "Car Transfers", desc: "Airport pickups & rides", to: "/pickups", color: "bg-orange-100 text-orange-700" },
+  { icon: Car, label: "Airport Transfers", desc: "Pre-booked airport pickups", to: "/pickups", color: "bg-orange-100 text-orange-700" },
   { icon: GraduationCap, label: "Consultations", desc: "Study, work & immigration", to: "/consultations", color: "bg-indigo-100 text-indigo-700" },
 ];
 

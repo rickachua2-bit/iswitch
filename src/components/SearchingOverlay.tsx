@@ -6,7 +6,7 @@ export type TravelTipCategory =
   | "flights"
   | "stays"
   | "visas"
-  | "insurance"
+  | "car_rentals"
   | "tours"
   | "pickups"
   | "general";
@@ -59,17 +59,17 @@ const TIPS: Record<TravelTipCategory, string[]> = {
     "Yellow fever vaccination cards are required for many African nations.",
     "Schengen visas let you visit 27 countries on a single permit.",
   ],
-  insurance: [
-    "Buy travel insurance the same day you book your trip for max coverage.",
-    "Check if your policy includes medical evacuation — it can cost $50K+.",
-    "Adventure activities (skiing, diving) often need add-on coverage.",
-    "Pre-existing conditions usually require a waiver — ask before buying.",
-    "Keep digital and printed copies of your policy while travelling.",
-    "Some credit cards include basic travel insurance — check before paying twice.",
-    "‘Cancel for any reason’ upgrades cost more but offer real flexibility.",
-    "Save the 24/7 emergency number in your phone before you fly.",
-    "File claims within 30 days of incident — most policies require it.",
-    "Coverage limits matter more than the premium — read the fine print.",
+  car_rentals: [
+    "Book early — rental rates climb sharply within 7 days of pick-up.",
+    "Airport pick-ups are usually 10–15% pricier than city locations.",
+    "Check the fuel policy: full-to-full beats prepaid for most trips.",
+    "Inspect the car for scratches and photograph everything before driving off.",
+    "Decline supplier insurance if your card already covers rental CDW.",
+    "Automatic transmission costs more in Europe — book early if needed.",
+    "Cross-border travel often requires written supplier permission.",
+    "An International Driving Permit is required in 100+ countries.",
+    "Unlimited mileage is standard in the US but rare in Europe.",
+    "Return the car with the same fuel level to avoid steep refill fees.",
   ],
   tours: [
     "Book popular tours 2–4 weeks ahead in peak season — they sell out.",
@@ -226,7 +226,7 @@ export function TravelTip({
     category === "flights" ? "Flight tip" :
     category === "stays" ? "Hotel tip" :
     category === "visas" ? "Visa tip" :
-    category === "insurance" ? "Insurance tip" :
+    category === "car_rentals" ? "Car rental tip" :
     category === "tours" ? "Tour tip" :
     category === "pickups" ? "Transfer tip" :
     "Travel tip";

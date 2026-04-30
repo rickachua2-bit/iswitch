@@ -1,23 +1,23 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plane, Hotel, FileCheck, Shield, Map as MapIcon, Car } from "lucide-react";
+import { Plane, Hotel, FileCheck, Car, Map as MapIcon, Key } from "lucide-react";
 import { FlightForm } from "@/components/FlightForm";
 import {
   StayInlineForm,
   VisaInlineForm,
-  InsuranceInlineForm,
   ToursInlineForm,
   PickupInlineForm,
+  CarRentalInlineForm,
 } from "@/components/SearchTabsForms";
 
-type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+type TabId = "flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups";
 
 const TABS: { id: TabId; label: string; icon: typeof Plane; route: any }[] = [
   { id: "flights", label: "Flights", icon: Plane, route: "/flights" },
   { id: "stays", label: "Hotels", icon: Hotel, route: "/stays" },
   { id: "visas", label: "Visas", icon: FileCheck, route: "/visas" },
-  { id: "insurance", label: "Insurance", icon: Shield, route: "/insurance" },
+  { id: "car_rentals", label: "Car Rentals", icon: Key, route: "/car-rentals" },
   { id: "tours", label: "Tours", icon: MapIcon, route: "/tours" },
-  { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
+  { id: "pickups", label: "Airport Transfers", icon: Car, route: "/pickups" },
 ];
 
 export function UnifiedSearchBar({
@@ -40,18 +40,13 @@ export function UnifiedSearchBar({
       {(title || subtitle) && (
         <div className="mx-auto mb-5 max-w-4xl px-4 text-center">
           {title && (
-            <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">
-              {title}
-            </h1>
+            <h1 className="font-display text-2xl font-extrabold text-primary-foreground md:text-4xl">{title}</h1>
           )}
-          {subtitle && (
-            <p className="mt-2 text-sm text-primary-foreground/80">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-2 text-sm text-primary-foreground/80">{subtitle}</p>}
         </div>
       )}
 
       <div className="mx-auto w-full max-w-6xl px-4">
-        {/* Tabs — 3 cols × 2 rows on mobile, single 6-col row on md+ */}
         <div className="grid grid-cols-3 gap-1 md:flex md:gap-1.5">
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -61,9 +56,7 @@ export function UnifiedSearchBar({
                 key={t.id}
                 to={t.route}
                 className={`flex items-center justify-center gap-1.5 rounded-t-xl px-2 py-3 text-[11px] font-bold transition md:min-w-fit md:gap-2 md:px-5 md:text-sm ${
-                  isActive
-                    ? "bg-card text-primary shadow-card"
-                    : "bg-white/15 text-primary-foreground hover:bg-white/25"
+                  isActive ? "bg-card text-primary shadow-card" : "bg-white/15 text-primary-foreground hover:bg-white/25"
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
@@ -73,47 +66,24 @@ export function UnifiedSearchBar({
           })}
         </div>
 
-        {/* Form panel */}
         <div className="rounded-b-2xl rounded-tr-2xl bg-card p-4 shadow-elevated md:p-5">
           {active === "flights" && (
-            <FlightForm
-              pending={pending}
-              onSearch={(q) =>
-                navigate({ to: "/flights/search", search: { ...q } as never })
-              }
-            />
+            <FlightForm pending={pending} onSearch={(q) => navigate({ to: "/flights/search", search: { ...q } as never })} />
           )}
           {active === "stays" && (
-            <StayInlineForm
-              initial={initial}
-              onSearch={(q) => navigate({ to: "/stays", search: q as never })}
-            />
+            <StayInlineForm initial={initial} onSearch={(q) => navigate({ to: "/stays", search: q as never })} />
           )}
           {active === "visas" && (
-            <VisaInlineForm
-              initial={initial}
-              onSearch={(q) => navigate({ to: "/visas", search: { ...q, submitted: "1" } as never })}
-            />
+            <VisaInlineForm initial={initial} onSearch={(q) => navigate({ to: "/visas", search: { ...q, submitted: "1" } as never })} />
           )}
-          {active === "insurance" && (
-            <InsuranceInlineForm
-              initial={initial}
-              onSearch={(q) =>
-                navigate({ to: "/insurance", search: q as never })
-              }
-            />
+          {active === "car_rentals" && (
+            <CarRentalInlineForm initial={initial} onSearch={(q) => navigate({ to: "/car-rentals", search: q as never })} />
           )}
           {active === "tours" && (
-            <ToursInlineForm
-              initial={initial}
-              onSearch={(q) => navigate({ to: "/tours", search: q as never })}
-            />
+            <ToursInlineForm initial={initial} onSearch={(q) => navigate({ to: "/tours", search: q as never })} />
           )}
           {active === "pickups" && (
-            <PickupInlineForm
-              initial={initial}
-              onSearch={(q) => navigate({ to: "/pickups", search: q as never })}
-            />
+            <PickupInlineForm initial={initial} onSearch={(q) => navigate({ to: "/pickups", search: q as never })} />
           )}
         </div>
       </div>

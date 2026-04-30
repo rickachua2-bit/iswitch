@@ -7,21 +7,21 @@ import {
 import { FlightForm } from "@/components/FlightForm";
 import { StayInlineForm } from "@/components/SearchTabsForms";
 
-type TabId = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
+type TabId = "flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups";
 
 const TABS: { id: TabId; label: string; icon: typeof Plane; route: string }[] = [
   { id: "flights", label: "Flights", icon: Plane, route: "/flights" },
   { id: "stays", label: "Hotels", icon: Hotel, route: "/stays" },
   { id: "visas", label: "Visas", icon: FileCheck, route: "/visas" },
-  { id: "insurance", label: "Insurance", icon: Shield, route: "/insurance" },
+  { id: "car_rentals", label: "Car Rentals", icon: Shield, route: "/car-rentals" },
   { id: "tours", label: "Tours", icon: Map, route: "/tours" },
-  { id: "pickups", label: "Car Transfers", icon: Car, route: "/pickups" },
+  { id: "pickups", label: "Airport Transfers", icon: Car, route: "/pickups" },
 ];
 
 function tabFromPath(pathname: string): TabId {
   if (pathname.startsWith("/stays")) return "stays";
   if (pathname.startsWith("/visas")) return "visas";
-  if (pathname.startsWith("/insurance")) return "insurance";
+  if (pathname.startsWith("/car-rentals")) return "car_rentals";
   if (pathname.startsWith("/tours")) return "tours";
   if (pathname.startsWith("/pickups")) return "pickups";
   return "flights";
@@ -66,7 +66,7 @@ export function SearchTabs({ defaultTab }: { defaultTab?: TabId } = {}) {
         {active === "flights" && <FlightForm onSearch={(q) => navigate({ to: "/flights/search", search: q as never })} />}
         {active === "stays" && <StayInlineForm onSearch={(q) => navigate({ to: "/stays", search: q as never })} />}
         {active === "visas" && <VisaForm onSearch={(q) => navigate({ to: "/visas", search: q as never })} />}
-        {active === "insurance" && <InsuranceForm onSearch={(q) => navigate({ to: "/insurance", search: q as never })} />}
+        {active === "car_rentals" && <PickupForm onSearch={(q) => navigate({ to: "/car-rentals", search: q as never })} />}
         {active === "tours" && <ToursForm onSearch={(q) => navigate({ to: "/tours", search: q as never })} />}
         {active === "pickups" && <PickupForm onSearch={(q) => navigate({ to: "/pickups", search: q as never })} />}
       </div>

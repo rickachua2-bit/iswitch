@@ -16,11 +16,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PickupsRouteImport } from './routes/pickups'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FlightsRouteImport } from './routes/flights'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConsultationsRouteImport } from './routes/consultations'
+import { Route as CarRentalsRouteImport } from './routes/car-rentals'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
@@ -29,7 +29,6 @@ import { Route as VisasBookRouteImport } from './routes/visas.book'
 import { Route as ToursBookRouteImport } from './routes/tours.book'
 import { Route as StaysBookRouteImport } from './routes/stays.book'
 import { Route as PickupsBookRouteImport } from './routes/pickups.book'
-import { Route as InsuranceBookRouteImport } from './routes/insurance.book'
 import { Route as FlightsSearchRouteImport } from './routes/flights.search'
 import { Route as FlightsBookRouteImport } from './routes/flights.book'
 import { Route as DashboardWalletRouteImport } from './routes/dashboard.wallet'
@@ -38,6 +37,7 @@ import { Route as DashboardConsultationsRouteImport } from './routes/dashboard.c
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as DashboardBookRouteImport } from './routes/dashboard.book'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as CarRentalsBookRouteImport } from './routes/car-rentals.book'
 import { Route as AgentsApplyRouteImport } from './routes/agents.apply'
 import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -88,11 +88,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InsuranceRoute = InsuranceRouteImport.update({
-  id: '/insurance',
-  path: '/insurance',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
@@ -111,6 +106,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ConsultationsRoute = ConsultationsRouteImport.update({
   id: '/consultations',
   path: '/consultations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarRentalsRoute = CarRentalsRouteImport.update({
+  id: '/car-rentals',
+  path: '/car-rentals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -153,11 +153,6 @@ const PickupsBookRoute = PickupsBookRouteImport.update({
   path: '/book',
   getParentRoute: () => PickupsRoute,
 } as any)
-const InsuranceBookRoute = InsuranceBookRouteImport.update({
-  id: '/book',
-  path: '/book',
-  getParentRoute: () => InsuranceRoute,
-} as any)
 const FlightsSearchRoute = FlightsSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -197,6 +192,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CarRentalsBookRoute = CarRentalsBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => CarRentalsRoute,
 } as any)
 const AgentsApplyRoute = AgentsApplyRouteImport.update({
   id: '/agents/apply',
@@ -273,11 +273,11 @@ const ApiPublicWebhooksKorapayRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -298,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -306,7 +307,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -317,10 +317,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -341,6 +341,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -349,7 +350,6 @@ export interface FileRoutesByTo {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -362,11 +362,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/car-rentals': typeof CarRentalsRouteWithChildren
   '/consultations': typeof ConsultationsRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/flights': typeof FlightsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/insurance': typeof InsuranceRouteWithChildren
   '/login': typeof LoginRoute
   '/pickups': typeof PickupsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -387,6 +387,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/wallets': typeof AdminWalletsRoute
   '/agents/apply': typeof AgentsApplyRoute
+  '/car-rentals/book': typeof CarRentalsBookRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/dashboard/book': typeof DashboardBookRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
@@ -395,7 +396,6 @@ export interface FileRoutesById {
   '/dashboard/wallet': typeof DashboardWalletRoute
   '/flights/book': typeof FlightsBookRoute
   '/flights/search': typeof FlightsSearchRoute
-  '/insurance/book': typeof InsuranceBookRoute
   '/pickups/book': typeof PickupsBookRoute
   '/stays/book': typeof StaysBookRoute
   '/tours/book': typeof ToursBookRoute
@@ -409,11 +409,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/car-rentals'
     | '/consultations'
     | '/dashboard'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -434,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -442,7 +443,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -453,10 +453,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/car-rentals'
     | '/consultations'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -477,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -485,7 +486,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -497,11 +497,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/car-rentals'
     | '/consultations'
     | '/dashboard'
     | '/flights'
     | '/forgot-password'
-    | '/insurance'
     | '/login'
     | '/pickups'
     | '/reset-password'
@@ -522,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/wallets'
     | '/agents/apply'
+    | '/car-rentals/book'
     | '/checkout/return'
     | '/dashboard/book'
     | '/dashboard/bookings'
@@ -530,7 +531,6 @@ export interface FileRouteTypes {
     | '/dashboard/wallet'
     | '/flights/book'
     | '/flights/search'
-    | '/insurance/book'
     | '/pickups/book'
     | '/stays/book'
     | '/tours/book'
@@ -543,11 +543,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  CarRentalsRoute: typeof CarRentalsRouteWithChildren
   ConsultationsRoute: typeof ConsultationsRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   FlightsRoute: typeof FlightsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  InsuranceRoute: typeof InsuranceRouteWithChildren
   LoginRoute: typeof LoginRoute
   PickupsRoute: typeof PickupsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -611,13 +611,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/insurance': {
-      id: '/insurance'
-      path: '/insurance'
-      fullPath: '/insurance'
-      preLoaderRoute: typeof InsuranceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -644,6 +637,13 @@ declare module '@tanstack/react-router' {
       path: '/consultations'
       fullPath: '/consultations'
       preLoaderRoute: typeof ConsultationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/car-rentals': {
+      id: '/car-rentals'
+      path: '/car-rentals'
+      fullPath: '/car-rentals'
+      preLoaderRoute: typeof CarRentalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -702,13 +702,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PickupsBookRouteImport
       parentRoute: typeof PickupsRoute
     }
-    '/insurance/book': {
-      id: '/insurance/book'
-      path: '/book'
-      fullPath: '/insurance/book'
-      preLoaderRoute: typeof InsuranceBookRouteImport
-      parentRoute: typeof InsuranceRoute
-    }
     '/flights/search': {
       id: '/flights/search'
       path: '/search'
@@ -764,6 +757,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/car-rentals/book': {
+      id: '/car-rentals/book'
+      path: '/book'
+      fullPath: '/car-rentals/book'
+      preLoaderRoute: typeof CarRentalsBookRouteImport
+      parentRoute: typeof CarRentalsRoute
     }
     '/agents/apply': {
       id: '/agents/apply'
@@ -900,6 +900,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface CarRentalsRouteChildren {
+  CarRentalsBookRoute: typeof CarRentalsBookRoute
+}
+
+const CarRentalsRouteChildren: CarRentalsRouteChildren = {
+  CarRentalsBookRoute: CarRentalsBookRoute,
+}
+
+const CarRentalsRouteWithChildren = CarRentalsRoute._addFileChildren(
+  CarRentalsRouteChildren,
+)
+
 interface DashboardRouteChildren {
   DashboardBookRoute: typeof DashboardBookRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
@@ -934,18 +946,6 @@ const FlightsRouteChildren: FlightsRouteChildren = {
 
 const FlightsRouteWithChildren =
   FlightsRoute._addFileChildren(FlightsRouteChildren)
-
-interface InsuranceRouteChildren {
-  InsuranceBookRoute: typeof InsuranceBookRoute
-}
-
-const InsuranceRouteChildren: InsuranceRouteChildren = {
-  InsuranceBookRoute: InsuranceBookRoute,
-}
-
-const InsuranceRouteWithChildren = InsuranceRoute._addFileChildren(
-  InsuranceRouteChildren,
-)
 
 interface PickupsRouteChildren {
   PickupsBookRoute: typeof PickupsBookRoute
@@ -991,11 +991,11 @@ const VisasRouteWithChildren = VisasRoute._addFileChildren(VisasRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  CarRentalsRoute: CarRentalsRouteWithChildren,
   ConsultationsRoute: ConsultationsRoute,
   DashboardRoute: DashboardRouteWithChildren,
   FlightsRoute: FlightsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  InsuranceRoute: InsuranceRouteWithChildren,
   LoginRoute: LoginRoute,
   PickupsRoute: PickupsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,

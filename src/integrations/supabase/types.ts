@@ -943,6 +943,7 @@ export type Database = {
         | "insurance"
         | "tours"
         | "pickups"
+        | "car_rentals"
       wallet_tx_type:
         | "fund"
         | "swap_in"
@@ -1108,7 +1109,15 @@ export const Constants = {
         "cancelled",
         "refunded",
       ],
-      vertical: ["flights", "stays", "visas", "insurance", "tours", "pickups"],
+      vertical: [
+        "flights",
+        "stays",
+        "visas",
+        "insurance",
+        "tours",
+        "pickups",
+        "car_rentals",
+      ],
       wallet_tx_type: [
         "fund",
         "swap_in",

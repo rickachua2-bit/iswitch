@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "iSwitch — Flights, Stays, Visas & Expert Travel Consultations" },
-      { name: "description", content: "Book flights, hotels, visas, insurance, tours and airport pickups. Plus paid expert consultations on study abroad, immigration, work abroad and global business setup." },
+      { name: "description", content: "Book flights, hotels, visas, car rentals, tours and airport transfers. Plus paid expert consultations on study abroad, immigration, work abroad and global business setup." },
       { property: "og:title", content: "iSwitch — Your Global Mobility Super App" },
       { property: "og:description", content: "Everything you need to travel, study, work and do business abroad — in one app." },
       { property: "og:image", content: heroImg },
@@ -60,7 +60,7 @@ function Home() {
               <span className="text-gradient-accent">in one tap.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base text-primary-foreground/90 md:text-lg">
-              Flights · Stays · Visas · Insurance · Tours · Pickups · plus <span className="font-bold text-accent">expert consultations</span> for study, work, immigration & business abroad.
+              Flights · Stays · Visas · Car Rentals · Tours · Airport Transfers · plus <span className="font-bold text-accent">expert consultations</span> for study, work, immigration & business abroad.
             </p>
           </div>
           <SearchTabs />

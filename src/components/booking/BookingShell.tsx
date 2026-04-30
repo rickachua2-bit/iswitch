@@ -26,7 +26,7 @@ export type BookingVertical =
   | "stays"
   | "tours"
   | "visas"
-  | "insurance"
+  | "car_rentals"
   | "pickups";
 
 export type BookingHeroProps = {
@@ -51,8 +51,8 @@ const VERTICAL_META: Record<
   stays: { icon: BedDouble, label: "Stays" },
   tours: { icon: Compass, label: "Tours" },
   visas: { icon: FileCheck2, label: "Visas" },
-  insurance: { icon: Heart, label: "Insurance" },
-  pickups: { icon: Car, label: "Pickups" },
+  car_rentals: { icon: Car, label: "Car Rentals" },
+  pickups: { icon: Car, label: "Airport Transfers" },
 };
 
 /* ============================================================
