@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { CountryAutocomplete, getDestinationsForNationality } from "@/components/CountryAutocomplete";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { TourDestinationAutocomplete } from "@/components/TourDestinationAutocomplete";
 import { getCatalog } from "@/server/travsify";
 import {
   GuestsRoomsPopover,
