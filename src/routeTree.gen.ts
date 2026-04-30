@@ -51,7 +51,6 @@ import { Route as AdminConsultationsRouteImport } from './routes/admin.consultat
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminApiProvidersRouteImport } from './routes/admin.api-providers'
 import { Route as AdminAgentsRouteImport } from './routes/admin.agents'
-import { Route as ApiPublicBookingHealthRouteImport } from './routes/api/public/booking-health'
 import { Route as ApiPublicWebhooksKorapayRouteImport } from './routes/api.public.webhooks.korapay'
 
 const VisasRoute = VisasRouteImport.update({
@@ -264,11 +263,6 @@ const AdminAgentsRoute = AdminAgentsRouteImport.update({
   path: '/agents',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicBookingHealthRoute = ApiPublicBookingHealthRouteImport.update({
-  id: '/api/public/booking-health',
-  path: '/api/public/booking-health',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicWebhooksKorapayRoute =
   ApiPublicWebhooksKorapayRouteImport.update({
     id: '/api/public/webhooks/korapay',
@@ -319,7 +313,6 @@ export interface FileRoutesByFullPath {
   '/visas/book': typeof VisasBookRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/api/public/booking-health': typeof ApiPublicBookingHealthRoute
   '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRoutesByTo {
@@ -363,7 +356,6 @@ export interface FileRoutesByTo {
   '/visas/book': typeof VisasBookRoute
   '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/api/public/booking-health': typeof ApiPublicBookingHealthRoute
   '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRoutesById {
@@ -410,7 +402,6 @@ export interface FileRoutesById {
   '/visas/book': typeof VisasBookRoute
   '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/api/public/booking-health': typeof ApiPublicBookingHealthRoute
   '/api/public/webhooks/korapay': typeof ApiPublicWebhooksKorapayRoute
 }
 export interface FileRouteTypes {
@@ -458,7 +449,6 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin/'
     | '/dashboard/'
-    | '/api/public/booking-health'
     | '/api/public/webhooks/korapay'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -502,7 +492,6 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin'
     | '/dashboard'
-    | '/api/public/booking-health'
     | '/api/public/webhooks/korapay'
   id:
     | '__root__'
@@ -548,7 +537,6 @@ export interface FileRouteTypes {
     | '/visas/book'
     | '/admin/'
     | '/dashboard/'
-    | '/api/public/booking-health'
     | '/api/public/webhooks/korapay'
   fileRoutesById: FileRoutesById
 }
@@ -569,7 +557,6 @@ export interface RootRouteChildren {
   VisasRoute: typeof VisasRouteWithChildren
   AgentsApplyRoute: typeof AgentsApplyRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
-  ApiPublicBookingHealthRoute: typeof ApiPublicBookingHealthRoute
   ApiPublicWebhooksKorapayRoute: typeof ApiPublicWebhooksKorapayRoute
 }
 
@@ -869,13 +856,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAgentsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/api/public/booking-health': {
-      id: '/api/public/booking-health'
-      path: '/api/public/booking-health'
-      fullPath: '/api/public/booking-health'
-      preLoaderRoute: typeof ApiPublicBookingHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/webhooks/korapay': {
       id: '/api/public/webhooks/korapay'
       path: '/api/public/webhooks/korapay'
@@ -1025,7 +1005,6 @@ const rootRouteChildren: RootRouteChildren = {
   VisasRoute: VisasRouteWithChildren,
   AgentsApplyRoute: AgentsApplyRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
-  ApiPublicBookingHealthRoute: ApiPublicBookingHealthRoute,
   ApiPublicWebhooksKorapayRoute: ApiPublicWebhooksKorapayRoute,
 }
 export const routeTree = rootRouteImport
