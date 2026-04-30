@@ -298,17 +298,61 @@ export async function bookingSearchTours(input: {
 
 function normalizeBookingTour(p: any) {
   const price = p?.representativePrice ?? p?.price ?? {};
+
+  // Collect images: prefer largest variant of primaryPhoto, then any photos[].
+  const images: string[] = [];
+  const pp = p?.primaryPhoto ?? {};
+  for (const k of ["large", "medium", "small", "url"]) {
+    const u = pp?.[k];
+    if (typeof u === "string" && u && !images.includes(u)) images.push(u);
+  }
+  for (const ph of p?.photos ?? []) {
+    const u = typeof ph === "string" ? ph : (ph?.large ?? ph?.medium ?? ph?.small ?? ph?.url);
+    if (typeof u === "string" && u && !images.includes(u)) images.push(u);
+  }
+
+  // Rating: Booking.com surfaces a few different shapes. Try them in order.
+  const rating =
+    p?.reviewsStats?.combinedNumericStats?.average ??
+    p?.reviewsStats?.combinedNumericStats?.total ??
+    p?.reviewsStats?.average ??
+    p?.rating ??
+    null;
+  const reviewCount =
+    p?.reviewsStats?.allReviewsCount ??
+    p?.reviewsStats?.totalReviewCount ??
+    p?.reviewCount ??
+    null;
+
+  // Duration: prefer human text; fall back to representativeDuration { value, unit }.
+  let durationText: string | null = null;
+  if (typeof p?.duration === "string") durationText = p.duration;
+  else if (p?.representativeDuration?.value && p?.representativeDuration?.unit) {
+    const v = Number(p.representativeDuration.value);
+    const u = String(p.representativeDuration.unit).toLowerCase();
+    if (Number.isFinite(v)) durationText = `${v} ${v === 1 ? u.replace(/s$/, "") : u}`;
+  }
+
+  const fromPrice = price?.publicAmount ?? price?.chargeAmount ?? null;
+
   return {
     id: `booking-${p?.id ?? p?.slug}`,
     external_id: String(p?.id ?? ""),
     title: p?.name ?? p?.title ?? "Experience",
-    subtitle: p?.shortDescription ?? null,
-    description: p?.description ?? null,
+    subtitle: p?.shortDescription ?? p?.primaryCategory?.name ?? null,
+    description: p?.description ?? p?.shortDescription ?? null,
     destination: p?.ufiDetails?.bCityName ?? p?.cityName ?? null,
-    price: price?.publicAmount ?? price?.chargeAmount ?? null,
+    price: fromPrice,
+    from_price: fromPrice,
     currency: price?.currency ?? "USD",
-    duration: p?.duration ?? null,
-    images: p?.primaryPhoto?.small ? [p.primaryPhoto.small] : (p?.photos ?? []).map((ph: any) => ph?.url ?? ph).filter(Boolean),
+    duration: durationText,
+    duration_text: durationText,
+    rating: rating != null ? Number(rating) : null,
+    review_count: reviewCount != null ? Number(reviewCount) : null,
+    category: p?.primaryCategory?.name ?? null,
+    images,
+    image: images[0] ?? null,
+    thumbnail: images[0] ?? null,
     source_url: p?.productUrl ?? null,
     source: "booking" as const,
     raw: p,
