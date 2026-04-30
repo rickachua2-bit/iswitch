@@ -63,7 +63,7 @@ export function SearchTabs({ defaultTab }: { defaultTab?: TabId } = {}) {
 
       {/* Panel */}
       <div className="rounded-b-2xl rounded-tr-2xl bg-card p-4 shadow-elevated md:p-6">
-        {active === "flights" && <FlightForm onSearch={(q) => navigate({ to: "/flights", search: q as never })} />}
+        {active === "flights" && <FlightForm onSearch={(q) => navigate({ to: "/flights/search", search: q as never })} />}
         {active === "stays" && <StayInlineForm onSearch={(q) => navigate({ to: "/stays", search: q as never })} />}
         {active === "visas" && <VisaForm onSearch={(q) => navigate({ to: "/visas", search: q as never })} />}
         {active === "insurance" && <InsuranceForm onSearch={(q) => navigate({ to: "/insurance", search: q as never })} />}
