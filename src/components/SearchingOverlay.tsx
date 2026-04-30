@@ -6,7 +6,7 @@ export type TravelTipCategory =
   | "flights"
   | "stays"
   | "visas"
-  | "insurance"
+  | "car_rentals"
   | "tours"
   | "pickups"
   | "general";
