@@ -541,9 +541,39 @@ export const startFlightSearch = createServerFn({ method: "POST" })
       const offers = t.data?.offers ?? t.data?.data?.offers ?? [];
       return { search_id: null, data: { offers }, error: null };
     }
-    const r = await runDuffelSearch(data);
-    if (r.error) return { search_id: null, data: { offers: [] }, error: r.error };
-    return { search_id: null, data: { offers: r.offers }, error: null };
+    // Run Duffel + Booking.com in parallel; either one failing is non-fatal
+    // as long as the other returns offers.
+    const [duffelRes, bookingRes] = await Promise.allSettled([
+      runDuffelSearch(data),
+      bookingSearchFlights({
+        origin: data.origin ?? data.segments?.[0]?.origin ?? "",
+        destination: data.destination ?? data.segments?.[0]?.destination ?? "",
+        departure_date: data.departure_date ?? data.segments?.[0]?.departure_date ?? "",
+        return_date: data.return_date,
+        adults: data.adults,
+        children: data.children,
+        cabin: data.cabin,
+      }),
+    ]);
+
+    const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
+      ? (duffelRes.value.offers ?? []).map((o: any) => ({ ...o, source: "duffel" as const }))
+      : [];
+    const bookingOffers = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.offers
+      : [];
+
+    const merged = [...duffelOffers, ...bookingOffers].sort(
+      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
+    );
+
+    if (merged.length === 0) {
+      const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
+                  "No flights found.";
+      return { search_id: null, data: { offers: [] }, error: err };
+    }
+    return { search_id: null, data: { offers: merged }, error: null };
   });
 
 export const pollFlightSearch = createServerFn({ method: "POST" })
@@ -557,9 +587,32 @@ export const pollFlightSearch = createServerFn({ method: "POST" })
 export const searchFlights = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => FlightSearchInput.parse(d))
   .handler(async ({ data }) => {
-    const r = await runDuffelSearch(data);
-    if (r.error) return fail(r.error, { offers: [] });
-    return ok({ offers: r.offers });
+    const [duffelRes, bookingRes] = await Promise.allSettled([
+      runDuffelSearch(data),
+      bookingSearchFlights({
+        origin: data.origin ?? "",
+        destination: data.destination ?? "",
+        departure_date: data.departure_date ?? "",
+        return_date: data.return_date,
+        adults: data.adults,
+        children: data.children,
+        cabin: data.cabin,
+      }),
+    ]);
+    const duffelOffers = duffelRes.status === "fulfilled" && !duffelRes.value.error
+      ? (duffelRes.value.offers ?? []).map((o: any) => ({ ...o, source: "duffel" as const }))
+      : [];
+    const bookingOffers = bookingRes.status === "fulfilled" && bookingRes.value.ok
+      ? bookingRes.value.offers : [];
+    const merged = [...duffelOffers, ...bookingOffers].sort(
+      (a, b) => Number(a.total_amount ?? 0) - Number(b.total_amount ?? 0),
+    );
+    if (merged.length === 0) {
+      const err = (duffelRes.status === "fulfilled" && duffelRes.value.error) ||
+                  (bookingRes.status === "fulfilled" && bookingRes.value.error) || "No flights found.";
+      return fail(err, { offers: [] });
+    }
+    return ok({ offers: merged });
   });
 
 export const bookFlight = createServerFn({ method: "POST" })
