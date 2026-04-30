@@ -219,6 +219,14 @@ export const testProvider = createServerFn({ method: "POST" })
         });
         status = r.status; ok = r.ok;
         message = r.ok ? "LiteAPI responding" : (await r.text()).slice(0, 200);
+      } else if (prov.slug.startsWith("booking-")) {
+        const key = process.env.RAPIDAPI_BOOKING_KEY;
+        if (!key) throw new Error("RAPIDAPI_BOOKING_KEY not configured");
+        const r = await fetch("https://booking-com15.p.rapidapi.com/api/v1/meta/getCountries", {
+          headers: { "x-rapidapi-host": "booking-com15.p.rapidapi.com", "x-rapidapi-key": key, Accept: "application/json" },
+        });
+        status = r.status; ok = r.ok;
+        message = r.ok ? "Booking.com (RapidAPI) responding" : (await r.text()).slice(0, 200);
       } else if (prov.kind === "crawl" && prov.base_url) {
         const r = await fetch(prov.base_url, { method: "HEAD", redirect: "follow" });
         status = r.status; ok = r.status < 400;
