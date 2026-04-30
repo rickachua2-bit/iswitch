@@ -1,25 +1,39 @@
-I found that the Booking.com autocomplete server call is working and returning suggestions, but the client component is reading the response from the wrong level. It currently looks at `res.suggestions`, while the project’s server functions return `{ data: { suggestions }, error }`, so the dropdown receives an empty list even after a successful API response.
+Make Booking.com hotel results take priority and sort cheapest first, plus pull every useful field out of the Booking.com property payload so the cards can show full property data.
 
-Plan:
+### 1. Reorder hotel results (server)
+File: `src/server/travsify.ts` — `searchHotels` handler.
+- After fetching from both providers, build the final list as: **Booking.com first, then LiteAPI**.
+- Sort each group **ascending by price** before concatenating, so the cheapest Booking.com hotel is at the very top, followed by the rest of Booking, then the cheapest LiteAPI, etc.
+- Hotels with no price get pushed to the bottom of their group instead of being treated as `0`.
+- Tag each hotel with `source: "booking" | "liteapi"` (already done) so the UI can show a badge.
 
-1. Fix the response handling in `TourDestinationAutocomplete`
-   - Read suggestions from `res.data.suggestions` first, with a fallback to `res.suggestions` for safety.
-   - Show the dropdown whenever the user is typing/searching, including a clear “No matches” message if Booking.com returns none.
+### 2. Enrich Booking.com property normalization (server)
+File: `src/server/booking.server.ts` — `normalizeBookingHotel`.
+Pull every useful field exposed by Booking.com's `searchHotels` payload:
 
-2. Enable autocomplete from 1 letter
-   - Lower the client-side threshold from 2 letters to 1 letter.
-   - Update the server function validator from `min(1)` already allowed, so only the UI threshold needs adjustment.
-   - Keep debounce behavior to avoid excessive API calls while typing.
+- **Pricing**: `price`, `original_price` (strikethrough), `currency`, `taxes_included` flag, `discount_pct`, `price_breakdown` (gross/net/excluded charges), benefit badges (e.g. "Genius discount").
+- **Identity**: `id`, `name`, `accommodation_type` (Hotel / Apartment / Resort / Villa / Hostel / Guest house — mapped from `accommodationTypeId`).
+- **Location**: `address`, `district`, `city`, `country`, `country_code`, `latitude`, `longitude`, `distance_to_center` if present.
+- **Quality signals**: `stars` (`accuratePropertyClass` preferred, then `propertyClass`), `review_score`, `review_score_word`, `review_count`, `ranking_score`.
+- **Policies**: `refundable` (`isFreeCancellable`), `checkin_from`, `checkin_until`, `checkout_until`, `checkin_date`, `checkout_date`.
+- **Media**: `image` (main), `thumbnail`, `images` (every URL from `photoUrls` plus `mainPhotoUrl`, deduped).
+- **Badges & offers**: collect badge text from `badges`, `ribbon`, `priceBreakdown.benefitBadges` into a `badges: string[]` array (e.g. "Hot deal", "Genius", "Breakfast included").
 
-3. Return more places per search
-   - Increase normalized suggestions from 10 to a larger practical limit, e.g. 20, so users see more cities, locations, and places around the typed search.
-   - Normalize multiple Booking.com response shapes (`destinations`, `products`, direct arrays) and filter invalid labels.
+All new fields are additive — existing `id`, `offer_id`, `price`, `name`, `image`, `stars`, `review_score`, `review_count`, `latitude`, `longitude`, `refundable`, `source` keep their current names so the UI keeps working.
 
-4. Improve the dropdown UX
-   - Keep keyboard navigation and click selection.
-   - Ensure the input opens suggestions on focus when there is at least one character.
-   - Display city/place name, country, and type badge where available.
+### 3. UI surfaces the new data (already mostly compatible)
+File: `src/routes/stays.tsx` — `HotelResultCard`.
+- Show `accommodation_type` next to stars when present.
+- Show `district` / full `address` instead of just city when available.
+- Show `distance_to_center` line if present.
+- Render badges from `h.badges` as small chips alongside the existing "Prepay" / "Breakfast included" chips.
+- Score word: prefer `h.review_score_word` over the local `scoreLabel(score)` fallback.
+- Source ribbon: small "Booking.com" / "LiteAPI" tag in the corner so users can tell where the rate came from.
 
-5. Verify in browser
-   - Test typing one letter like `L`, then two letters like `La`.
-   - Confirm the network request returns suggestions and the UI visibly lists them under the tours destination input.
+### 4. Sort UI
+- Default sort tab stays "Best match" but the underlying list is already Booking-first + ascending price, so it visually matches the request.
+- "Lowest price" sort still works across both sources.
+
+### Verification
+- Run a hotel search (e.g. Dubai check-in/out) in the preview.
+- Confirm: Booking.com cards appear at the top of the list, prices ascend within each provider group, and richer fields (address, badges, full image, score word) render.
