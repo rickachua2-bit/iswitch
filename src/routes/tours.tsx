@@ -8,6 +8,8 @@ import { useSelectOffer } from "@/lib/use-select-offer";
 import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Loader2, MapPin, Star, Clock, ImageIcon } from "lucide-react";
 import { z } from "zod";
+import { usePriceFormat } from "@/lib/use-price-format";
+import { getUserCurrencyCode } from "@/lib/user-currency";
 
 const searchSchema = z.object({
   destination: z.coerce.string().optional().default("Dubai"),
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/tours")({
   loader: async ({ deps }) => {
     if (!deps.date) return { tours: [], query: deps, error: null as string | null };
     try {
-      const res = await searchTours({ data: { destination: deps.destination, date: deps.date, participants: Number(deps.guests) || 2 } });
+      const res = await searchTours({ data: { destination: deps.destination, date: deps.date, participants: Number(deps.guests) || 2, currency: getUserCurrencyCode() } });
       return { tours: res?.data?.tours ?? [], query: deps, error: null };
     } catch (e: any) {
       return { tours: [], query: deps, error: e?.message ?? "Search failed" };
@@ -49,6 +51,7 @@ function ToursSearchPage() {
   const { tours, query, error } = Route.useLoaderData() as any;
   const hasSearched = !!query.date;
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
+  const formatPrice = usePriceFormat();
 
   function goToBooking(t: any) {
     const id = String(t.id ?? t.tour_id ?? t.external_id);
@@ -164,7 +167,7 @@ function ToursSearchPage() {
                         <div>
                           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">From</div>
                           <div className="text-lg font-extrabold text-primary">
-                            {t.currency ?? "USD"} {price}
+                            {Number.isFinite(Number(price)) ? formatPrice(Number(price), t.currency ?? "USD") : "—"}
                           </div>
                         </div>
                         <span className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-accent px-3 py-1.5 text-xs font-bold text-accent-foreground">

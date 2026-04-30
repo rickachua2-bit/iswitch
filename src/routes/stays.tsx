@@ -7,6 +7,7 @@ import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { searchHotels } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
+import { getUserCurrencyCode } from "@/lib/user-currency";
 import {
   Star, Loader2, MapPin, ThumbsUp, Heart, Tag, Search,
   Hotel, Plane, Home as HomeIcon, Briefcase, Compass, Car,
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/stays")({
           checkin: deps.checkIn,
           checkout: deps.checkOut,
           adults: adultsFromGuests(deps.guests),
-          currency: "USD",
+          currency: getUserCurrencyCode(),
         },
       });
       return { hotels: res?.data?.hotels ?? [], query: deps, error: null };
