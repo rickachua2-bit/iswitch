@@ -134,11 +134,13 @@ export async function bookingSearchFlights(input: {
   }
 }
 
-function normalizeBookingFlight(o: any, idx: number) {
+function normalizeBookingFlight(o: any, idx: number, requestedCurrency = "USD") {
   // Booking.com offer shape (abbreviated): { token, segments: [{ legs: [...] }], priceBreakdown: { total: { units, currencyCode } } }
   const total = o?.priceBreakdown?.total ?? {};
   const totalAmount = (Number(total?.units ?? 0) + Number(total?.nanos ?? 0) / 1e9).toFixed(2);
-  const currency = total?.currencyCode ?? "USD";
+  // Never silently fall back to USD: prefer Booking's currency, then the
+  // currency the user actually requested, then USD as last resort.
+  const currency = total?.currencyCode ?? requestedCurrency ?? "USD";
 
   const carrierLogos = new Set<string>();
 
@@ -173,10 +175,26 @@ function normalizeBookingFlight(o: any, idx: number) {
   });
 
   const firstCarrier = o?.segments?.[0]?.legs?.[0]?.carriersData?.[0];
+
+  // Stable id: prefer Booking's token; otherwise build a content fingerprint
+  // so two physically different offers never collide on key.
+  let id: string = o?.token ?? "";
+  if (!id) {
+    const fingerprint = JSON.stringify({
+      p: totalAmount,
+      c: currency,
+      s: slices.map((sl: any) => sl.segments?.map((sg: any) => `${sg.marketing_carrier_iata}${sg.flight_number}@${sg.departing_at}->${sg.arriving_at}`)),
+    });
+    let h = 0;
+    for (let i = 0; i < fingerprint.length; i++) h = ((h << 5) - h + fingerprint.charCodeAt(i)) | 0;
+    id = `booking-${idx}-${(h >>> 0).toString(36)}`;
+  }
+
   return {
-    id: o?.token ?? `booking-${idx}`,
+    id,
     total_amount: totalAmount,
     total_currency: currency,
+    requested_currency: requestedCurrency,
     owner: firstCarrier?.name ?? "Booking.com",
     owner_logo: firstCarrier?.logo ?? null,
     owner_iata: firstCarrier?.code ?? null,
