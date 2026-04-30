@@ -128,6 +128,7 @@ function useFlightSearch(search: any): SearchState & { query: any } {
     infants: search.infants ?? "",
     cabin: search.cabin ?? "",
     segments: search.segments ?? "",
+    _r: (search as any)._r ?? "",
   });
 
   const activeSig = useRef<string>("");
