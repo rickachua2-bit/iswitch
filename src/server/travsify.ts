@@ -809,7 +809,7 @@ export const autocompleteTourDestinations = createServerFn({ method: "POST" })
       const json: any = await res.json();
       const raw: any[] = json?.data?.destinations ?? json?.data?.products ?? json?.data ?? [];
       const suggestions = raw
-        .slice(0, 10)
+        .slice(0, 20)
         .map((r: any) => ({
           id: String(r?.id ?? r?.productId ?? r?.ufi ?? r?.b_ufi ?? ""),
           label: String(r?.cityName ?? r?.name ?? r?.bCityName ?? r?.title ?? "").trim(),
