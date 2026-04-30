@@ -134,7 +134,40 @@ export function VisaInlineForm({ onSearch, initial }: { onSearch: OnSearch; init
   );
 }
 
-/* ---------- Insurance ---------- */
+/* ---------- Car Rentals ---------- */
+export function CarRentalInlineForm({ onSearch, initial }: { onSearch: OnSearch; initial?: Init }) {
+  const [pickup, setPickup] = useState(initial?.pickup_label ?? "Dubai International Airport");
+  const [pickupId, setPickupId] = useState(initial?.pickup_location_id ?? "");
+  const [pickupDate, setPickupDate] = useState(initial?.pickup_date_time ?? "");
+  const [dropoffDate, setDropoffDate] = useState(initial?.dropoff_date_time ?? "");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSearch({
+          pickup_label: pickup,
+          pickup_location_id: pickupId,
+          pickup_date_time: pickupDate,
+          dropoff_date_time: dropoffDate,
+        });
+      }}
+      className="grid grid-cols-1 gap-3 md:grid-cols-[1.6fr_1fr_1fr_auto]"
+    >
+      <Field icon={MapPin} label="Pick-up location">
+        <TextInput value={pickup} onChange={(e) => { setPickup(e.target.value); setPickupId(e.target.value); }} placeholder="City or airport" />
+      </Field>
+      <Field icon={Calendar} label="Pick-up">
+        <TextInput type="datetime-local" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} />
+      </Field>
+      <Field icon={Calendar} label="Drop-off">
+        <TextInput type="datetime-local" value={dropoffDate} onChange={(e) => setDropoffDate(e.target.value)} />
+      </Field>
+      <SubmitBtn />
+    </form>
+  );
+}
+
+/* ---------- Insurance (legacy, unused) ---------- */
 export function InsuranceInlineForm({ onSearch, initial }: { onSearch: OnSearch; initial?: Init }) {
   const [destination, setDestination] = useState(initial?.destination ?? "Schengen Area");
   const [start, setStart] = useState(initial?.start ?? "");
