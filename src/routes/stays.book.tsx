@@ -181,18 +181,32 @@ function HotelBookingPage() {
     );
   }
 
-  const images = pickAllImages(hotel);
-  const cover = images[0];
+  // Merge cached search photos with the FULL Booking.com gallery (deduped, full set first).
+  const cachedImages = pickAllImages(hotel);
+  const allImages = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const src of [...extraPhotos, ...cachedImages]) {
+      if (src && !seen.has(src)) { seen.add(src); out.push(src); }
+    }
+    return out;
+  })();
+  const cover = allImages[0];
+
+  // Selected room (if user picked one from the available-rooms list).
+  const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null;
+
   // Fall back to values stored inside the cached hotel payload when URL params are missing
   const effCheckIn = checkIn || hotel.checkIn || "";
   const effCheckOut = checkOut || hotel.checkOut || "";
   const effGuests = guests || hotel.guests || "2 Guests, 1 Room";
   const nights = nightsBetween(effCheckIn, effCheckOut);
-  const pricePerNight = Number(hotel.price ?? 0);
+  const effRoomName = selectedRoom?.name ?? hotel.room_name ?? "Standard double room";
+  const pricePerNight = Number(selectedRoom?.price ?? hotel.price ?? 0);
   const subtotal = pricePerNight * nights;
   const taxes = Math.round(subtotal * 0.1 * 100) / 100;
   const total = subtotal + taxes;
-  const currency = hotel.currency ?? "USD";
+  const currency = selectedRoom?.currency ?? hotel.currency ?? "USD";
   const score = Number(hotel.review_score ?? hotel.score ?? 8.6);
 
   const hero: BookingHeroProps = {
