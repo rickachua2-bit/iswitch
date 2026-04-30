@@ -127,87 +127,77 @@ export function normalizeVisaResponse(
 ): NormalizedVisa[] {
   if (!raw || typeof raw !== "object") return [];
 
-  // The API returns a single object describing the visa rule for the pair.
-  // Handle both wrapped and unwrapped shapes.
-  const root = raw.data ?? raw.result ?? raw;
+  const data = raw.data ?? raw;
+  const dest = data?.destination ?? {};
+  const passport = data?.passport ?? {};
+  const rules = data?.visa_rules ?? {};
 
-  // Some responses include an array of categories — expand them.
-  const categories: any[] =
-    Array.isArray(root?.categories) ? root.categories
-    : Array.isArray(root?.options) ? root.options
-    : [root];
+  // Collect rules: primary + any additional alternatives the API returns.
+  const ruleEntries: Array<{ key: string; rule: any }> = [];
+  if (rules.primary_rule) ruleEntries.push({ key: "primary", rule: rules.primary_rule });
+  for (const [k, v] of Object.entries(rules)) {
+    if (k === "primary_rule") continue;
+    if (v && typeof v === "object" && !Array.isArray(v) && (v as any).name) {
+      ruleEntries.push({ key: k, rule: v });
+    } else if (Array.isArray(v)) {
+      v.forEach((r, i) => {
+        if (r && typeof r === "object" && (r as any).name) {
+          ruleEntries.push({ key: `${k}-${i}`, rule: r });
+        }
+      });
+    }
+  }
 
-  const out: NormalizedVisa[] = [];
-  categories.forEach((c, idx) => {
-    if (!c || typeof c !== "object") return;
+  if (ruleEntries.length === 0) return [];
 
-    const visaType =
-      strOrUndef(c.visa) ??
-      strOrUndef(c.visa_type) ??
-      strOrUndef(c.category) ??
-      strOrUndef(c.type) ??
-      strOrUndef(root.visa) ??
-      strOrUndef(root.visa_type);
+  return ruleEntries.map(({ key, rule }, idx) => {
+    const visaTypeRaw = strOrUndef(rule.name) ?? "Visa";
+    const visaTypeLower = visaTypeRaw.toLowerCase();
 
-    const visaTypeLower = (visaType ?? "").toLowerCase();
-    const visa_free =
-      c.visa_free === true ||
-      /visa[-\s]?free|not required|no visa/.test(visaTypeLower);
-    const voa =
-      c.visa_on_arrival === true ||
-      /on[-\s]?arrival|voa\b/.test(visaTypeLower);
-    const evisa =
-      c.evisa === true ||
-      /e[-\s]?visa|electronic|eta\b|esta\b/.test(visaTypeLower);
+    const visa_free = /visa[-\s]?free|not required|no visa/.test(visaTypeLower);
+    const voa = /on[-\s]?arrival|voa\b/.test(visaTypeLower);
+    const evisa = /e[-\s]?visa|electronic|online visa|eta\b|esta\b/.test(visaTypeLower);
 
+    const destName = strOrUndef(dest.name) ?? destCC;
     const niceName =
-      visa_free ? "Visa-free entry"
-      : voa ? "Visa on arrival"
-      : evisa ? "Electronic visa (e-Visa)"
-      : visaType ? `${visaType} visa`
-      : `${passportCC} → ${destCC} visa`;
+      visa_free ? `Visa-free entry to ${destName}`
+      : voa ? `Visa on arrival — ${destName}`
+      : evisa ? `Online / e-Visa — ${destName}`
+      : `${visaTypeRaw} — ${destName}`;
 
-    const price =
-      c.price ?? c.fee ?? c.cost ?? root.price ?? root.fee ?? root.cost;
-    const currency =
-      strOrUndef(c.currency) ?? strOrUndef(root.currency) ?? "USD";
-    const duration =
-      strOrUndef(c.stay_duration) ?? strOrUndef(c.stay) ?? strOrUndef(c.duration) ??
-      strOrUndef(root.stay_duration) ?? strOrUndef(root.stay);
-    const validity =
-      strOrUndef(c.validity) ?? strOrUndef(root.validity);
-    const processing_time =
-      strOrUndef(c.processing_time) ?? strOrUndef(c.processing) ??
-      strOrUndef(root.processing_time) ?? strOrUndef(root.processing);
+    const requirements: string[] = [];
+    if (passport.name) requirements.push(`Valid ${passport.name} passport`);
+    if (dest.passport_validity) {
+      requirements.push(`Passport valid for at least ${dest.passport_validity} beyond entry`);
+    } else {
+      requirements.push("Passport valid for at least 6 months beyond entry");
+    }
+    requirements.push("Recent passport-size photograph (white background)");
+    requirements.push("Proof of onward / return travel");
+    requirements.push("Proof of accommodation for the stay");
+    requirements.push("Proof of sufficient funds (recent bank statements)");
+    if (!visa_free) requirements.push(`Completed ${visaTypeRaw.toLowerCase()} application`);
 
-    const requirements =
-      asArray(c.requirements) ??
-      asArray(c.required_documents) ??
-      asArray(root.requirements) ??
-      asArray(root.required_documents);
-
-    const notes =
-      strOrUndef(c.notes) ?? strOrUndef(c.description) ??
-      strOrUndef(root.notes) ?? strOrUndef(root.description);
-
-    out.push({
-      id: `visa-${passportCC}-${destCC}-${idx}`,
+    return {
+      id: `visa-${passportCC}-${destCC}-${key}-${idx}`,
       name: niceName,
-      type: visaType,
+      type: visaTypeRaw,
       visa_free,
       evisa,
       voa,
-      duration,
-      validity,
-      processing_time,
-      price: typeof price === "number" ? price : strOrUndef(price),
-      currency,
+      duration: strOrUndef(rule.duration),
+      validity: strOrUndef(rule.validity) ?? strOrUndef(rule.duration),
+      processing_time:
+        strOrUndef(rule.processing_time) ??
+        (evisa ? "3–10 business days" : voa ? "On arrival" : visa_free ? "—" : "10–20 business days"),
+      price: rule.price ?? rule.fee ?? undefined,
+      currency: strOrUndef(rule.currency) ?? strOrUndef(dest.currency_code) ?? "USD",
       requirements,
-      notes,
-      source: strOrUndef(root.source) ?? "Visa Requirement API",
+      notes:
+        strOrUndef(rule.notes) ??
+        (rule.link ? `Apply / learn more: ${rule.link}` : undefined),
+      source: rule.link ? String(rule.link) : "Visa Requirement API",
       provider_slug: "visa-requirement",
-    });
+    };
   });
-
-  return out;
 }
