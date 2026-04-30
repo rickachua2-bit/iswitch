@@ -106,6 +106,10 @@ function HotelBookingPage() {
 
   const [hotel, setHotel] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [extraPhotos, setExtraPhotos] = useState<string[]>([]);
+  const [rooms, setRooms] = useState<BookingNormalizedRoom[]>([]);
+  const [roomsLoading, setRoomsLoading] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,6 +129,32 @@ function HotelBookingPage() {
     })();
     return () => { cancelled = true; };
   }, [offer_id]);
+
+  // For Booking.com hotels, pull the FULL gallery + every available room
+  // directly from the RapidAPI detail endpoints.
+  useEffect(() => {
+    if (!hotel) return;
+    if (hotel.source !== "booking") return;
+    const id = bookingHotelId(hotel);
+    const ci = checkIn || hotel.checkIn || "";
+    const co = checkOut || hotel.checkOut || "";
+    if (!id || !ci || !co) return;
+    const { adults, rooms: roomQty } = parseGuests(guests || hotel.guests || "2 Guests, 1 Room");
+    const currency = (hotel.currency || getUserCurrencyCode() || "USD").toUpperCase();
+    let cancelled = false;
+    setRoomsLoading(true);
+    getBookingHotelFull({
+      data: { hotelId: id, checkin: ci, checkout: co, adults, rooms: roomQty, currency },
+    })
+      .then((res) => {
+        if (cancelled) return;
+        if (res.photos?.length) setExtraPhotos(res.photos);
+        if (res.rooms?.length) setRooms(res.rooms);
+      })
+      .catch(() => { /* graceful fallback to cached payload */ })
+      .finally(() => { if (!cancelled) setRoomsLoading(false); });
+    return () => { cancelled = true; };
+  }, [hotel, checkIn, checkOut, guests]);
 
   if (loading) {
     return (
