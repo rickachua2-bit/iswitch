@@ -250,7 +250,7 @@ function useFlightSearch(search: any): SearchState & { query: any } {
 
 /* page */
 function FlightSearchResultsPage() {
-  const search = Route.useSearch();
+  const search: any = Route.useSearch();
   const navigate = Route.useNavigate();
 
   const { offers, error, status, query } = useFlightSearch(search);
