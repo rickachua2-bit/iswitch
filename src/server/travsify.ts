@@ -771,8 +771,16 @@ export const searchTours = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { tours: [] });
       return ok({ tours: t.data?.tours ?? t.data?.data?.tours ?? [] });
     }
+    // Booking.com first; fall back to crawled inventory if it returns nothing.
+    const b = await bookingSearchTours({
+      destination: data.destination,
+      date: data.date,
+      participants: data.participants,
+    });
+    if (b.ok && b.tours.length > 0) return ok({ tours: b.tours });
     const r = await fetchInventory("tours", { destination: data.destination });
-    if (r.error) return fail(r.error, { tours: [] });
+    if (r.error && !b.error) return fail(r.error, { tours: [] });
+    if (r.items.length === 0 && b.error) return fail(b.error, { tours: [] });
     return ok({ tours: r.items });
   });
 
@@ -952,8 +960,17 @@ export const searchTransfers = createServerFn({ method: "POST" })
       if (!t.ok) return fail(t.error, { vehicles: [] });
       return ok({ vehicles: t.data?.vehicles ?? t.data?.data?.vehicles ?? [] });
     }
+    // Booking.com first; fall back to crawled inventory if it returns nothing.
+    const b = await bookingSearchCars({
+      pickup: data.pickup,
+      drop: data.drop,
+      date: data.date,
+      time: data.time,
+    });
+    if (b.ok && b.vehicles.length > 0) return ok({ vehicles: b.vehicles });
     const r = await fetchInventory("pickups", { origin: data.pickup, destination: data.drop });
-    if (r.error) return fail(r.error, { vehicles: [] });
+    if (r.error && !b.error) return fail(r.error, { vehicles: [] });
+    if (r.items.length === 0 && b.error) return fail(b.error, { vehicles: [] });
     return ok({ vehicles: r.items });
   });
 
