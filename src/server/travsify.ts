@@ -27,6 +27,43 @@ const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";
 const TRAVSIFY_BASE = "https://api.travsify.com";
 const REQ_TIMEOUT_MS = 25_000;
 
+/**
+ * Build a stable signature for a flight offer so we can dedupe across
+ * providers (Booking.com vs Duffel) when they return the same physical flight.
+ * Two offers with the same signature are considered duplicates and only the
+ * first occurrence (Booking.com is concatenated first) is kept.
+ */
+function flightSignature(o: any): string {
+  const firstSlice = o?.slices?.[0];
+  const lastSlice = o?.slices?.[o?.slices?.length - 1];
+  const firstSeg = firstSlice?.segments?.[0];
+  const lastSeg = lastSlice?.segments?.[lastSlice?.segments?.length - 1];
+  const carrier = (o?.owner_iata ?? firstSeg?.marketing_carrier_iata ?? o?.owner ?? "?").toString().toUpperCase();
+  const flightNo = firstSeg?.flight_number ?? "?";
+  const dep = firstSeg?.departing_at ?? firstSeg?.origin ?? "?";
+  const arr = lastSeg?.arriving_at ?? lastSeg?.destination ?? "?";
+  const route = (o?.slices ?? [])
+    .map((s: any) => (s?.segments ?? []).map((sg: any) => `${sg?.origin ?? "?"}-${sg?.destination ?? "?"}@${sg?.departing_at ?? "?"}`).join(">"))
+    .join("|");
+  return `${carrier}|${flightNo}|${dep}|${arr}|${route}|${o?.total_amount ?? "?"}|${o?.total_currency ?? "?"}`;
+}
+
+function dedupeFlightOffers(offers: any[]): any[] {
+  const seen = new Set<string>();
+  const out: any[] = [];
+  for (const o of offers) {
+    const sig = flightSignature(o);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    out.push(o);
+  }
+  return out;
+}
+
+function stampOffers<T extends { id?: string }>(offers: T[], requestId: string, fetchedAt: string): T[] {
+  return offers.map((o) => ({ ...o, fetched_at: fetchedAt, provider_request_id: requestId }));
+}
+
 type Vertical = "flights" | "stays" | "visas" | "insurance" | "tours" | "pickups";
 
 /**
