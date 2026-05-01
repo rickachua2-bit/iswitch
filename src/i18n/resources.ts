@@ -37,6 +37,7 @@ const en = {
     insurance: "Insurance",
     tours: "Tours",
     transfers: "Car Transfers",
+    carRentals: "Car Rentals",
     consultations: "Consultations",
   },
   cta: {
