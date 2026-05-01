@@ -326,11 +326,18 @@ function VisasPage() {
                   <div className="mt-5 flex items-end justify-between border-t border-border pt-4">
                     <div>
                       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                        {bookable ? "Total fee" : "Visa fee"}
+                        {kinds.includes("visa-free") ? "Visa fee" : "From (incl. service fee)"}
                       </div>
                       <div className="text-2xl font-extrabold text-primary">
-                        {kinds.includes("visa-free") ? "Free" : hasPrice ? `${v.currency ?? "USD"} ${v.price}` : "On request"}
+                        {kinds.includes("visa-free")
+                          ? "Free"
+                          : hasPrice
+                            ? formatPrice(Number(v.price) * 1.1, v.currency ?? "USD")
+                            : "On request"}
                       </div>
+                      {v.price_is_estimate && !kinds.includes("visa-free") && (
+                        <div className="text-[10px] text-muted-foreground">Indicative — confirmed at review</div>
+                      )}
                     </div>
                     {bookable ? (
                       <button
