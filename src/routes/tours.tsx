@@ -95,7 +95,7 @@ function ToursSearchPage() {
           <>
             <h2 className="mb-4 font-display text-xl font-bold">{tours.length} experiences · {query.destination}</h2>
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {tours.map((t: any) => {
+              {[...tours].sort((a: any, b: any) => Number(a.from_price ?? a.price ?? Infinity) - Number(b.from_price ?? b.price ?? Infinity)).map((t: any) => {
                 const id = String(t.id ?? t.tour_id ?? t.external_id);
                 const loading = isSelecting(id);
                 const hero = (Array.isArray(t.images) && t.images[0]) || t.image || t.thumbnail || null;
