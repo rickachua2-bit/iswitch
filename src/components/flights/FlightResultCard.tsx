@@ -90,18 +90,6 @@ export function FlightResultCard({ offer }: { offer: any }) {
       <div className="flex items-center gap-2 border-b border-border/60 bg-secondary/40 px-4 py-1.5 text-[11px] font-semibold text-primary">
         <Briefcase className="h-3 w-3" />
         Checked baggage included
-        {sourceLabel && (
-          <span
-            className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary"
-            title={[
-              `Source: ${sourceLabel}`,
-              offer?.fetched_at ? `Fetched: ${new Date(offer.fetched_at).toLocaleTimeString()}` : null,
-              offer?.provider_request_id ? `Req: ${String(offer.provider_request_id).slice(-6)}` : null,
-            ].filter(Boolean).join(" · ")}
-          >
-            {sourceLabel}
-          </span>
-        )}
         <span className="ml-auto text-muted-foreground">
           {offer?.owner?.name || carrier.name}
         </span>
