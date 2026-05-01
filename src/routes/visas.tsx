@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { searchVisas } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Dialog,
   DialogContent,
@@ -138,6 +139,7 @@ export const Route = createFileRoute("/visas")({
 function VisasPage() {
   const { visas, query, error, submitted } = Route.useLoaderData() as any;
   const navigate = useNavigate();
+  const formatPrice = usePriceFormat();
   const [dismissed, setDismissed] = useState(false);
   const { select, error: selectError, clearError } = useSelectOffer();
 
@@ -324,11 +326,18 @@ function VisasPage() {
                   <div className="mt-5 flex items-end justify-between border-t border-border pt-4">
                     <div>
                       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                        {bookable ? "Total fee" : "Visa fee"}
+                        {kinds.includes("visa-free") ? "Visa fee" : "From (incl. service fee)"}
                       </div>
                       <div className="text-2xl font-extrabold text-primary">
-                        {kinds.includes("visa-free") ? "Free" : hasPrice ? `${v.currency ?? "USD"} ${v.price}` : "On request"}
+                        {kinds.includes("visa-free")
+                          ? "Free"
+                          : hasPrice
+                            ? formatPrice(Number(v.price) * 1.1, v.currency ?? "USD")
+                            : "On request"}
                       </div>
+                      {v.price_is_estimate && !kinds.includes("visa-free") && (
+                        <div className="text-[10px] text-muted-foreground">Indicative — confirmed at review</div>
+                      )}
                     </div>
                     {bookable ? (
                       <button
