@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { searchVisas } from "@/server/travsify";
+import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Dialog,
   DialogContent,
