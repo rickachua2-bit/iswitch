@@ -37,6 +37,7 @@ const en = {
     insurance: "Insurance",
     tours: "Tours",
     transfers: "Car Transfers",
+    carRentals: "Car Rentals",
     consultations: "Consultations",
   },
   cta: {
@@ -48,47 +49,47 @@ const en = {
 };
 
 const es: typeof en = {
-  nav: { flights: "Vuelos", hotels: "Hoteles", visas: "Visas", insurance: "Seguros", tours: "Tours", transfers: "Traslados", consultations: "Consultorías" },
+  nav: { flights: "Vuelos", hotels: "Hoteles", visas: "Visas", insurance: "Seguros", tours: "Tours", transfers: "Traslados", carRentals: "Alquiler de Coches", consultations: "Consultorías" },
   cta: { signIn: "Iniciar sesión", partner: "Sé nuestro socio", bookConsult: "Reservar consulta" },
   common: { language: "Idioma", currency: "Moneda" },
 };
 const fr: typeof en = {
-  nav: { flights: "Vols", hotels: "Hôtels", visas: "Visas", insurance: "Assurance", tours: "Excursions", transfers: "Transferts", consultations: "Consultations" },
+  nav: { flights: "Vols", hotels: "Hôtels", visas: "Visas", insurance: "Assurance", tours: "Excursions", transfers: "Transferts", carRentals: "Location de Voitures", consultations: "Consultations" },
   cta: { signIn: "Se connecter", partner: "Devenir partenaire", bookConsult: "Réserver" },
   common: { language: "Langue", currency: "Devise" },
 };
 const de: typeof en = {
-  nav: { flights: "Flüge", hotels: "Hotels", visas: "Visa", insurance: "Versicherung", tours: "Touren", transfers: "Transfers", consultations: "Beratung" },
+  nav: { flights: "Flüge", hotels: "Hotels", visas: "Visa", insurance: "Versicherung", tours: "Touren", transfers: "Transfers", carRentals: "Mietwagen", consultations: "Beratung" },
   cta: { signIn: "Anmelden", partner: "Partner werden", bookConsult: "Beratung buchen" },
   common: { language: "Sprache", currency: "Währung" },
 };
 const pt: typeof en = {
-  nav: { flights: "Voos", hotels: "Hotéis", visas: "Vistos", insurance: "Seguros", tours: "Passeios", transfers: "Transfers", consultations: "Consultorias" },
+  nav: { flights: "Voos", hotels: "Hotéis", visas: "Vistos", insurance: "Seguros", tours: "Passeios", transfers: "Transfers", carRentals: "Aluguel de Carros", consultations: "Consultorias" },
   cta: { signIn: "Entrar", partner: "Seja parceiro", bookConsult: "Agendar consulta" },
   common: { language: "Idioma", currency: "Moeda" },
 };
 const ar: typeof en = {
-  nav: { flights: "رحلات", hotels: "فنادق", visas: "تأشيرات", insurance: "تأمين", tours: "جولات", transfers: "نقل", consultations: "استشارات" },
+  nav: { flights: "رحلات", hotels: "فنادق", visas: "تأشيرات", insurance: "تأمين", tours: "جولات", transfers: "نقل", carRentals: "تأجير السيارات", consultations: "استشارات" },
   cta: { signIn: "تسجيل الدخول", partner: "كن شريكاً", bookConsult: "حجز استشارة" },
   common: { language: "اللغة", currency: "العملة" },
 };
 const zh: typeof en = {
-  nav: { flights: "机票", hotels: "酒店", visas: "签证", insurance: "保险", tours: "旅游", transfers: "接送", consultations: "咨询" },
+  nav: { flights: "机票", hotels: "酒店", visas: "签证", insurance: "保险", tours: "旅游", transfers: "接送", carRentals: "租车", consultations: "咨询" },
   cta: { signIn: "登录", partner: "成为合作伙伴", bookConsult: "预约咨询" },
   common: { language: "语言", currency: "货币" },
 };
 const hi: typeof en = {
-  nav: { flights: "उड़ानें", hotels: "होटल", visas: "वीज़ा", insurance: "बीमा", tours: "टूर", transfers: "कार ट्रांसफर", consultations: "परामर्श" },
+  nav: { flights: "उड़ानें", hotels: "होटल", visas: "वीज़ा", insurance: "बीमा", tours: "टूर", transfers: "कार ट्रांसफर", carRentals: "कार किराये पर", consultations: "परामर्श" },
   cta: { signIn: "साइन इन", partner: "हमारे साथ जुड़ें", bookConsult: "परामर्श बुक करें" },
   common: { language: "भाषा", currency: "मुद्रा" },
 };
 const ru: typeof en = {
-  nav: { flights: "Авиабилеты", hotels: "Отели", visas: "Визы", insurance: "Страховка", tours: "Туры", transfers: "Трансферы", consultations: "Консультации" },
+  nav: { flights: "Авиабилеты", hotels: "Отели", visas: "Визы", insurance: "Страховка", tours: "Туры", transfers: "Трансферы", carRentals: "Аренда авто", consultations: "Консультации" },
   cta: { signIn: "Войти", partner: "Стать партнёром", bookConsult: "Записаться" },
   common: { language: "Язык", currency: "Валюта" },
 };
 const ja: typeof en = {
-  nav: { flights: "航空券", hotels: "ホテル", visas: "ビザ", insurance: "保険", tours: "ツアー", transfers: "送迎", consultations: "相談" },
+  nav: { flights: "航空券", hotels: "ホテル", visas: "ビザ", insurance: "保険", tours: "ツアー", transfers: "送迎", carRentals: "レンタカー", consultations: "相談" },
   cta: { signIn: "ログイン", partner: "提携する", bookConsult: "相談を予約" },
   common: { language: "言語", currency: "通貨" },
 };
