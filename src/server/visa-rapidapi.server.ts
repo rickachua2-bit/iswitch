@@ -150,6 +150,16 @@ export function normalizeVisaResponse(
 
   if (ruleEntries.length === 0) return [];
 
+  // Indicative government fee defaults (USD) when the API doesn't return one.
+  // These are typical published consular/e-visa fees — used as a fallback so
+  // users always see a clear price before clicking "Apply".
+  const DEFAULT_FEE_USD = {
+    evisa: 60,
+    voa: 50,
+    embassy: 160,
+    visa_free: 0,
+  } as const;
+
   return ruleEntries.map(({ key, rule }, idx) => {
     const visaTypeRaw = strOrUndef(rule.name) ?? "Visa";
     const visaTypeLower = visaTypeRaw.toLowerCase();
