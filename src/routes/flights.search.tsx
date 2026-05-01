@@ -262,7 +262,7 @@ function FlightSearchResultsPage() {
   const isSearching = status === "starting" || status === "polling";
   const showOverlay = isSearching && offers.length === 0;
 
-  const sort = search.sort ?? "best";
+  const sort = search.sort ?? "cheapest";
   const stopsFilter = search.stops ?? "any";
   const airlinesCsv = search.airlines ?? "";
   const airlineFilter = airlinesCsv ? airlinesCsv.split(",") : [];
