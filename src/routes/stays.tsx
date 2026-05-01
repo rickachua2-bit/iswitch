@@ -654,11 +654,6 @@ function HotelResultCard({
             -{discount}% Hot deal
           </span>
         )}
-        {h.source && (
-          <span className="absolute bottom-3 left-3 rounded-md bg-card/95 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-foreground shadow">
-            {h.source === "booking" ? "Booking.com" : h.source === "liteapi" ? "LiteAPI" : h.source}
-          </span>
-        )}
       </div>
 
       {/* Body */}
