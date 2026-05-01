@@ -346,7 +346,7 @@ function ResultsBoard({
   isSelecting: (id: string) => boolean;
   selecting: boolean;
 }) {
-  const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("best");
+  const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("lowest");
   const [maxPrice, setMaxPrice] = useState(1000);
   const [minStars, setMinStars] = useState(0);
   const [minScore, setMinScore] = useState(0);
