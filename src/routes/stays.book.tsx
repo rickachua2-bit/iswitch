@@ -279,7 +279,7 @@ function HotelBookingPage() {
           {hotel.source === "booking" && (
             <BookingSectionCard
               title="Available rooms"
-              subtitle="Every option Booking.com lists for your dates · cheapest first"
+              subtitle="Every option available for your dates · cheapest first"
               icon={BedDouble}
             >
               <RoomList
