@@ -139,6 +139,7 @@ export const Route = createFileRoute("/visas")({
 function VisasPage() {
   const { visas, query, error, submitted } = Route.useLoaderData() as any;
   const navigate = useNavigate();
+  const formatPrice = usePriceFormat();
   const [dismissed, setDismissed] = useState(false);
   const { select, error: selectError, clearError } = useSelectOffer();
 
