@@ -82,9 +82,6 @@ export function FlightResultCard({ offer }: { offer: any }) {
   }
   const fareLoadingId = isSelecting(String(offer.id)) ? "active" : null;
 
-  const sourceLabel =
-    offer?.source === "booking" ? "Booking.com" :
-    offer?.source === "duffel"  ? "Duffel" : null;
   const ownerLogo = typeof offer?.owner_logo === "string" ? offer.owner_logo : null;
 
   return (
