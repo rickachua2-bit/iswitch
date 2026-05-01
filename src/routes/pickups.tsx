@@ -102,7 +102,7 @@ function PickupsSearchPage() {
               {vehicles.length} vehicles · {query.pickup} → {query.drop}
             </h2>
             <div className="space-y-3">
-              {vehicles.map((v: any) => {
+              {[...vehicles].sort((a: any, b: any) => Number(a.price ?? Infinity) - Number(b.price ?? Infinity)).map((v: any) => {
                 const id = String(v.id ?? v.vehicle_id ?? v.external_id);
                 const loading = isSelecting(id);
                 return (
