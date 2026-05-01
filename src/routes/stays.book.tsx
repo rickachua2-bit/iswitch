@@ -275,7 +275,7 @@ function HotelBookingPage() {
             </div>
           </BookingSectionCard>
 
-          {/* Available rooms (Booking.com only) */}
+          {/* Available rooms */}
           {hotel.source === "booking" && (
             <BookingSectionCard
               title="Available rooms"
