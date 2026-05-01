@@ -97,6 +97,7 @@ type NormalizedVisa = {
   validity?: string;
   processing_time?: string;
   price?: number | string;
+  price_is_estimate?: boolean;
   currency?: string;
   requirements?: string[];
   notes?: string;
