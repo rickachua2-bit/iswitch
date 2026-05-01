@@ -200,7 +200,13 @@ export function normalizeVisaResponse(
       processing_time:
         strOrUndef(rule.processing_time) ??
         (evisa ? "3–10 business days" : voa ? "On arrival" : visa_free ? "—" : "10–20 business days"),
-      price: rule.price ?? rule.fee ?? undefined,
+      price:
+        rule.price ?? rule.fee ??
+        (visa_free ? DEFAULT_FEE_USD.visa_free
+          : evisa ? DEFAULT_FEE_USD.evisa
+          : voa ? DEFAULT_FEE_USD.voa
+          : DEFAULT_FEE_USD.embassy),
+      price_is_estimate: rule.price == null && rule.fee == null && !visa_free,
       currency: strOrUndef(rule.currency) ?? strOrUndef(dest.currency_code) ?? "USD",
       requirements,
       notes:
