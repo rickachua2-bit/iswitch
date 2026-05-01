@@ -121,7 +121,7 @@ function CarRentalsSearchPage() {
               {cars.length} cars · {query.pickup_label || "Pick-up"} → {query.dropoff_label || query.pickup_label || "Drop-off"}
             </h2>
             <div className="space-y-3">
-              {cars.map((c: any) => {
+              {[...cars].sort((a: any, b: any) => Number(a.total_price ?? a.daily_price ?? Infinity) - Number(b.total_price ?? b.daily_price ?? Infinity)).map((c: any) => {
                 const id = String(c.id);
                 const loading = isSelecting(id);
                 return (
