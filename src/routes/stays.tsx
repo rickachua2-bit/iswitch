@@ -160,12 +160,14 @@ function StaysSearchPage() {
       <Header />
       <SearchingOverlay match="/stays" label="Searching for stays…" category="stays" />
 
-      <UnifiedSearchBar
-        active="stays"
-        title="See the world for less"
-        subtitle="Compare 2M+ hotels and homes worldwide · Best price guarantee"
-        initial={query}
-      />
+      {(!hasSearched || stayUiOpen.search) && (
+        <UnifiedSearchBar
+          active="stays"
+          title={hasSearched ? undefined : "See the world for less"}
+          subtitle={hasSearched ? undefined : "Compare 2M+ hotels and homes worldwide · Best price guarantee"}
+          initial={query}
+        />
+      )}
 
       {/* Live results — Agoda-style: sticky filter sidebar + horizontal cards */}
       {hasSearched && (
@@ -178,6 +180,8 @@ function StaysSearchPage() {
           onSelect={goToBooking}
           isSelecting={isSelecting}
           selecting={selecting}
+          uiOpen={stayUiOpen}
+          setUiOpen={setStayUiOpen}
         />
       )}
 
