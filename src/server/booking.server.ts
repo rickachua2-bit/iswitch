@@ -221,22 +221,33 @@ export async function bookingSearchHotels(input: {
     const dest = await bookingResolveStayDest(input.destination);
     if (!dest) return { ok: true, hotels: [] };
 
+    // Booking.com expects search_type as upper-case enum (CITY/REGION/COUNTRY/DISTRICT…).
+    const searchType = String(dest.dest_type ?? "city").toUpperCase();
+
     const params = new URLSearchParams({
       dest_id: String(dest.dest_id),
-      search_type: dest.dest_type ?? "city",
+      search_type: searchType,
       arrival_date: input.checkin,
       departure_date: input.checkout,
       adults: String(Math.max(1, input.adults)),
       room_qty: String(Math.max(1, input.rooms)),
       currency_code: (input.currency ?? "USD").toUpperCase(),
       page_number: "1",
+      sort_by: "price",
       languagecode: "en-us",
+      units: "metric",
+      temperature_unit: "c",
     });
     const { status, text } = await bFetch("booking-hotels", `${BASE}/api/v1/hotels/searchHotels?${params.toString()}`);
     if (status >= 400) return { ok: false, hotels: [], error: `Booking.com hotels: HTTP ${status}` };
     const json = safeJson(text);
-    const list = json?.data?.hotels ?? [];
-    const hotels = list.slice(0, 50).map((h: any) => normalizeBookingHotel(h, input.currency ?? "USD"));
+    // Booking-com15 returns several possible shapes; cover them all.
+    const rawList: any[] =
+      (Array.isArray(json?.data?.hotels) && json.data.hotels) ||
+      (Array.isArray(json?.data?.result) && json.data.result) ||
+      (Array.isArray(json?.data) && json.data) ||
+      [];
+    const hotels = rawList.slice(0, 50).map((h: any) => normalizeBookingHotel(h, input.currency ?? "USD"));
     return { ok: true, hotels };
   } catch (e: any) {
     return { ok: false, hotels: [], error: String(e?.message ?? e) };
@@ -251,9 +262,28 @@ async function bookingResolveStayDest(query: string): Promise<{ dest_id: string;
     );
     if (status >= 400) return null;
     const json = safeJson(text);
-    const top = (json?.data ?? [])[0];
-    if (!top?.dest_id) return null;
-    return { dest_id: String(top.dest_id), dest_type: top.search_type ?? top.dest_type ?? "city" };
+    const list: any[] =
+      (Array.isArray(json?.data) && json.data) ||
+      (Array.isArray(json?.data?.destinations) && json.data.destinations) ||
+      (Array.isArray(json?.data?.results) && json.data.results) ||
+      [];
+    if (!list.length) return null;
+    // Prefer city > region > country
+    const ranked = [...list].sort((a, b) => {
+      const score = (x: any) => {
+        const t = String(x?.search_type ?? x?.dest_type ?? "").toLowerCase();
+        if (t === "city") return 0;
+        if (t === "region") return 1;
+        if (t === "district") return 2;
+        if (t === "country") return 3;
+        return 4;
+      };
+      return score(a) - score(b);
+    });
+    const top = ranked[0];
+    const id = top?.dest_id ?? top?.id;
+    if (!id) return null;
+    return { dest_id: String(id), dest_type: top?.search_type ?? top?.dest_type ?? "city" };
   } catch {
     return null;
   }
