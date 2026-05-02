@@ -262,6 +262,8 @@ function FlightSearchResultsPage() {
   const { offers, error, status, query } = useFlightSearch(search);
   const isSearching = status === "starting" || status === "polling";
   const showOverlay = isSearching && offers.length === 0;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const sort = search.sort ?? "cheapest";
   const stopsFilter = search.stops ?? "any";
@@ -299,16 +301,33 @@ function FlightSearchResultsPage() {
   return (
     <div className="min-h-screen bg-secondary/30">
       <Header />
-      <UnifiedSearchBar
-        active="flights"
-        pending={isSearching}
-        title="Compare cheap flights worldwide"
-        subtitle="Live NDC + GDS inventory · 500+ airlines · Real-time confirmation"
-      />
+      {searchOpen && (
+        <UnifiedSearchBar
+          active="flights"
+          pending={isSearching}
+        />
+      )}
 
       {showOverlay && <FlightSearchingOverlay query={query} />}
 
-      <section className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+      <ResultsToolbar
+        searchOpen={searchOpen}
+        filterOpen={filterOpen}
+        onToggleSearch={() => setSearchOpen((v) => !v)}
+        onToggleFilter={() => setFilterOpen((v) => !v)}
+        showFilterButton={!isSearching && !error && offers.length > 0}
+        summary={
+          !isSearching && !error && offers.length > 0 ? (
+            <>
+              <span className="font-bold text-foreground">{filtered.length}</span>{" "}
+              flights · {query.origin?.split(" ")[0] ?? toIata(query.origin)} →{" "}
+              {query.destination?.split(" ")[0] ?? toIata(query.destination)}
+            </>
+          ) : null
+        }
+      />
+
+      <section className="mx-auto max-w-7xl px-4 py-4 md:px-6">
         <NoResultsDialog
           open={!isSearching && (!!error || offers.length === 0)}
           title={error ? "Flights are taking a moment" : "No flights found"}
@@ -321,24 +340,26 @@ function FlightSearchResultsPage() {
         />
 
         {!isSearching && !error && offers.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-            <FlightFilters
-              offers={offers}
-              currency={currency}
-              stops={stopsFilter}
-              airlines={airlineFilter}
-              baggage={baggageOnly}
-              recommended={recommendedOnly}
-              onChange={(p) => {
-                const patch: Record<string, any> = {};
-                if (p.stops !== undefined) patch.stops = p.stops;
-                if (p.airlines !== undefined)
-                  patch.airlines = p.airlines.length ? p.airlines.join(",") : undefined;
-                if (p.baggage !== undefined) patch.baggage = p.baggage ? "1" : undefined;
-                if (p.recommended !== undefined) patch.recommended = p.recommended ? "1" : undefined;
-                setSearch(patch);
-              }}
-            />
+          <div className={`grid grid-cols-1 gap-6 ${filterOpen ? "lg:grid-cols-[280px_1fr]" : ""}`}>
+            {filterOpen && (
+              <FlightFilters
+                offers={offers}
+                currency={currency}
+                stops={stopsFilter}
+                airlines={airlineFilter}
+                baggage={baggageOnly}
+                recommended={recommendedOnly}
+                onChange={(p) => {
+                  const patch: Record<string, any> = {};
+                  if (p.stops !== undefined) patch.stops = p.stops;
+                  if (p.airlines !== undefined)
+                    patch.airlines = p.airlines.length ? p.airlines.join(",") : undefined;
+                  if (p.baggage !== undefined) patch.baggage = p.baggage ? "1" : undefined;
+                  if (p.recommended !== undefined) patch.recommended = p.recommended ? "1" : undefined;
+                  setSearch(patch);
+                }}
+              />
+            )}
 
             <div className="space-y-3">
               <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-card sm:flex-row sm:items-center sm:justify-between">
