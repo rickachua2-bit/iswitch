@@ -517,6 +517,7 @@ function ResultsBoard({
             </div>
           </FilterGroup>
         </aside>
+        )}
 
         {/* ============ Results column ============ */}
         <div>
@@ -586,7 +587,8 @@ function ResultsBoard({
           )}
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
 
