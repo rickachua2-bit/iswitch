@@ -135,6 +135,7 @@ function StaysSearchPage() {
   const hasSearched = !!(query.checkIn && query.checkOut);
   const nights = nightsBetween(query.checkIn, query.checkOut);
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
+  const [stayUiOpen, setStayUiOpen] = useState<{ search: boolean; filter: boolean }>({ search: false, filter: false });
 
   function goToBooking(h: any) {
     const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
