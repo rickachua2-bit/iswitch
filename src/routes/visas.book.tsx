@@ -226,10 +226,13 @@ function ApplicationForm({ visa }: { visa: any }) {
     setError(null);
     try {
       const { startCheckout } = await import("@/lib/checkout");
+      const fee = Number(visa.price ?? visa.fee ?? 0);
+      const service = Math.round(fee * 0.1 * 100) / 100;
+      const totalAmount = Math.round((fee + service) * 100) / 100;
       const res = await startCheckout({
         vertical: "visas",
         provider_slug: visa.provider_slug ?? "travsify",
-        amount: Number(visa.price ?? visa.fee ?? 0),
+        amount: totalAmount,
         currency: visa.currency ?? "USD",
         customer_name: `${v.firstName} ${v.lastName}`.trim(),
         customer_email: v.email,
@@ -239,6 +242,7 @@ function ApplicationForm({ visa }: { visa: any }) {
           applicant: { firstName: v.firstName, lastName: v.lastName, email: v.email, passport: v.passport, dob: v.dob, phone: v.phone },
           country: visa.country,
           type: visa.type,
+          fee_breakdown: { government_fee: fee, service_fee: service, total: totalAmount, currency: visa.currency ?? "USD" },
         },
       });
       if (!res.ok) { setError(res.error); return; }
