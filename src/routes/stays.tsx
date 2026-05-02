@@ -381,9 +381,21 @@ function ResultsBoard({
   }, [hotels, maxPrice, minStars, minScore, sort]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-        {/* ============ Sidebar ============ */}
+    <>
+      <ResultsToolbar
+        searchOpen={uiOpen.search}
+        filterOpen={uiOpen.filter}
+        onToggleSearch={() => setUiOpen((s) => ({ ...s, search: !s.search }))}
+        onToggleFilter={() => setUiOpen((s) => ({ ...s, filter: !s.filter }))}
+        summary={
+          <>
+            <span className="font-bold text-foreground">{filtered.length}</span> stays · {query.destination}
+          </>
+        }
+      />
+      <section className="mx-auto max-w-7xl px-4 py-4 pb-16 md:px-6">
+        <div className={`grid grid-cols-1 gap-6 ${uiOpen.filter ? "lg:grid-cols-[280px_1fr]" : ""}`}>
+        {uiOpen.filter && (
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           {/* Map card */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
