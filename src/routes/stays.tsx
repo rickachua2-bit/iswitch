@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
+import { ResultsToolbar } from "@/components/ResultsToolbar";
 import { searchHotels } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { getUserCurrencyCode } from "@/lib/user-currency";
