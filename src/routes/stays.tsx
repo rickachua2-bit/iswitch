@@ -341,7 +341,7 @@ function scoreLabel(s: number) {
 }
 
 function ResultsBoard({
-  hotels, error, query, nights, formatPrice, onSelect, isSelecting, selecting,
+  hotels, error, query, nights, formatPrice, onSelect, isSelecting, selecting, uiOpen, setUiOpen,
 }: {
   hotels: any[];
   error: string | null;
@@ -351,6 +351,8 @@ function ResultsBoard({
   onSelect: (h: any) => void;
   isSelecting: (id: string) => boolean;
   selecting: boolean;
+  uiOpen: { search: boolean; filter: boolean };
+  setUiOpen: React.Dispatch<React.SetStateAction<{ search: boolean; filter: boolean }>>;
 }) {
   const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("lowest");
   const [maxPrice, setMaxPrice] = useState(1000);
