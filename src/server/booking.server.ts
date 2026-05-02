@@ -404,13 +404,22 @@ export async function bookingSearchTours(input: {
     );
     if (r1.status >= 400) return { ok: false, tours: [], error: `Booking.com tours: HTTP ${r1.status}` };
     const j1 = safeJson(r1.text);
-    const loc = (j1?.data?.products ?? j1?.data?.destinations ?? j1?.data ?? [])[0];
-    const id = loc?.id ?? loc?.productId ?? loc?.ufi ?? loc?.b_ufi;
+    // Booking-com15 attraction/searchLocation may return: { data: { destinations: [...], products: [...] } }
+    // OR { data: [...] }. Prefer destinations (city ids) — `productId` is for individual attractions
+    // and is NOT a valid `id` for searchAttractions.
+    const destList: any[] =
+      (Array.isArray(j1?.data?.destinations) && j1.data.destinations) ||
+      (Array.isArray(j1?.data) && j1.data.filter((x: any) => x?.id || x?.b_id)) ||
+      [];
+    const productList: any[] =
+      (Array.isArray(j1?.data?.products) && j1.data.products) || [];
+    const loc = destList[0] ?? productList[0];
+    const id = loc?.id ?? loc?.b_id ?? loc?.productId ?? loc?.ufi;
     if (!id) return { ok: true, tours: [] };
 
     const params = new URLSearchParams({
       id: String(id),
-      sortBy: "trending",
+      sortBy: "lowest_price",
       page: "1",
       currency_code: (input.currency ?? "USD").toUpperCase(),
       languagecode: "en-us",
@@ -419,7 +428,11 @@ export async function bookingSearchTours(input: {
     const { status, text } = await bFetch("booking-tours", `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`);
     if (status >= 400) return { ok: false, tours: [], error: `Booking.com tours: HTTP ${status}` };
     const json = safeJson(text);
-    const products = json?.data?.products ?? [];
+    const products: any[] =
+      (Array.isArray(json?.data?.products) && json.data.products) ||
+      (Array.isArray(json?.products) && json.products) ||
+      (Array.isArray(json?.data) && json.data) ||
+      [];
     const tours = products.slice(0, 50).map((p: any) => normalizeBookingTour(p));
     return { ok: true, tours };
   } catch (e: any) {
