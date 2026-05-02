@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
+import { ResultsToolbar } from "@/components/ResultsToolbar";
 import { searchHotels } from "@/server/travsify";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { getUserCurrencyCode } from "@/lib/user-currency";
@@ -135,6 +136,7 @@ function StaysSearchPage() {
   const hasSearched = !!(query.checkIn && query.checkOut);
   const nights = nightsBetween(query.checkIn, query.checkOut);
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
+  const [stayUiOpen, setStayUiOpen] = useState<{ search: boolean; filter: boolean }>({ search: false, filter: false });
 
   function goToBooking(h: any) {
     const id = String(h.offer_id ?? h.rate_id ?? h.id ?? h.hotelId);
@@ -160,12 +162,14 @@ function StaysSearchPage() {
       <Header />
       <SearchingOverlay match="/stays" label="Searching for stays…" category="stays" />
 
-      <UnifiedSearchBar
-        active="stays"
-        title="See the world for less"
-        subtitle="Compare 2M+ hotels and homes worldwide · Best price guarantee"
-        initial={query}
-      />
+      {(!hasSearched || stayUiOpen.search) && (
+        <UnifiedSearchBar
+          active="stays"
+          title={hasSearched ? undefined : "See the world for less"}
+          subtitle={hasSearched ? undefined : "Compare 2M+ hotels and homes worldwide · Best price guarantee"}
+          initial={query}
+        />
+      )}
 
       {/* Live results — Agoda-style: sticky filter sidebar + horizontal cards */}
       {hasSearched && (
@@ -178,6 +182,8 @@ function StaysSearchPage() {
           onSelect={goToBooking}
           isSelecting={isSelecting}
           selecting={selecting}
+          uiOpen={stayUiOpen}
+          setUiOpen={setStayUiOpen}
         />
       )}
 
@@ -335,7 +341,7 @@ function scoreLabel(s: number) {
 }
 
 function ResultsBoard({
-  hotels, error, query, nights, formatPrice, onSelect, isSelecting, selecting,
+  hotels, error, query, nights, formatPrice, onSelect, isSelecting, selecting, uiOpen, setUiOpen,
 }: {
   hotels: any[];
   error: string | null;
@@ -345,6 +351,8 @@ function ResultsBoard({
   onSelect: (h: any) => void;
   isSelecting: (id: string) => boolean;
   selecting: boolean;
+  uiOpen: { search: boolean; filter: boolean };
+  setUiOpen: React.Dispatch<React.SetStateAction<{ search: boolean; filter: boolean }>>;
 }) {
   const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("lowest");
   const [maxPrice, setMaxPrice] = useState(1000);
@@ -373,9 +381,21 @@ function ResultsBoard({
   }, [hotels, maxPrice, minStars, minScore, sort]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
-        {/* ============ Sidebar ============ */}
+    <>
+      <ResultsToolbar
+        searchOpen={uiOpen.search}
+        filterOpen={uiOpen.filter}
+        onToggleSearch={() => setUiOpen((s) => ({ ...s, search: !s.search }))}
+        onToggleFilter={() => setUiOpen((s) => ({ ...s, filter: !s.filter }))}
+        summary={
+          <>
+            <span className="font-bold text-foreground">{filtered.length}</span> stays · {query.destination}
+          </>
+        }
+      />
+      <section className="mx-auto max-w-7xl px-4 py-4 pb-16 md:px-6">
+        <div className={`grid grid-cols-1 gap-6 ${uiOpen.filter ? "lg:grid-cols-[280px_1fr]" : ""}`}>
+        {uiOpen.filter && (
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           {/* Map card */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -497,6 +517,7 @@ function ResultsBoard({
             </div>
           </FilterGroup>
         </aside>
+        )}
 
         {/* ============ Results column ============ */}
         <div>
@@ -566,7 +587,8 @@ function ResultsBoard({
           )}
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
 

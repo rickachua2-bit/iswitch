@@ -1,90 +1,60 @@
-## Goal
+I’ll make the fixes in three areas: live inventory, results-page layout, and visa booking.
 
-1. Remove the **Insurance** vertical entirely.
-2. Add a new **Car Rentals** vertical, powered by **Priceline.com Provider** on RapidAPI (`priceline-com-provider.p.rapidapi.com`).
-3. Rename **Pickups / Car Transfers → Airport Transfers** across the app (route, labels, copy). The transfer feature itself stays as-is — only the name changes.
+## 1. Fix hotels and tours not fetching Booking.com RapidAPI results
 
-## What gets built
+I found the Booking.com RapidAPI secret is configured, and recent hotel calls are reaching the provider successfully, but the app can still show no results because of normalization/merge issues and tour destination ID handling.
 
-### A. New Car Rentals vertical (`/car-rentals`)
+Planned changes:
+- Update the Booking.com hotel search integration to:
+  - use price sorting at the provider request level where supported (`sort_by=price`),
+  - accept more possible response shapes for destination lookup and hotel result lists,
+  - keep Booking.com results first while still falling back to LiteAPI if Booking.com returns empty,
+  - avoid treating an empty Booking.com response as a hard failure when the fallback provider has results.
+- Update the Booking.com tours integration to:
+  - parse more possible `searchLocation` response shapes,
+  - pass the correct Booking.com attraction location ID into `searchAttractions`,
+  - request `lowest_price` sorting so tours start lowest-to-highest,
+  - normalize additional price/image/rating fields so cards render even when the response shape varies.
+- Keep all provider branding hidden in user-facing UI, as previously requested.
 
-Routes:
-- `src/routes/car-rentals.tsx` — search + results listing
-- `src/routes/car-rentals.book.tsx` — booking/lead capture (pattern copied from `pickups.book.tsx`)
+## 2. Collapse search and filters on flight, hotel, and tour results pages
 
-Search form fields (in `SearchTabsForms.tsx` as `CarRentalsInlineForm`):
-- Pick-up location (city or airport, autocomplete using Priceline `cars/search-pickup-locations`)
-- Drop-off location (defaults to same as pick-up)
-- Pick-up date + time
-- Drop-off date + time
-- Driver age (default 30)
+Goal: after a user searches, results should appear immediately without the large search bar and filters pushing results down.
 
-Results card shows: vehicle name + class, supplier (Hertz/Avis/etc.) with logo, transmission, seats, bags, A/C, mileage policy, pick-up depot type (airport/in-terminal/shuttle), total price + per-day price, "Book now" CTA.
+Planned UX:
+- On search-results states for Flights, Hotels, and Tours:
+  - hide the full search bar by default,
+  - show a compact top action row with two buttons:
+    - `Search` opens/closes the search form,
+    - `Filter` opens/closes the filters panel.
+- For Flights:
+  - the existing flight search form will be inside the collapsed `Search` panel,
+  - the existing `FlightFilters` sidebar will be hidden until the user clicks `Filter`.
+- For Hotels:
+  - the existing hotel search bar will be collapsed after a search,
+  - the existing hotel filter sidebar will be moved behind the `Filter` button,
+  - results and sort tabs will show at the top immediately.
+- For Tours:
+  - the existing tour search form will be collapsed after a search,
+  - add a simple filter panel for tours, including at minimum price/rating/category-style controls when data is available,
+  - keep lowest price sorting by default.
+- On landing/non-searched states, keep the current prominent search bar so users can start a search easily.
 
-### B. Priceline server integration
+## 3. Restore visa result booking flow through payment
 
-New file `src/server/priceline.server.ts`:
-- `searchPickupLocations(query)` → calls `GET /v1/cars/search-pickup-locations` for autocomplete
-- `searchCarRentals(params)` → calls `GET /v1/cars/list` with pickup/dropoff IDs + datetimes + driver age
-- `normalizeCarRentals(raw)` → maps Priceline's response to the UI shape
+The visa booking page and payment checkout already exist, and visa cards have CTAs, but the flow needs tightening so every bookable visa reliably opens the booking page and then payment.
 
-Plus `searchCarRentals` and `bookCarRental` `createServerFn` wrappers exported from `src/server/travsify.ts` (alongside existing verticals), with graceful fallback to crawled inventory if Priceline is rate-limited.
+Planned changes:
+- Make visa result CTAs clearly bookable for all paid/applicable visa options.
+- Ensure selected visa data is cached with a stable ID before routing to `/visas/book`.
+- On `/visas/book`, ensure the checkout amount matches the displayed total, including the service fee, so the payment page charges the same amount the user saw.
+- Keep visa-free options non-payment and clearly labeled, while paid/assisted visa options go to applicant details then payment.
 
-Auth header: `x-rapidapi-host: priceline-com-provider.p.rapidapi.com` + `x-rapidapi-key: $RAPIDAPI_PRICELINE_KEY` (new secret you'll be prompted to add).
+## 4. Verification after implementation
 
-### C. Rename Pickups → Airport Transfers (UI only, route stays `/pickups`)
-
-Reasoning: changing the URL would break existing bookings/links. We rename labels everywhere it's user-visible:
-- `SearchTabs.tsx`, `UnifiedSearchBar.tsx`: tab label "Car Transfers" → "Airport Transfers"
-- `Header.tsx`, `MobileBottomNav.tsx`, `Footer.tsx`, `ServicesGrid.tsx`, `index.tsx`: same rename
-- `i18n/resources.ts`: `nav.transfers` translations updated to "Airport Transfers" / equivalents in all 9 locales
-- Page `<title>` and meta descriptions updated on `pickups.tsx`
-
-### D. Remove Insurance
-
-Delete:
-- `src/routes/insurance.tsx`, `src/routes/insurance.book.tsx`
-- Insurance form blocks in `SearchTabs.tsx` and `SearchTabsForms.tsx`
-- `searchInsurance` / `bookInsurance` from `src/server/travsify.ts`
-- `Insurance` entries from `Header.tsx`, `MobileBottomNav.tsx`, `Footer.tsx`, `ServicesGrid.tsx`, `index.tsx` hero copy
-- `nav.insurance` from `i18n/resources.ts` (all locales) and `insurance` from the `Vertical` union in `travsify.ts`
-- Replace its slot in `ServicesGrid` and `MobileBottomNav` with the new **Car Rentals** entry
-
-### E. Secrets
-
-Will request: `RAPIDAPI_PRICELINE_KEY` via `add_secret` after plan approval. (You'll paste the same RapidAPI key — it works across all RapidAPI products subscribed under your account.)
-
-## Technical details
-
-```text
-src/
-├─ routes/
-│   ├─ car-rentals.tsx          (new)
-│   ├─ car-rentals.book.tsx     (new)
-│   ├─ pickups.tsx              (rename labels only)
-│   ├─ insurance.tsx            (DELETE)
-│   └─ insurance.book.tsx       (DELETE)
-├─ server/
-│   ├─ priceline.server.ts      (new — Priceline fetch + normalize)
-│   └─ travsify.ts              (add searchCarRentals/bookCarRental, drop insurance)
-├─ components/
-│   ├─ SearchTabs.tsx           (drop Insurance, add Car Rentals, rename Transfers)
-│   ├─ SearchTabsForms.tsx      (drop InsuranceInlineForm, add CarRentalsInlineForm)
-│   ├─ UnifiedSearchBar.tsx     (same)
-│   ├─ Header.tsx, Footer.tsx, MobileBottomNav.tsx, ServicesGrid.tsx
-│   └─ CarRentalLocationAutocomplete.tsx  (new — wraps Priceline locations endpoint)
-└─ i18n/resources.ts            (drop nav.insurance, add nav.carRentals, rename transfers)
-```
-
-Priceline endpoints used:
-- `GET /v1/cars/search-pickup-locations?string=<query>` — location autocomplete
-- `GET /v1/cars/list?pickup_location_id=…&pickup_date_time=…&dropoff_location_id=…&dropoff_date_time=…&driver_age=…&currency=USD`
-
-Vertical type union becomes: `"flights" | "stays" | "visas" | "car_rentals" | "tours" | "pickups"`.
-
-Booking flow for car rentals reuses the existing `startCheckout` / `createLead` infrastructure (same pattern as pickups). No DB schema changes needed.
-
-## Out of scope
-
-- Real-time Priceline booking confirmation (requires their booking API tier). For now bookings capture as leads, same as visas/tours.
-- Migrating any existing insurance bookings (none in production data per current setup).
+After approval and implementation, I’ll verify:
+- hotel search returns visible results for a common city/date search,
+- tour search returns visible results for a common city/date search,
+- flight/hotel/tour results pages show results first with `Search` and `Filter` buttons,
+- opening Search/Filter panels works without losing search params,
+- visa result CTA opens `/visas/book`, applicant details submit, and checkout starts payment.
