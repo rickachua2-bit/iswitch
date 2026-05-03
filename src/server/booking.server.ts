@@ -457,27 +457,55 @@ export async function bookingSearchTours(input: {
       [];
     const productList: any[] =
       (Array.isArray(j1?.data?.products) && j1.data.products) || [];
-    const loc = destList[0] ?? productList[0];
-    const id = loc?.id ?? loc?.b_id ?? loc?.productId ?? loc?.ufi;
-    if (!id) return { ok: true, tours: [] };
+    // Try several candidate destination IDs (Booking attractions sometimes only
+    // returns a hit on the second/third entry, especially for ambiguous queries
+    // like "New York" or "Dubai").
+    const candidates: string[] = [];
+    for (const it of [...destList, ...productList].slice(0, 5)) {
+      const id = it?.id ?? it?.b_id ?? it?.productId ?? it?.ufi;
+      if (id != null) candidates.push(String(id));
+    }
+    if (!candidates.length) return { ok: true, tours: [] };
 
-    const params = new URLSearchParams({
-      id: String(id),
-      sortBy: "lowest_price",
-      page: "1",
-      currency_code: (input.currency ?? "USD").toUpperCase(),
-      languagecode: "en-us",
-    });
-    if (input.date) params.set("startDate", input.date);
-    const { status, text } = await bFetch("booking-tours", `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`);
-    if (status >= 400) return { ok: false, tours: [], error: `Booking.com tours: HTTP ${status}` };
-    const json = safeJson(text);
-    const products: any[] =
-      (Array.isArray(json?.data?.products) && json.data.products) ||
-      (Array.isArray(json?.products) && json.products) ||
-      (Array.isArray(json?.data) && json.data) ||
-      [];
-    const tours = products.slice(0, 50).map((p: any) => normalizeBookingTour(p));
+    let products: any[] = [];
+    let lastStatus: number | null = null;
+    for (const id of candidates) {
+      const params = new URLSearchParams({
+        id,
+        sortBy: "lowest_price",
+        page: "1",
+        currency_code: (input.currency ?? "USD").toUpperCase(),
+        languagecode: "en-us",
+      });
+      if (input.date) params.set("startDate", input.date);
+      const { status, text } = await bFetch(
+        "booking-tours",
+        `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`,
+      );
+      lastStatus = status;
+      if (status >= 400) continue;
+      const json = safeJson(text);
+      const list: any[] =
+        (Array.isArray(json?.data?.products) && json.data.products) ||
+        (Array.isArray(json?.data?.attractions) && json.data.attractions) ||
+        (Array.isArray(json?.data?.results) && json.data.results) ||
+        (Array.isArray(json?.products) && json.products) ||
+        (Array.isArray(json?.results) && json.results) ||
+        (Array.isArray(json?.data) && json.data) ||
+        [];
+      if (list.length) { products = list; break; }
+    }
+    if (!products.length) {
+      return {
+        ok: lastStatus == null || lastStatus < 400,
+        tours: [],
+        error: lastStatus && lastStatus >= 400 ? `Booking.com tours: HTTP ${lastStatus}` : undefined,
+      };
+    }
+    const tours = products
+      .slice(0, 50)
+      .map((p: any, idx: number) => normalizeBookingTour(p, idx))
+      .filter((t: any) => t && t.id);
     return { ok: true, tours };
   } catch (e: any) {
     return { ok: false, tours: [], error: String(e?.message ?? e) };
