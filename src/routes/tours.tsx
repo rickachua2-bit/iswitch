@@ -191,6 +191,11 @@ function ToursSearchPage() {
 
             <div>
               <h2 className="mb-4 font-display text-xl font-bold">{filtered.length} experiences · {query.destination}</h2>
+              {filtered.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                  No tours match your filters. Try increasing the maximum price or lowering the minimum rating.
+                </div>
+              ) : null}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((t: any) => {
                   const id = String(t.id ?? t.tour_id ?? t.external_id);
