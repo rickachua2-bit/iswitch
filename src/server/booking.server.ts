@@ -245,9 +245,17 @@ export async function bookingSearchHotels(input: {
     const rawList: any[] =
       (Array.isArray(json?.data?.hotels) && json.data.hotels) ||
       (Array.isArray(json?.data?.result) && json.data.result) ||
+      (Array.isArray(json?.data?.results) && json.data.results) ||
+      (Array.isArray(json?.data?.search_results) && json.data.search_results) ||
+      (Array.isArray(json?.data?.properties) && json.data.properties) ||
+      (Array.isArray(json?.results) && json.results) ||
+      (Array.isArray(json?.hotels) && json.hotels) ||
       (Array.isArray(json?.data) && json.data) ||
       [];
-    const hotels = rawList.slice(0, 50).map((h: any) => normalizeBookingHotel(h, input.currency ?? "USD"));
+    const hotels = rawList
+      .slice(0, 50)
+      .map((h: any, idx: number) => normalizeBookingHotel(h, input.currency ?? "USD", idx))
+      .filter((h: any) => h && h.id);
     return { ok: true, hotels };
   } catch (e: any) {
     return { ok: false, hotels: [], error: String(e?.message ?? e) };
