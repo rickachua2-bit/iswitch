@@ -55,13 +55,27 @@ function ToursSearchPage() {
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
   const formatPrice = usePriceFormat();
   const [uiOpen, setUiOpen] = useState<{ search: boolean; filter: boolean }>({ search: false, filter: false });
-  const [maxPrice, setMaxPrice] = useState(1000);
+
+  // Compute price ceiling from the actual results so the filter slider never
+  // accidentally hides legitimate inventory.
+  const priceCeiling = useMemo(() => {
+    const prices = (tours as any[] ?? [])
+      .map((t) => Number(t.from_price ?? t.price ?? 0))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return 5000;
+    return Math.max(100, Math.ceil(Math.max(...prices) * 1.05));
+  }, [tours]);
+
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [minRating, setMinRating] = useState(0);
 
   const filtered = useMemo(() => {
     const list = (tours as any[] ?? []).filter((t) => {
-      const price = Number(t.from_price ?? t.price ?? 0);
-      if (price > 0 && price > maxPrice) return false;
+      // Only apply price ceiling when user has explicitly set one.
+      if (maxPrice != null) {
+        const price = Number(t.from_price ?? t.price ?? 0);
+        if (price > 0 && price > maxPrice) return false;
+      }
       const rating = Number(t.rating ?? 0);
       if (rating > 0 && rating < minRating) return false;
       return true;
@@ -71,6 +85,8 @@ function ToursSearchPage() {
         Number(a.from_price ?? a.price ?? Infinity) - Number(b.from_price ?? b.price ?? Infinity),
     );
   }, [tours, maxPrice, minRating]);
+
+  const effectiveMaxPrice = maxPrice ?? priceCeiling;
 
   function goToBooking(t: any) {
     const id = String(t.id ?? t.tour_id ?? t.external_id);
