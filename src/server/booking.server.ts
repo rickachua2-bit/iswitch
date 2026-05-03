@@ -304,17 +304,35 @@ const ACCOMMODATION_TYPE_MAP: Record<string, string> = {
   "229": "Riad", "231": "Holiday park", "232": "Aparthotel", "233": "Cruise",
 };
 
-function normalizeBookingHotel(h: any, fallbackCurrency: string) {
+function normalizeBookingHotel(h: any, fallbackCurrency: string, idx = 0) {
   const prop = h?.property ?? h;
-  const breakdown = prop?.priceBreakdown ?? {};
-  const gross = breakdown?.grossPrice ?? null;
-  const strike = breakdown?.strikethroughPrice ?? null;
-  const benefit = breakdown?.benefitBadges ?? [];
-  const excluded = breakdown?.excludedPrice ?? null;
+  const breakdown = prop?.priceBreakdown ?? h?.priceBreakdown ?? h?.price_breakdown ?? {};
+  const gross = breakdown?.grossPrice ?? breakdown?.gross_price ?? null;
+  const strike = breakdown?.strikethroughPrice ?? breakdown?.strikethrough_price ?? null;
+  const benefit = breakdown?.benefitBadges ?? breakdown?.benefit_badges ?? [];
+  const excluded = breakdown?.excludedPrice ?? breakdown?.excluded_price ?? null;
 
-  const amount = gross?.value != null ? Number(gross.value) : (prop?.minTotalPrice ?? null);
+  // Robust price extraction — Booking.com returns prices in many shapes.
+  const priceCandidates = [
+    gross?.value,
+    gross?.amount,
+    breakdown?.gross_amount?.value,
+    breakdown?.gross_amount_per_night?.value,
+    prop?.minTotalPrice,
+    prop?.min_total_price,
+    h?.min_total_price,
+    h?.price,
+    h?.composite_price_breakdown?.gross_amount_per_night?.value,
+    h?.composite_price_breakdown?.gross_amount?.value,
+  ];
+  let amount: number | null = null;
+  for (const c of priceCandidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) { amount = n; break; }
+  }
   const original = strike?.value != null ? Number(strike.value) : null;
-  const currency = gross?.currency ?? strike?.currency ?? fallbackCurrency;
+  const currency =
+    gross?.currency ?? gross?.currencyCode ?? strike?.currency ?? breakdown?.currency ?? fallbackCurrency;
   const discountPct = original && amount && original > amount
     ? Math.round(((original - amount) / original) * 100) : 0;
 
