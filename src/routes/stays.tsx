@@ -355,7 +355,18 @@ function ResultsBoard({
   setUiOpen: React.Dispatch<React.SetStateAction<{ search: boolean; filter: boolean }>>;
 }) {
   const [sort, setSort] = useState<typeof SORT_TABS[number]["id"]>("lowest");
-  const [maxPrice, setMaxPrice] = useState(1000);
+
+  // Compute the price slider ceiling from the actual returned hotels so default
+  // filters can never accidentally hide live inventory.
+  const priceCeiling = useMemo(() => {
+    const prices = (hotels ?? [])
+      .map((h: any) => Number(h.price ?? 0))
+      .filter((n: number) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return 5000;
+    return Math.max(200, Math.ceil(Math.max(...prices) * 1.05));
+  }, [hotels]);
+
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [minStars, setMinStars] = useState(0);
   const [minScore, setMinScore] = useState(0);
   const [popular, setPopular] = useState<string[]>([]);
@@ -365,9 +376,12 @@ function ResultsBoard({
   const toggle = (arr: string[], setArr: (v: string[]) => void, v: string) =>
     setArr(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
+  const effectiveMaxPrice = maxPrice ?? priceCeiling;
+
   const filtered = useMemo(() => {
     const list = (hotels ?? []).filter((h) => {
-      if (Number(h.price ?? 0) > maxPrice) return false;
+      // Only filter by price when the user explicitly chose a ceiling.
+      if (maxPrice != null && Number(h.price ?? 0) > maxPrice) return false;
       if ((h.stars ?? 0) < minStars) return false;
       if (Number(h.review_score ?? h.score ?? 0) < minScore) return false;
       return true;
