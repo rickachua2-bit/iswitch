@@ -427,16 +427,16 @@ function ResultsBoard({
               <input
                 type="range"
                 min={20}
-                max={2000}
+                max={Math.max(priceCeiling, 2000)}
                 step={10}
-                value={maxPrice}
+                value={effectiveMaxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-[hsl(var(--primary))]"
               />
               <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
                 <span>Up to</span>
                 <span className="rounded-md bg-primary px-2 py-0.5 text-primary-foreground">
-                  {formatPrice(maxPrice, "USD")}
+                  {formatPrice(effectiveMaxPrice, "USD")}
                 </span>
               </div>
             </div>
