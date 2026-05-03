@@ -338,9 +338,24 @@ function normalizeBookingHotel(h: any, fallbackCurrency: string, idx = 0) {
 
   // Photos: dedupe + prefer high-res when available
   const photoSet = new Set<string>();
-  if (prop?.mainPhotoUrl) photoSet.add(prop.mainPhotoUrl);
-  if (Array.isArray(prop?.photoUrls)) {
-    for (const url of prop.photoUrls) if (url) photoSet.add(url);
+  const photoCandidates = [
+    prop?.mainPhotoUrl,
+    prop?.main_photo_url,
+    h?.main_photo_url,
+    prop?.photoMainUrl,
+    prop?.cover_photo,
+  ];
+  for (const u of photoCandidates) if (typeof u === "string" && u) photoSet.add(u);
+  const photoArrays = [prop?.photoUrls, prop?.photo_urls, prop?.photos, h?.photos, h?.hotelImages];
+  for (const arr of photoArrays) {
+    if (!Array.isArray(arr)) continue;
+    for (const p of arr) {
+      if (typeof p === "string" && p) photoSet.add(p);
+      else if (p && typeof p === "object") {
+        const u = p.url ?? p.urlHd ?? p.url_max ?? p.url_original ?? p.large ?? p.image;
+        if (typeof u === "string" && u) photoSet.add(u);
+      }
+    }
   }
   const photos = Array.from(photoSet);
 
@@ -361,7 +376,10 @@ function normalizeBookingHotel(h: any, fallbackCurrency: string, idx = 0) {
   if (prop?.ribbonText) badges.push(String(prop.ribbonText));
   if (prop?.isFreeCancellable) badges.push("Free cancellation");
 
-  const id = String(prop?.id ?? h?.hotel_id ?? prop?.hotel_id ?? "");
+  // Stable id: try every plausible key, then fall back to a content fingerprint
+  // so a property with an unusual response shape still renders.
+  const rawId = prop?.id ?? h?.hotel_id ?? prop?.hotel_id ?? h?.id ?? prop?.idDetail ?? h?.idDetail ?? "";
+  const id = String(rawId || `${(prop?.name ?? "hotel").toString().slice(0, 32).replace(/\s+/g, "-")}-${idx}`);
   const accomKey = String(prop?.accommodationTypeId ?? prop?.accommodationType ?? "");
   const accommodationType = ACCOMMODATION_TYPE_MAP[accomKey] ?? null;
   const stars = prop?.accuratePropertyClass ?? prop?.propertyClass ?? 0;
