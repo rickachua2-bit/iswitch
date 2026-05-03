@@ -245,9 +245,17 @@ export async function bookingSearchHotels(input: {
     const rawList: any[] =
       (Array.isArray(json?.data?.hotels) && json.data.hotels) ||
       (Array.isArray(json?.data?.result) && json.data.result) ||
+      (Array.isArray(json?.data?.results) && json.data.results) ||
+      (Array.isArray(json?.data?.search_results) && json.data.search_results) ||
+      (Array.isArray(json?.data?.properties) && json.data.properties) ||
+      (Array.isArray(json?.results) && json.results) ||
+      (Array.isArray(json?.hotels) && json.hotels) ||
       (Array.isArray(json?.data) && json.data) ||
       [];
-    const hotels = rawList.slice(0, 50).map((h: any) => normalizeBookingHotel(h, input.currency ?? "USD"));
+    const hotels = rawList
+      .slice(0, 50)
+      .map((h: any, idx: number) => normalizeBookingHotel(h, input.currency ?? "USD", idx))
+      .filter((h: any) => h && h.id);
     return { ok: true, hotels };
   } catch (e: any) {
     return { ok: false, hotels: [], error: String(e?.message ?? e) };
@@ -296,25 +304,58 @@ const ACCOMMODATION_TYPE_MAP: Record<string, string> = {
   "229": "Riad", "231": "Holiday park", "232": "Aparthotel", "233": "Cruise",
 };
 
-function normalizeBookingHotel(h: any, fallbackCurrency: string) {
+function normalizeBookingHotel(h: any, fallbackCurrency: string, idx = 0) {
   const prop = h?.property ?? h;
-  const breakdown = prop?.priceBreakdown ?? {};
-  const gross = breakdown?.grossPrice ?? null;
-  const strike = breakdown?.strikethroughPrice ?? null;
-  const benefit = breakdown?.benefitBadges ?? [];
-  const excluded = breakdown?.excludedPrice ?? null;
+  const breakdown = prop?.priceBreakdown ?? h?.priceBreakdown ?? h?.price_breakdown ?? {};
+  const gross = breakdown?.grossPrice ?? breakdown?.gross_price ?? null;
+  const strike = breakdown?.strikethroughPrice ?? breakdown?.strikethrough_price ?? null;
+  const benefit = breakdown?.benefitBadges ?? breakdown?.benefit_badges ?? [];
+  const excluded = breakdown?.excludedPrice ?? breakdown?.excluded_price ?? null;
 
-  const amount = gross?.value != null ? Number(gross.value) : (prop?.minTotalPrice ?? null);
+  // Robust price extraction — Booking.com returns prices in many shapes.
+  const priceCandidates = [
+    gross?.value,
+    gross?.amount,
+    breakdown?.gross_amount?.value,
+    breakdown?.gross_amount_per_night?.value,
+    prop?.minTotalPrice,
+    prop?.min_total_price,
+    h?.min_total_price,
+    h?.price,
+    h?.composite_price_breakdown?.gross_amount_per_night?.value,
+    h?.composite_price_breakdown?.gross_amount?.value,
+  ];
+  let amount: number | null = null;
+  for (const c of priceCandidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) { amount = n; break; }
+  }
   const original = strike?.value != null ? Number(strike.value) : null;
-  const currency = gross?.currency ?? strike?.currency ?? fallbackCurrency;
+  const currency =
+    gross?.currency ?? gross?.currencyCode ?? strike?.currency ?? breakdown?.currency ?? fallbackCurrency;
   const discountPct = original && amount && original > amount
     ? Math.round(((original - amount) / original) * 100) : 0;
 
   // Photos: dedupe + prefer high-res when available
   const photoSet = new Set<string>();
-  if (prop?.mainPhotoUrl) photoSet.add(prop.mainPhotoUrl);
-  if (Array.isArray(prop?.photoUrls)) {
-    for (const url of prop.photoUrls) if (url) photoSet.add(url);
+  const photoCandidates = [
+    prop?.mainPhotoUrl,
+    prop?.main_photo_url,
+    h?.main_photo_url,
+    prop?.photoMainUrl,
+    prop?.cover_photo,
+  ];
+  for (const u of photoCandidates) if (typeof u === "string" && u) photoSet.add(u);
+  const photoArrays = [prop?.photoUrls, prop?.photo_urls, prop?.photos, h?.photos, h?.hotelImages];
+  for (const arr of photoArrays) {
+    if (!Array.isArray(arr)) continue;
+    for (const p of arr) {
+      if (typeof p === "string" && p) photoSet.add(p);
+      else if (p && typeof p === "object") {
+        const u = p.url ?? p.urlHd ?? p.url_max ?? p.url_original ?? p.large ?? p.image;
+        if (typeof u === "string" && u) photoSet.add(u);
+      }
+    }
   }
   const photos = Array.from(photoSet);
 
@@ -335,7 +376,10 @@ function normalizeBookingHotel(h: any, fallbackCurrency: string) {
   if (prop?.ribbonText) badges.push(String(prop.ribbonText));
   if (prop?.isFreeCancellable) badges.push("Free cancellation");
 
-  const id = String(prop?.id ?? h?.hotel_id ?? prop?.hotel_id ?? "");
+  // Stable id: try every plausible key, then fall back to a content fingerprint
+  // so a property with an unusual response shape still renders.
+  const rawId = prop?.id ?? h?.hotel_id ?? prop?.hotel_id ?? h?.id ?? prop?.idDetail ?? h?.idDetail ?? "";
+  const id = String(rawId || `${(prop?.name ?? "hotel").toString().slice(0, 32).replace(/\s+/g, "-")}-${idx}`);
   const accomKey = String(prop?.accommodationTypeId ?? prop?.accommodationType ?? "");
   const accommodationType = ACCOMMODATION_TYPE_MAP[accomKey] ?? null;
   const stars = prop?.accuratePropertyClass ?? prop?.propertyClass ?? 0;
@@ -413,59 +457,96 @@ export async function bookingSearchTours(input: {
       [];
     const productList: any[] =
       (Array.isArray(j1?.data?.products) && j1.data.products) || [];
-    const loc = destList[0] ?? productList[0];
-    const id = loc?.id ?? loc?.b_id ?? loc?.productId ?? loc?.ufi;
-    if (!id) return { ok: true, tours: [] };
+    // Try several candidate destination IDs (Booking attractions sometimes only
+    // returns a hit on the second/third entry, especially for ambiguous queries
+    // like "New York" or "Dubai").
+    const candidates: string[] = [];
+    for (const it of [...destList, ...productList].slice(0, 5)) {
+      const id = it?.id ?? it?.b_id ?? it?.productId ?? it?.ufi;
+      if (id != null) candidates.push(String(id));
+    }
+    if (!candidates.length) return { ok: true, tours: [] };
 
-    const params = new URLSearchParams({
-      id: String(id),
-      sortBy: "lowest_price",
-      page: "1",
-      currency_code: (input.currency ?? "USD").toUpperCase(),
-      languagecode: "en-us",
-    });
-    if (input.date) params.set("startDate", input.date);
-    const { status, text } = await bFetch("booking-tours", `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`);
-    if (status >= 400) return { ok: false, tours: [], error: `Booking.com tours: HTTP ${status}` };
-    const json = safeJson(text);
-    const products: any[] =
-      (Array.isArray(json?.data?.products) && json.data.products) ||
-      (Array.isArray(json?.products) && json.products) ||
-      (Array.isArray(json?.data) && json.data) ||
-      [];
-    const tours = products.slice(0, 50).map((p: any) => normalizeBookingTour(p));
+    let products: any[] = [];
+    let lastStatus: number | null = null;
+    for (const id of candidates) {
+      const params = new URLSearchParams({
+        id,
+        sortBy: "lowest_price",
+        page: "1",
+        currency_code: (input.currency ?? "USD").toUpperCase(),
+        languagecode: "en-us",
+      });
+      if (input.date) params.set("startDate", input.date);
+      const { status, text } = await bFetch(
+        "booking-tours",
+        `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`,
+      );
+      lastStatus = status;
+      if (status >= 400) continue;
+      const json = safeJson(text);
+      const list: any[] =
+        (Array.isArray(json?.data?.products) && json.data.products) ||
+        (Array.isArray(json?.data?.attractions) && json.data.attractions) ||
+        (Array.isArray(json?.data?.results) && json.data.results) ||
+        (Array.isArray(json?.products) && json.products) ||
+        (Array.isArray(json?.results) && json.results) ||
+        (Array.isArray(json?.data) && json.data) ||
+        [];
+      if (list.length) { products = list; break; }
+    }
+    if (!products.length) {
+      return {
+        ok: lastStatus == null || lastStatus < 400,
+        tours: [],
+        error: lastStatus && lastStatus >= 400 ? `Booking.com tours: HTTP ${lastStatus}` : undefined,
+      };
+    }
+    const tours = products
+      .slice(0, 50)
+      .map((p: any, idx: number) => normalizeBookingTour(p, idx))
+      .filter((t: any) => t && t.id);
     return { ok: true, tours };
   } catch (e: any) {
     return { ok: false, tours: [], error: String(e?.message ?? e) };
   }
 }
 
-function normalizeBookingTour(p: any) {
-  const price = p?.representativePrice ?? p?.price ?? {};
+function normalizeBookingTour(p: any, idx = 0) {
+  const price = p?.representativePrice ?? p?.price ?? p?.pricing ?? p?.priceBreakdown ?? {};
 
-  // Collect images: prefer largest variant of primaryPhoto, then any photos[].
+  // Collect images from every plausible field — Booking attractions returns
+  // images in `primaryPhoto`, `photos[]`, `images[]`, `image_urls[]`, etc.
   const images: string[] = [];
-  const pp = p?.primaryPhoto ?? {};
-  for (const k of ["large", "medium", "small", "url"]) {
+  const pp = p?.primaryPhoto ?? p?.primary_photo ?? {};
+  for (const k of ["large", "medium", "small", "url", "url_max", "url_original"]) {
     const u = pp?.[k];
     if (typeof u === "string" && u && !images.includes(u)) images.push(u);
   }
-  for (const ph of p?.photos ?? []) {
-    const u = typeof ph === "string" ? ph : (ph?.large ?? ph?.medium ?? ph?.small ?? ph?.url);
-    if (typeof u === "string" && u && !images.includes(u)) images.push(u);
+  const arrays = [p?.photos, p?.images, p?.image_urls, p?.gallery];
+  for (const arr of arrays) {
+    if (!Array.isArray(arr)) continue;
+    for (const ph of arr) {
+      const u = typeof ph === "string"
+        ? ph
+        : (ph?.large ?? ph?.medium ?? ph?.small ?? ph?.url ?? ph?.url_max ?? ph?.src);
+      if (typeof u === "string" && u && !images.includes(u)) images.push(u);
+    }
   }
 
-  // Rating: Booking.com surfaces a few different shapes. Try them in order.
+  // Rating: try every shape Booking surfaces.
   const rating =
     p?.reviewsStats?.combinedNumericStats?.average ??
     p?.reviewsStats?.combinedNumericStats?.total ??
     p?.reviewsStats?.average ??
     p?.rating ??
+    p?.reviewScore ??
     null;
   const reviewCount =
     p?.reviewsStats?.allReviewsCount ??
     p?.reviewsStats?.totalReviewCount ??
     p?.reviewCount ??
+    p?.review_count ??
     null;
 
   // Duration: prefer human text; fall back to representativeDuration { value, unit }.
@@ -477,18 +558,40 @@ function normalizeBookingTour(p: any) {
     if (Number.isFinite(v)) durationText = `${v} ${v === 1 ? u.replace(/s$/, "") : u}`;
   }
 
-  const fromPrice = price?.publicAmount ?? price?.chargeAmount ?? null;
+  // Robust price extraction across every Booking attractions shape.
+  const priceCandidates = [
+    price?.publicAmount,
+    price?.chargeAmount,
+    price?.amount,
+    price?.value,
+    price?.fromPrice,
+    price?.from,
+    price?.gross_price,
+    price?.gross_amount?.value,
+    p?.fromPrice,
+    p?.from_price,
+    p?.lowestPrice,
+    p?.lowest_price,
+  ];
+  let fromPrice: number | null = null;
+  for (const c of priceCandidates) {
+    const n = Number(c);
+    if (Number.isFinite(n) && n > 0) { fromPrice = n; break; }
+  }
+
+  const rawId = p?.id ?? p?.productId ?? p?.product_id ?? p?.slug ?? p?.b_id ?? "";
+  const id = String(rawId || `${(p?.name ?? "tour").toString().slice(0, 32).replace(/\s+/g, "-")}-${idx}`);
 
   return {
-    id: `booking-${p?.id ?? p?.slug}`,
-    external_id: String(p?.id ?? ""),
+    id: `booking-${id}`,
+    external_id: String(rawId ?? ""),
     title: p?.name ?? p?.title ?? "Experience",
     subtitle: p?.shortDescription ?? p?.primaryCategory?.name ?? null,
     description: p?.description ?? p?.shortDescription ?? null,
     destination: p?.ufiDetails?.bCityName ?? p?.cityName ?? null,
     price: fromPrice,
     from_price: fromPrice,
-    currency: price?.currency ?? "USD",
+    currency: price?.currency ?? price?.currencyCode ?? "USD",
     duration: durationText,
     duration_text: durationText,
     rating: rating != null ? Number(rating) : null,

@@ -55,13 +55,27 @@ function ToursSearchPage() {
   const { select, isSelecting, selecting, error: selectError, clearError } = useSelectOffer();
   const formatPrice = usePriceFormat();
   const [uiOpen, setUiOpen] = useState<{ search: boolean; filter: boolean }>({ search: false, filter: false });
-  const [maxPrice, setMaxPrice] = useState(1000);
+
+  // Compute price ceiling from the actual results so the filter slider never
+  // accidentally hides legitimate inventory.
+  const priceCeiling = useMemo(() => {
+    const prices = (tours as any[] ?? [])
+      .map((t) => Number(t.from_price ?? t.price ?? 0))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    if (!prices.length) return 5000;
+    return Math.max(100, Math.ceil(Math.max(...prices) * 1.05));
+  }, [tours]);
+
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [minRating, setMinRating] = useState(0);
 
   const filtered = useMemo(() => {
     const list = (tours as any[] ?? []).filter((t) => {
-      const price = Number(t.from_price ?? t.price ?? 0);
-      if (price > 0 && price > maxPrice) return false;
+      // Only apply price ceiling when user has explicitly set one.
+      if (maxPrice != null) {
+        const price = Number(t.from_price ?? t.price ?? 0);
+        if (price > 0 && price > maxPrice) return false;
+      }
       const rating = Number(t.rating ?? 0);
       if (rating > 0 && rating < minRating) return false;
       return true;
@@ -71,6 +85,8 @@ function ToursSearchPage() {
         Number(a.from_price ?? a.price ?? Infinity) - Number(b.from_price ?? b.price ?? Infinity),
     );
   }, [tours, maxPrice, minRating]);
+
+  const effectiveMaxPrice = maxPrice ?? priceCeiling;
 
   function goToBooking(t: any) {
     const id = String(t.id ?? t.tour_id ?? t.external_id);
@@ -138,16 +154,16 @@ function ToursSearchPage() {
                   <input
                     type="range"
                     min={20}
-                    max={2000}
+                    max={Math.max(priceCeiling, 2000)}
                     step={10}
-                    value={maxPrice}
+                    value={effectiveMaxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     className="mt-3 w-full accent-[hsl(var(--primary))]"
                   />
                   <div className="mt-1 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
                     <span>Up to</span>
                     <span className="rounded-md bg-primary px-2 py-0.5 text-primary-foreground">
-                      {formatPrice(maxPrice, "USD")}
+                      {formatPrice(effectiveMaxPrice, "USD")}
                     </span>
                   </div>
                 </div>
@@ -175,6 +191,11 @@ function ToursSearchPage() {
 
             <div>
               <h2 className="mb-4 font-display text-xl font-bold">{filtered.length} experiences · {query.destination}</h2>
+              {filtered.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+                  No tours match your filters. Try increasing the maximum price or lowering the minimum rating.
+                </div>
+              ) : null}
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((t: any) => {
                   const id = String(t.id ?? t.tour_id ?? t.external_id);
