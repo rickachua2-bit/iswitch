@@ -478,6 +478,38 @@ function normalizeBookingHotel(h: any, fallbackCurrency: string, idx = 0) {
 
 /* =========================== TOURS ================================= */
 
+const TOUR_SEARCH_PAGE_COUNT = 3;
+
+function encodeTourUfi(ufi: unknown): string | null {
+  if (ufi == null) return null;
+  try {
+    return Buffer.from(JSON.stringify({ ufi: Number(ufi) })).toString("base64");
+  } catch {
+    return null;
+  }
+}
+
+function extractBookingTourRows(json: any): any[] {
+  const data = json?.data;
+  const candidates = [data?.products, data?.attractions, data?.results, json?.products, json?.results, Array.isArray(data) ? data : null];
+  for (const value of candidates) {
+    if (Array.isArray(value) && value.length) return value;
+  }
+  return [];
+}
+
+function sortByTourPrice(a: any, b: any) {
+  const pa = Number(a?.from_price ?? a?.price);
+  const pb = Number(b?.from_price ?? b?.price);
+  const aBad = !Number.isFinite(pa) || pa <= 0;
+  const bBad = !Number.isFinite(pb) || pb <= 0;
+  if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+  if (aBad) return 1;
+  if (bBad) return -1;
+  if (pa !== pb) return pa - pb;
+  return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+}
+
 export async function bookingSearchTours(input: {
   destination: string;
   date?: string;
@@ -506,39 +538,43 @@ export async function bookingSearchTours(input: {
     // returns a hit on the second/third entry, especially for ambiguous queries
     // like "New York" or "Dubai").
     const candidates: string[] = [];
-    for (const it of [...destList, ...productList].slice(0, 5)) {
-      const id = it?.id ?? it?.b_id ?? it?.productId ?? it?.ufi;
-      if (id != null) candidates.push(String(id));
+    const add = (id: unknown) => {
+      if (id == null) return;
+      const value = String(id);
+      if (value && !candidates.includes(value)) candidates.push(value);
+    };
+    for (const it of destList.slice(0, 6)) {
+      add(it?.id ?? it?.b_id);
+      add(encodeTourUfi(it?.ufi ?? it?.cityUfi));
+    }
+    for (const it of productList.slice(0, 10)) {
+      add(encodeTourUfi(it?.cityUfi ?? it?.ufi));
     }
     if (!candidates.length) return { ok: true, tours: [] };
 
     let products: any[] = [];
     let lastStatus: number | null = null;
     for (const id of candidates) {
-      const params = new URLSearchParams({
-        id,
-        sortBy: "lowest_price",
-        page: "1",
-        currency_code: (input.currency ?? "USD").toUpperCase(),
-        languagecode: "en-us",
-      });
-      if (input.date) params.set("startDate", input.date);
-      const { status, text } = await bFetch(
-        "booking-tours",
-        `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`,
+      const pageResults = await Promise.all(
+        Array.from({ length: TOUR_SEARCH_PAGE_COUNT }, (_, i) => {
+          const params = new URLSearchParams({
+            id,
+            sortBy: "trending",
+            page: String(i + 1),
+            currency_code: (input.currency ?? "USD").toUpperCase(),
+            languagecode: "en-us",
+          });
+          if (input.date) params.set("startDate", input.date);
+          return bFetch("booking-tours", `${BASE}/api/v1/attraction/searchAttractions?${params.toString()}`).catch(() => null);
+        }),
       );
-      lastStatus = status;
-      if (status >= 400) continue;
-      const json = safeJson(text);
-      const list: any[] =
-        (Array.isArray(json?.data?.products) && json.data.products) ||
-        (Array.isArray(json?.data?.attractions) && json.data.attractions) ||
-        (Array.isArray(json?.data?.results) && json.data.results) ||
-        (Array.isArray(json?.products) && json.products) ||
-        (Array.isArray(json?.results) && json.results) ||
-        (Array.isArray(json?.data) && json.data) ||
-        [];
-      if (list.length) { products = list; break; }
+      for (const page of pageResults) {
+        if (!page) continue;
+        lastStatus = page.status;
+        if (page.status >= 400) continue;
+        products.push(...extractBookingTourRows(safeJson(page.text)));
+      }
+      if (products.length) break;
     }
     if (!products.length) {
       return {
@@ -547,10 +583,17 @@ export async function bookingSearchTours(input: {
         error: lastStatus && lastStatus >= 400 ? `Booking.com tours: HTTP ${lastStatus}` : undefined,
       };
     }
+    const seen = new Set<string>();
     const tours = products
-      .slice(0, 50)
       .map((p: any, idx: number) => normalizeBookingTour(p, idx))
-      .filter((t: any) => t && t.id);
+      .filter((t: any) => t && t.id)
+      .filter((t: any) => {
+        const key = String(t.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort(sortByTourPrice);
     return { ok: true, tours };
   } catch (e: any) {
     return { ok: false, tours: [], error: String(e?.message ?? e) };
