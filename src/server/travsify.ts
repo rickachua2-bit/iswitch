@@ -821,12 +821,6 @@ export const searchTours = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
-    if ((await getActiveProvider("tours")) === "travsify") {
-      const t = await travsifySearch("/tours/search", data);
-      if (!t.ok) return fail(t.error, { tours: [] });
-      return ok({ tours: t.data?.tours ?? t.data?.data?.tours ?? [] });
-    }
-    // Booking.com first; fall back to crawled inventory if it returns nothing.
     const b = await bookingSearchTours({
       destination: data.destination,
       date: data.date,
@@ -834,10 +828,7 @@ export const searchTours = createServerFn({ method: "POST" })
       currency: data.currency,
     });
     if (b.ok && b.tours.length > 0) return ok({ tours: b.tours });
-    const r = await fetchInventory("tours", { destination: data.destination });
-    if (r.error && !b.error) return fail(r.error, { tours: [] });
-    if (r.items.length === 0 && b.error) return fail(b.error, { tours: [] });
-    return ok({ tours: r.items });
+    return b.error ? fail(b.error, { tours: [] }) : ok({ tours: [] });
   });
 
 /**
@@ -898,8 +889,8 @@ export const bookTour = createServerFn({ method: "POST" })
     const lead = data.participants[0];
     const r = await createLead({
       vertical: "tours",
-      provider_slug: "getyourguide",
-      inventory_item_id: data.tour_id,
+      provider_slug: "booking-tours",
+      external_reference: data.tour_id,
       amount: Number(data.amount ?? 0),
       currency: data.currency ?? "USD",
       customer_name: `${lead.firstName} ${lead.lastName}`.trim(),
