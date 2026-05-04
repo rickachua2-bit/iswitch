@@ -207,6 +207,40 @@ function normalizeBookingFlight(o: any, idx: number, requestedCurrency = "USD") 
 
 /* =========================== HOTELS ================================ */
 
+const HOTEL_SEARCH_PAGE_COUNT = 5;
+
+function extractBookingHotelRows(json: any): any[] {
+  const data = json?.data;
+  const candidates = [
+    data?.hotels,
+    data?.result,
+    data?.results,
+    data?.search_results,
+    data?.properties,
+    data?.propertyResults,
+    data?.property_results,
+    json?.results,
+    json?.hotels,
+    Array.isArray(data) ? data : null,
+  ];
+  for (const value of candidates) {
+    if (Array.isArray(value) && value.length) return value;
+  }
+  return [];
+}
+
+function sortByHotelPrice(a: any, b: any) {
+  const pa = Number(a?.price);
+  const pb = Number(b?.price);
+  const aBad = !Number.isFinite(pa) || pa <= 0;
+  const bBad = !Number.isFinite(pb) || pb <= 0;
+  if (aBad && bBad) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+  if (aBad) return 1;
+  if (bBad) return -1;
+  if (pa !== pb) return pa - pb;
+  return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+}
+
 export async function bookingSearchHotels(input: {
   destination: string;
   checkin: string;
@@ -224,7 +258,7 @@ export async function bookingSearchHotels(input: {
     // Booking.com expects search_type as upper-case enum (CITY/REGION/COUNTRY/DISTRICT…).
     const searchType = String(dest.dest_type ?? "city").toUpperCase();
 
-    const params = new URLSearchParams({
+    const baseParams = new URLSearchParams({
       dest_id: String(dest.dest_id),
       search_type: searchType,
       arrival_date: input.checkin,
@@ -238,24 +272,35 @@ export async function bookingSearchHotels(input: {
       units: "metric",
       temperature_unit: "c",
     });
-    const { status, text } = await bFetch("booking-hotels", `${BASE}/api/v1/hotels/searchHotels?${params.toString()}`);
-    if (status >= 400) return { ok: false, hotels: [], error: `Booking.com hotels: HTTP ${status}` };
-    const json = safeJson(text);
-    // Booking-com15 returns several possible shapes; cover them all.
-    const rawList: any[] =
-      (Array.isArray(json?.data?.hotels) && json.data.hotels) ||
-      (Array.isArray(json?.data?.result) && json.data.result) ||
-      (Array.isArray(json?.data?.results) && json.data.results) ||
-      (Array.isArray(json?.data?.search_results) && json.data.search_results) ||
-      (Array.isArray(json?.data?.properties) && json.data.properties) ||
-      (Array.isArray(json?.results) && json.results) ||
-      (Array.isArray(json?.hotels) && json.hotels) ||
-      (Array.isArray(json?.data) && json.data) ||
-      [];
+    const buildUrl = (page: number) => {
+      const params = new URLSearchParams(baseParams);
+      params.set("page_number", String(page));
+      return `${BASE}/api/v1/hotels/searchHotels?${params.toString()}`;
+    };
+
+    const first = await bFetch("booking-hotels", buildUrl(1));
+    if (first.status >= 400) return { ok: false, hotels: [], error: `Booking.com hotels: HTTP ${first.status}` };
+
+    const rest = await Promise.all(
+      Array.from({ length: HOTEL_SEARCH_PAGE_COUNT - 1 }, (_, i) =>
+        bFetch("booking-hotels", buildUrl(i + 2)).catch(() => null),
+      ),
+    );
+    const rawList = [first, ...rest]
+      .filter((page): page is { status: number; text: string; ms: number } => !!page && page.status < 400)
+      .flatMap((page) => extractBookingHotelRows(safeJson(page.text)));
+
+    const seen = new Set<string>();
     const hotels = rawList
-      .slice(0, 50)
       .map((h: any, idx: number) => normalizeBookingHotel(h, input.currency ?? "USD", idx))
-      .filter((h: any) => h && h.id);
+      .filter((h: any) => h && h.id)
+      .filter((h: any) => {
+        const key = String(h.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort(sortByHotelPrice);
     return { ok: true, hotels };
   } catch (e: any) {
     return { ok: false, hotels: [], error: String(e?.message ?? e) };
