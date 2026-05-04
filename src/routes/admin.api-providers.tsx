@@ -195,7 +195,7 @@ function ProvidersList({ onOpen }: { onOpen: (id: string) => void }) {
                 : "All providers are using LIVE keys. Real bookings and payments are processed."}
             </p>
             <div className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-              {(["duffel","liteapi","travsify"] as const).map((slug) => {
+              {(["duffel","booking","travsify"] as const).map((slug) => {
                 const k = keyStatus[slug];
                 if (!k) return null;
                 const has = globalMode === "test" ? k.test : k.live;

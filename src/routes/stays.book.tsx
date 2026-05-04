@@ -433,14 +433,14 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
 
       const res = await startCheckout({
         vertical: "stays",
-        provider_slug: hotel.provider_slug ?? "liteapi",
+        provider_slug: hotel.provider_slug ?? "booking-hotels",
         amount: total,
         currency: hotel.currency ?? "USD",
         customer_name: `${v.firstName} ${v.lastName}`.trim(),
         customer_email: v.email,
         customer_phone: v.phone,
         payload: {
-          lite_rate_id: hotel.rate_id ?? hotel.offer_id ?? hotel.id,
+          hotel_offer_id: hotel.rate_id ?? hotel.offer_id ?? hotel.id,
           holder: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
           guests: [{ firstName: v.firstName, lastName: v.lastName }],
           requests: v.requests,
