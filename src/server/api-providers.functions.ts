@@ -30,10 +30,10 @@ export const getApiProviderRouting = createServerFn({ method: "GET" })
       travsifyConfigured: !!(process.env.TRAVSIFY_API_KEY || process.env.TRAVSIFY_TEST_API_KEY),
       providers: {
         flights: { default: "Duffel", travsify: "Travsify" },
-        stays: { default: "LiteAPI", travsify: "Travsify" },
+        stays: { default: "Booking.com RapidAPI", travsify: "Travsify" },
         visas: { default: "Crawled inventory", travsify: "Travsify" },
         insurance: { default: "Crawled inventory", travsify: "Travsify" },
-        tours: { default: "Crawled inventory", travsify: "Travsify" },
+        tours: { default: "Booking.com RapidAPI", travsify: "Travsify" },
         pickups: { default: "Crawled inventory", travsify: "Travsify" },
       },
     };
@@ -266,7 +266,7 @@ export const getProviderMode = createServerFn({ method: "GET" })
       global,
       keys: {
         duffel:   { live: isKeyConfigured("duffel", "live"),   test: isKeyConfigured("duffel", "test") },
-        liteapi:  { live: isKeyConfigured("liteapi", "live"),  test: isKeyConfigured("liteapi", "test") },
+        booking:  { live: isKeyConfigured("booking", "live"),  test: isKeyConfigured("booking", "test") },
         travsify: { live: isKeyConfigured("travsify", "live"), test: isKeyConfigured("travsify", "test") },
       },
     };
