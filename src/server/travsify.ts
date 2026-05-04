@@ -4,7 +4,7 @@
  * The UI was originally wired to a single Travsify backend. We've since moved
  * to a hybrid stack:
  *  - Flights -> Duffel (live API)
- *  - Hotels  -> LiteAPI (live API)
+ *  - Hotels  -> Booking.com RapidAPI (live API)
  *  - Visas / Tours / Pickups -> crawled inventory in `inventory_items`
  *  - Car Rentals -> Priceline RapidAPI
  *  - All bookings -> lead capture in `bookings_unified` (manual fulfillment)
@@ -70,7 +70,7 @@ type Vertical = "flights" | "stays" | "visas" | "car_rentals" | "tours" | "picku
 /**
  * Reads admin-controlled per-vertical provider routing from system_settings.
  * Returns "travsify" only when the admin enabled it AND the API key is set.
- * Otherwise falls back to "default" (Duffel / LiteAPI / crawled inventory).
+ * Otherwise falls back to the built-in live provider for each vertical.
  */
 async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "default"> {
   try {
@@ -720,7 +720,7 @@ export const bookFlight = createServerFn({ method: "POST" })
     return ok({ booking: r.booking, message: "Lead captured. Our agent will contact you to confirm." });
   });
 
-/* ------------------------------ HOTELS (LiteAPI) ------------------- */
+/* ------------------------------ HOTELS ------------------------------ */
 
 export const searchHotels = createServerFn({ method: "POST" })
   .inputValidator(
@@ -741,46 +741,17 @@ export const searchHotels = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
-    if ((await getActiveProvider("stays")) === "travsify") {
-      const t = await travsifySearch("/hotels/search", data);
-      if (!t.ok) return fail(t.error, { hotels: [] });
-      return ok({ hotels: t.data?.hotels ?? t.data?.data?.hotels ?? [] });
-    }
-    // Resolve free-text destination ("Abidjan, Côte d'Ivoire") into city + country.
-    let cityName = data.city || undefined;
-    let countryCode =
-      data.country_code && data.country_code.length === 2 ? data.country_code.toUpperCase() : undefined;
-    if ((!cityName && !countryCode) || data.destination) {
-      const r = await resolveDestination(data.destination);
-      cityName = cityName ?? r.cityName;
-      countryCode = countryCode ?? r.countryCode;
-    }
-    const [liteRes, bookingRes] = await Promise.allSettled([
-      searchLiteHotels({
-        cityName,
-        countryCode,
-        checkin: data.checkin,
-        checkout: data.checkout,
-        adults: Math.max(1, Number(data.adults) || 1),
-        rooms: Math.max(1, Number(data.rooms) || 1),
-        currency: data.currency || "USD",
-      }),
-      bookingSearchHotels({
-        destination: data.destination || data.city || cityName || countryCode || "",
-        checkin: data.checkin,
-        checkout: data.checkout,
-        adults: Math.max(1, Number(data.adults) || 1),
-        rooms: Math.max(1, Number(data.rooms) || 1),
-        currency: data.currency || "USD",
-      }),
-    ]);
-    const liteHotels = liteRes.status === "fulfilled" && liteRes.value?.ok
-      ? (liteRes.value.hotels ?? []).map((h: any) => ({ ...h, source: h.source ?? "liteapi" }))
-      : [];
-    const bookingHotels = bookingRes.status === "fulfilled" && bookingRes.value.ok
-      ? bookingRes.value.hotels : [];
+    const bookingRes = await bookingSearchHotels({
+      destination: data.destination || data.city || data.country_code || "",
+      checkin: data.checkin,
+      checkout: data.checkout,
+      adults: Math.max(1, Number(data.adults) || 1),
+      rooms: Math.max(1, Number(data.rooms) || 1),
+      currency: data.currency || "USD",
+    });
+    const bookingHotels = bookingRes.ok ? bookingRes.hotels : [];
 
-    // Sort each group ascending by price; null/0 prices go to the bottom.
+    // Sort ascending by price; null/0 prices go to the bottom.
     const byPriceAsc = (a: any, b: any) => {
       const pa = Number(a?.price);
       const pb = Number(b?.price);
@@ -791,15 +762,9 @@ export const searchHotels = createServerFn({ method: "POST" })
       if (bBad) return -1;
       return pa - pb;
     };
-    const sortedBooking = [...bookingHotels].sort(byPriceAsc);
-    const sortedLite = [...liteHotels].sort(byPriceAsc);
-
-    // Booking.com first, LiteAPI second.
-    const merged = [...sortedBooking, ...sortedLite];
+    const merged = [...bookingHotels].sort(byPriceAsc);
     if (merged.length === 0) {
-      const err = (liteRes.status === "fulfilled" && !liteRes.value?.ok && liteRes.value?.error) ||
-                  (bookingRes.status === "fulfilled" && bookingRes.value.error) ||
-                  "Hotels unavailable.";
+      const err = bookingRes.error || "Hotels unavailable.";
       return fail(err, { hotels: [] });
     }
     return ok({ hotels: merged });
