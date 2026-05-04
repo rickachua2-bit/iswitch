@@ -483,7 +483,7 @@ const TOUR_SEARCH_PAGE_COUNT = 3;
 function encodeTourUfi(ufi: unknown): string | null {
   if (ufi == null) return null;
   try {
-    return Buffer.from(JSON.stringify({ ufi: Number(ufi) })).toString("base64");
+    return btoa(JSON.stringify({ ufi: Number(ufi) }));
   } catch {
     return null;
   }
