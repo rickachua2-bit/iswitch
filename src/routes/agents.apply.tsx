@@ -247,7 +247,7 @@ function SignupStep(props: {
         type="tel"
         value={props.phone}
         onChange={(e) => props.setPhone(e.target.value)}
-        placeholder="+234 801 234 5678"
+        placeholder="+16107647191"
         hint="Direct line for urgent ops escalations."
       />
       <AuthField
@@ -353,7 +353,7 @@ function KybStep(props: {
           type="tel"
           value={props.contactPhone}
           onChange={(e) => props.setContactPhone(e.target.value)}
-          placeholder="+234 801 234 5678"
+          placeholder="+16107647191"
         />
         <label className="block">
           <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">

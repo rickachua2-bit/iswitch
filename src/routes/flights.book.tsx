@@ -334,7 +334,7 @@ function BookingForm({ offer, fare, navigate }: { offer: any; fare: any; navigat
               required
               value={pax.phone_number}
               onChange={(e) => update("phone_number", e.target.value)}
-              placeholder="+2348012345678"
+              placeholder="+16107647191"
             />
           </Field>
         </div>

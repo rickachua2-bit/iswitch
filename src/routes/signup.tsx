@@ -94,7 +94,7 @@ function SignupPage() {
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="+234 801 234 5678"
+          placeholder="+16107647191"
           hint="We'll send WhatsApp & SMS booking updates here."
         />
 
