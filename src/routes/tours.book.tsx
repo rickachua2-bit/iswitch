@@ -299,7 +299,7 @@ function ParticipantsForm({ tour }: { tour: any; pax: number }) {
             <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
           <Field label="Phone" required icon={Phone}>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+16107647191" />
           </Field>
         </div>
       </BookingSectionCard>
