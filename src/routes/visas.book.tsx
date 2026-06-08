@@ -281,7 +281,7 @@ function ApplicationForm({ visa }: { visa: any }) {
             <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
           <Field label="Phone" required icon={Phone}>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+16107647191" />
           </Field>
           <Field label="Passport number" required icon={IdCard}>
             <input required value={v.passport} onChange={(e) => set("passport", e.target.value)} />

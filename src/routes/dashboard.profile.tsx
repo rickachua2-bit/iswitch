@@ -243,7 +243,7 @@ function ProfilePage() {
                 <Input value={form.display_name} onChange={(e) => update("display_name", e.target.value)} placeholder="e.g. Adaeze Okafor" />
               </Field>
               <Field label="Phone number">
-                <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+234 801 234 5678" />
+                <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+16107647191" />
               </Field>
               <Field label="Date of birth">
                 <Input type="date" value={form.date_of_birth} onChange={(e) => update("date_of_birth", e.target.value)} />
@@ -298,7 +298,7 @@ function ProfilePage() {
           <Card title="Emergency contact" subtitle="Who should we reach in case of an emergency during travel?">
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Contact name"><Input value={form.emergency_contact_name} onChange={(e) => update("emergency_contact_name", e.target.value)} placeholder="Full name" /></Field>
-              <Field label="Contact phone"><Input value={form.emergency_contact_phone} onChange={(e) => update("emergency_contact_phone", e.target.value)} placeholder="+234 …" /></Field>
+              <Field label="Contact phone"><Input value={form.emergency_contact_phone} onChange={(e) => update("emergency_contact_phone", e.target.value)} placeholder="+16107647191" /></Field>
             </div>
           </Card>
         </TabsContent>

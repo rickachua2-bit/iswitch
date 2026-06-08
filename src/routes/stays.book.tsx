@@ -474,7 +474,7 @@ function BookingForm({ hotel }: { hotel: any; navigate: any }) {
             <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} placeholder="you@example.com" />
           </Field>
           <Field label="Phone (with country code)" required icon={Phone}>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+2348012345678" />
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+16107647191" />
           </Field>
         </div>
       </BookingSectionCard>

@@ -282,7 +282,7 @@ function DriverForm({ car, pickup_label, dropoff_label, pickup_date_time, dropof
             <input required type="email" value={v.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
           <Field label="Mobile" required icon={Phone}>
-            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234…" />
+            <input required type="tel" value={v.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+16107647191" />
           </Field>
           <Field label="Driver age" required icon={User}>
             <input required type="number" min={18} max={99} value={v.age} onChange={(e) => set("age", e.target.value)} />
