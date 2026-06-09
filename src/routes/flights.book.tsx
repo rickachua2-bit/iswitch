@@ -8,7 +8,7 @@ import {
   Briefcase, Luggage, Loader2, Clock, Calendar as CalendarIcon, Users,
   User, Mail, Phone, Globe2, IdCard, VenetianMask, BadgeCheck,
 } from "lucide-react";
-import { bookFlight } from "@/server/travsify";
+import { bookFlight } from "@/lib/travsify.functions";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { FareAndTransitRules } from "@/components/flights/FareAndTransitRules";
 import {

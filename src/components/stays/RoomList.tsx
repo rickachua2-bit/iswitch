@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BedDouble, Users, ShieldCheck, Coffee, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import type { BookingNormalizedRoom } from "@/server/booking.server";
+import type { BookingNormalizedRoom } from "@/lib/booking.server";
 import { usePriceFormat } from "@/lib/use-price-format";
 
 type Props = {

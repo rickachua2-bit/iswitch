@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchCarRentalsFn } from "@/server/travsify";
+import { searchCarRentalsFn } from "@/lib/travsify.functions";
 import { useSelectOffer } from "@/lib/use-select-offer";
 import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Car, Users, Briefcase, Snowflake, Loader2, Settings2, MapPin, Fuel } from "lucide-react";

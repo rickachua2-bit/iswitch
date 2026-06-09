@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, MapPin } from "lucide-react";
-import { searchCarRentalLocations } from "@/server/travsify";
+import { searchCarRentalLocations } from "@/lib/travsify.functions";
 
 export type CarLocation = { id: string; name: string; type?: string; cityName?: string; iata?: string };
 
