@@ -5,7 +5,7 @@ import {
   BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
-import { bookTour } from "@/server/travsify";
+import { bookTour } from "@/lib/travsify.functions";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Compass, MapPin, Clock, Users, Languages, CheckCircle2, X, Calendar as CalendarIcon, Star,

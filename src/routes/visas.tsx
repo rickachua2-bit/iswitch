@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Outlet, useChildMatches } from "@tanstack
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
-import { searchVisas } from "@/server/travsify";
+import { searchVisas } from "@/lib/travsify.functions";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Dialog,

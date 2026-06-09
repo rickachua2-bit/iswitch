@@ -5,7 +5,7 @@ import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { ResultsToolbar } from "@/components/ResultsToolbar";
 import { FlightResultCard } from "@/components/flights/FlightResultCard";
 import { FlightFilters } from "@/components/flights/FlightFilters";
-import { startFlightSearch, pollFlightSearch } from "@/server/travsify";
+import { startFlightSearch, pollFlightSearch } from "@/lib/travsify.functions";
 import { TravelTip } from "@/components/SearchingOverlay";
 import { toIata } from "@/lib/airports";
 import { getUserCurrencyCode } from "@/lib/user-currency";

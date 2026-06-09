@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getCatalog } from "@/server/travsify";
+import { getCatalog } from "@/lib/travsify.functions";
 
 export type CountryOption = { name: string; code?: string };
 

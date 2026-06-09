@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { UnifiedSearchBar } from "@/components/UnifiedSearchBar";
 import { ResultsToolbar } from "@/components/ResultsToolbar";
 import { SearchingOverlay } from "@/components/SearchingOverlay";
-import { searchTours } from "@/server/travsify";
+import { searchTours } from "@/lib/travsify.functions";
 import { useSelectOffer } from "@/lib/use-select-offer";
 import { ErrorToast } from "@/components/booking/ErrorToast";
 import { Loader2, MapPin, Star, Clock, ImageIcon } from "lucide-react";

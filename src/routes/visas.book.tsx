@@ -5,7 +5,7 @@ import {
   BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip, SuccessCard,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
-import { bookVisa } from "@/server/travsify";
+import { bookVisa } from "@/lib/travsify.functions";
 import { usePriceFormat } from "@/lib/use-price-format";
 import {
   Briefcase, Globe2, Clock, FileCheck2, ShieldCheck, CheckCircle2, Stamp, ScrollText,

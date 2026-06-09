@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
-import { autocompleteTourDestinations } from "@/server/travsify";
+import { autocompleteTourDestinations } from "@/lib/travsify.functions";
 
 type Suggestion = {
   id: string;

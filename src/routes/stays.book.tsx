@@ -5,9 +5,9 @@ import {
   BookingShell, BookingSectionCard, Field, ConfirmButton, TrustStrip,
   type BookingHeroProps,
 } from "@/components/booking/BookingShell";
-import { bookHotel } from "@/server/travsify";
+import { bookHotel } from "@/lib/travsify.functions";
 import { getBookingHotelFull } from "@/server/booking.functions";
-import type { BookingNormalizedRoom } from "@/server/booking.server";
+import type { BookingNormalizedRoom } from "@/lib/booking.server";
 import { getUserCurrencyCode } from "@/lib/user-currency";
 import { usePriceFormat } from "@/lib/use-price-format";
 import { HotelGallery } from "@/components/stays/HotelGallery";

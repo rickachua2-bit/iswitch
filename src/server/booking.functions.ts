@@ -5,7 +5,7 @@ import {
   bookingGetHotelPhotos,
   bookingGetRoomList,
   type BookingNormalizedRoom,
-} from "./booking.server";
+} from "@/lib/booking.server";
 
 const Input = z.object({
   hotelId: z.string().min(1),
