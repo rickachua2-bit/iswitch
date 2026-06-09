@@ -1,6 +1,6 @@
 // Fulfillment helpers - auto-confirm flights/hotels, mark others manual
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { getProviderKey } from "./provider-keys.server";
+import { getProviderKey } from "@/lib/provider-keys.server";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 const LITEAPI_BASE = "https://api.liteapi.travel/v3.0";

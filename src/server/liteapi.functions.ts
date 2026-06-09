@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { friendlyError, timedFetch } from "./_shared.server";
-import { getProviderKey } from "./provider-keys.server";
+import { getProviderKey } from "@/lib/provider-keys.server";
 
 const BASE = "https://api.liteapi.travel/v3.0";
 
