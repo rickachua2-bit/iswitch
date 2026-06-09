@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { translateBatch } from "@/server/translate.functions";
+import { translateBatch } from "@/lib/translate.functions";
 import { SUPPORTED_LANGUAGES } from "@/i18n";
 
 const RTL_LANGS: Set<string> = new Set(
