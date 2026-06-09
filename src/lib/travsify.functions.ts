@@ -88,7 +88,7 @@ async function getActiveProvider(vertical: Vertical): Promise<"travsify" | "defa
 }
 
 async function travsifyHeaders() {
-  const { getProviderKey } = await import("@/server/provider-keys.server");
+  const { getProviderKey } = await import("@/lib/provider-keys.server");
   const key = await getProviderKey("travsify");
   if (!key) throw new Error("Travsify key not configured for current mode");
   return {
@@ -150,7 +150,7 @@ async function timedFetch(_providerSlug: string, url: string, init: RequestInit)
 }
 
 async function duffelHeaders() {
-  const { getProviderKey } = await import("@/server/provider-keys.server");
+  const { getProviderKey } = await import("@/lib/provider-keys.server");
   const key = await getProviderKey("duffel");
   if (!key) throw new Error("Duffel key not configured for current mode");
   return {
@@ -162,7 +162,7 @@ async function duffelHeaders() {
 }
 
 async function liteApiHeaders() {
-  const { getProviderKey } = await import("@/server/provider-keys.server");
+  const { getProviderKey } = await import("@/lib/provider-keys.server");
   const key = await getProviderKey("liteapi");
   if (!key) throw new Error("LiteAPI key not configured for current mode");
   return { "X-API-Key": key, "Content-Type": "application/json", Accept: "application/json" } as Record<string, string>;
@@ -918,7 +918,7 @@ export const searchVisas = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     // Primary provider: Visa Requirement RapidAPI (TravelBuddyAI)
     const { checkVisaRequirement, normalizeVisaResponse, toCountryCode } =
-      await import("@/server/visa-rapidapi.server");
+      await import("@/lib/visa-rapidapi.server");
     const passportCC = toCountryCode(data.nationality);
     const destCC = toCountryCode(data.destination);
     const r = await checkVisaRequirement(passportCC, destCC);
@@ -990,7 +990,7 @@ export const searchCarRentalsFn = createServerFn({ method: "POST" })
         .parse(d),
   )
   .handler(async ({ data }) => {
-    const { searchCarRentals } = await import("@/server/priceline.server");
+    const { searchCarRentals } = await import("@/lib/priceline.server");
     const r = await searchCarRentals({
       pickup_location_id: data.pickup_location_id,
       dropoff_location_id: data.dropoff_location_id ?? data.pickup_location_id,
@@ -1008,7 +1008,7 @@ export const searchCarRentalLocations = createServerFn({ method: "POST" })
     (d: unknown) => z.object({ query: z.string().min(1) }).parse(d),
   )
   .handler(async ({ data }) => {
-    const { searchPickupLocations } = await import("@/server/priceline.server");
+    const { searchPickupLocations } = await import("@/lib/priceline.server");
     const r = await searchPickupLocations(data.query);
     if (!r.ok) return fail(r.error ?? "Location search failed", { locations: [] });
     return ok({ locations: r.locations });
